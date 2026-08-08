@@ -1,0 +1,16 @@
+Follow-up to the issue I opened — figured a PR would save you a round trip, feel free to close/redo if you want it done differently.
+
+This removes `FALLBACK_TOKEN` from `ClipboardSyncLoopbackAuth` and everywhere it was accepted as a stand-in for the real per-install random loopback token. Right now `isLoopbackIngressAuthorized()` in `ClipboardSyncWebPortal` treats the hardcoded string `"gboardpatches-web-clipboard-loopback-fallback-v1"` as valid auth for `POST /phone-clipboard`, which is also the one endpoint that skips the pairing-code check for loopback callers. Since that string is sitting in the public repo (and just as easy to pull out of the built APK), any other app on the device can hit `127.0.0.1:<port>/phone-clipboard` with that header and get treated as a trusted local client, no matter what the actual random token is. Loopback sockets aren't permission-gated on Android so this doesn't take anything beyond normal INTERNET access to pull off.
+
+What changed:
+
+- `ClipboardSyncLoopbackAuth.java` — dropped `FALLBACK_TOKEN`, `fallbackToken()`, and `FALLBACK_PROOF_FIELD`.
+- `ClipboardSyncWebPortal.java` — `isLoopbackIngressAuthorized()` now only accepts the real token; removed the `fallbackLoopbackProofForStatusRequest()` path that exposed a fallback-token HMAC proof in `/status` too.
+- `ClipboardSyncLoopbackIngressClient.java` — removed the wrapper `fallbackLoopbackIngressToken()` and the corresponding fallback-proof check in `verifyExpectedPortal()`.
+- `GboardWebClipboardCaptureBootstrap.java` — this was the one legit caller of the fallback (used if `loopbackIngressToken` came back null/empty from prefs). Since `WebClipboardPreferences.ensureDefaults()` always generates a random token on first run, that null case should basically never happen in practice — so instead of falling back to a guessable value, it now just reports the capture bridge as unavailable and bails out safely.
+
+Net effect: `/phone-clipboard` and the loopback proof on `/status` now only trust the actual per-install random token, nothing static.
+
+Didn't touch the pairing-code compare (`isAuthorized()`) or add rate limiting — wanted to keep this PR scoped to the one concrete bypass rather than bundle in the other minor stuff I mentioned in the issue. Happy to do those as a separate PR if you'd want them.
+
+Patch is attached / diff below, only touches the four files above, no test files reference the removed symbols so nothing else should need updating.

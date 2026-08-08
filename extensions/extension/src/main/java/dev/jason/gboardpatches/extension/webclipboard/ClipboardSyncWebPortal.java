@@ -723,11 +723,7 @@ public final class ClipboardSyncWebPortal {
         if (suppliedToken.isBlank()) {
             suppliedToken = extractField(request == null ? "" : request.body, "token");
         }
-        if (constantTimeEquals(expectedToken, suppliedToken)) {
-            return true;
-        }
-        return !expectedToken.isEmpty()
-                && constantTimeEquals(ClipboardSyncLoopbackAuth.fallbackToken(), suppliedToken);
+        return constantTimeEquals(expectedToken, suppliedToken);
     }
 
     private boolean constantTimeEquals(String expected, String supplied) {
@@ -867,13 +863,6 @@ public final class ClipboardSyncWebPortal {
                 if (!loopbackProof.isEmpty()) {
                     payload.put(ClipboardSyncLoopbackAuth.PROOF_FIELD, loopbackProof);
                 }
-                String fallbackLoopbackProof = fallbackLoopbackProofForStatusRequest(
-                        request,
-                        socket);
-                if (!fallbackLoopbackProof.isEmpty()) {
-                    payload.put(ClipboardSyncLoopbackAuth.FALLBACK_PROOF_FIELD,
-                            fallbackLoopbackProof);
-                }
             } catch (Throwable ignored) {
                 return "{\"ok\":false,\"pairingRequired\":true,\"pairingVerified\":false,\"codeLength\":4,\"clients\":[]}";
             }
@@ -888,20 +877,6 @@ public final class ClipboardSyncWebPortal {
         }
         return ClipboardSyncLoopbackAuth.proof(
                 securityConfig.loopbackIngressToken,
-                request.query(ClipboardSyncLoopbackAuth.CHALLENGE_QUERY));
-    }
-
-    private String fallbackLoopbackProofForStatusRequest(Request request, Socket socket) {
-        if (securityConfig.loopbackIngressToken == null
-                || securityConfig.loopbackIngressToken.isEmpty()) {
-            return "";
-        }
-        if (request == null || socket == null || socket.getInetAddress() == null
-                || !socket.getInetAddress().isLoopbackAddress()) {
-            return "";
-        }
-        return ClipboardSyncLoopbackAuth.proof(
-                ClipboardSyncLoopbackAuth.fallbackToken(),
                 request.query(ClipboardSyncLoopbackAuth.CHALLENGE_QUERY));
     }
 

@@ -9,9 +9,6 @@ import javax.crypto.spec.SecretKeySpec;
 final class ClipboardSyncLoopbackAuth {
     static final String CHALLENGE_QUERY = "loopbackChallenge";
     static final String PROOF_FIELD = "loopbackProof";
-    static final String FALLBACK_PROOF_FIELD = "loopbackFallbackProof";
-    private static final String FALLBACK_TOKEN =
-            "gboardpatches-web-clipboard-loopback-fallback-v1";
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final int MAX_CHALLENGE_LENGTH = 128;
 
@@ -39,10 +36,6 @@ final class ClipboardSyncLoopbackAuth {
         return MessageDigest.isEqual(
                 expectedProof.getBytes(StandardCharsets.UTF_8),
                 suppliedProof.getBytes(StandardCharsets.UTF_8));
-    }
-
-    static String fallbackToken() {
-        return FALLBACK_TOKEN;
     }
 
     private static boolean hasUsableToken(String token) {

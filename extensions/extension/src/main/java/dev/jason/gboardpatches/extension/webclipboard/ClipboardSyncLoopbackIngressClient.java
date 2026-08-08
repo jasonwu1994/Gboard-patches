@@ -31,10 +31,6 @@ public final class ClipboardSyncLoopbackIngressClient {
         return isExpectedPortal(port, loopbackIngressToken, DEFAULT_TIMEOUT_MS);
     }
 
-    public static String fallbackLoopbackIngressToken() {
-        return ClipboardSyncLoopbackAuth.fallbackToken();
-    }
-
     public static boolean isExpectedPortal(int port, String loopbackIngressToken, int timeoutMs) {
         String safeToken = loopbackIngressToken == null ? "" : loopbackIngressToken;
         if (safeToken.isEmpty()
@@ -124,11 +120,7 @@ public final class ClipboardSyncLoopbackIngressClient {
             return ClipboardSyncLoopbackAuth.proofMatches(
                     loopbackIngressToken,
                     challenge,
-                    payload.optString(ClipboardSyncLoopbackAuth.PROOF_FIELD, ""))
-                    || ClipboardSyncLoopbackAuth.proofMatches(
-                            loopbackIngressToken,
-                            challenge,
-                            payload.optString(ClipboardSyncLoopbackAuth.FALLBACK_PROOF_FIELD, ""));
+                    payload.optString(ClipboardSyncLoopbackAuth.PROOF_FIELD, ""));
         } catch (Throwable ignored) {
             return false;
         }
