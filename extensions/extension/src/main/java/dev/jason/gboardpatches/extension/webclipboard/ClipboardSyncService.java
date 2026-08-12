@@ -18,7 +18,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -51,6 +53,7 @@ public final class ClipboardSyncService extends Service {
     private ClipboardSyncWebPortal webPortal;
     private int currentPortalPort;
     private boolean currentPairingRequired;
+    private boolean currentInjectSystemColors;
     private String currentPairingCode = WebClipboardPreferences.DEFAULT_PAIRING_CODE;
     private String currentLoopbackIngressToken =
             WebClipboardPreferences.DEFAULT_LOOPBACK_INGRESS_TOKEN;
@@ -237,22 +240,26 @@ public final class ClipboardSyncService extends Service {
         boolean enabled = WebClipboardPreferences.isEnabled(preferences);
         int desiredPort = WebClipboardPreferences.getPort(preferences);
         boolean pairingRequired = WebClipboardPreferences.isPairingRequired(preferences);
+        boolean injectSystemColors = WebClipboardPreferences.isInjectSystemColors(preferences);
         String pairingCode = WebClipboardPreferences.getPairingCode(preferences);
         String loopbackIngressToken = WebClipboardPreferences.getLoopbackIngressToken(preferences);
         boolean needsRestart = webPortal == null
                 || currentPortalPort != desiredPort
                 || currentPairingRequired != pairingRequired
+                || currentInjectSystemColors != injectSystemColors
                 || !currentPairingCode.equals(pairingCode)
                 || !currentLoopbackIngressToken.equals(loopbackIngressToken);
         Log.i(TAG, LOG_PREFIX + " refresh portal"
                 + " enabled=" + enabled
                 + ", desiredPort=" + desiredPort
                 + ", pairingRequired=" + pairingRequired
+                + ", injectSystemColors=" + injectSystemColors
                 + ", pairingCode=" + summarizePairingCode(pairingCode)
                 + ", loopbackToken=" + summarizeLoopbackToken(loopbackIngressToken)
                 + ", currentPortal=" + describePortal(webPortal)
                 + ", currentPort=" + currentPortalPort
                 + ", currentPairingRequired=" + currentPairingRequired
+                + ", currentInjectSystemColors=" + currentInjectSystemColors
                 + ", currentPairingCode=" + summarizePairingCode(currentPairingCode)
                 + ", currentLoopbackToken=" + summarizeLoopbackToken(currentLoopbackIngressToken)
                 + ", needsRestart=" + needsRestart);
@@ -265,7 +272,8 @@ public final class ClipboardSyncService extends Service {
         if (needsRestart) {
             Log.i(TAG, LOG_PREFIX + " refresh portal restarting current=" + describePortal(webPortal));
             stopWebPortal();
-            if (!startWebPortal(desiredPort, pairingRequired, pairingCode, loopbackIngressToken)) {
+            if (!startWebPortal(desiredPort, pairingRequired, pairingCode, loopbackIngressToken,
+                    injectSystemColors)) {
                 return;
             }
         } else {
@@ -276,7 +284,7 @@ public final class ClipboardSyncService extends Service {
     }
 
     private boolean startWebPortal(int port, boolean pairingRequired, String pairingCode,
-            String loopbackIngressToken) {
+            String loopbackIngressToken, boolean injectSystemColors) {
         ClipboardSyncWebPortal portal = new ClipboardSyncWebPortal(
                 port,
                 this::applyWebClipboardToPhone,
@@ -284,13 +292,15 @@ public final class ClipboardSyncService extends Service {
                 new ClipboardSyncWebPortal.SecurityConfig(
                         pairingRequired,
                         pairingCode,
-                        loopbackIngressToken));
+                        loopbackIngressToken),
+                injectSystemColors ? extractSystemColors() : Collections.emptyMap());
         try {
             portal.start();
             webPortal = portal;
             activePortal = portal;
             currentPortalPort = port;
             currentPairingRequired = pairingRequired;
+            currentInjectSystemColors = injectSystemColors;
             currentPairingCode = pairingCode;
             currentLoopbackIngressToken = loopbackIngressToken;
             seedPortalFromCurrentClipboard(portal);
@@ -299,6 +309,7 @@ public final class ClipboardSyncService extends Service {
                     + " instance=" + describePortal(portal)
                     + ", port=" + port
                     + ", pairingRequired=" + pairingRequired
+                    + ", injectSystemColors=" + injectSystemColors
                     + ", pairingCode=" + summarizePairingCode(pairingCode)
                     + ", loopbackToken=" + summarizeLoopbackToken(loopbackIngressToken));
             return true;
@@ -308,6 +319,30 @@ public final class ClipboardSyncService extends Service {
             handlePortalStartFailure();
             return false;
         }
+    }
+
+    private Map<String, String> extractSystemColors() {
+        if (Build.VERSION.SDK_INT < 31) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> colors = new HashMap<>();
+        String[] palettes = {"accent1", "accent2", "accent3", "neutral1", "neutral2"};
+        int[] shades = {0, 10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+        for (String palette : palettes) {
+            for (int shade : shades) {
+                String resName = "system_" + palette + "_" + shade;
+                int resId = getResources().getIdentifier(resName, "color", "android");
+                if (resId != 0) {
+                    try {
+                        int color = getResources().getColor(resId, null);
+                        colors.put(resName.replace("_", "-"),
+                                String.format("#%06X", (0xFFFFFF & color)));
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        }
+        return colors;
     }
 
     private void handlePortalStartFailure() {

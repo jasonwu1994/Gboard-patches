@@ -82,6 +82,9 @@ public final class GboardPatchesSettingsContract {
         void showTextInputDialog(String title, String hint, String initialValue,
                 TextValueConsumer consumer);
 
+        void showCodeEditorDialog(String title, String hint, String initialValue,
+                TextValueConsumer consumer);
+
         void showPreviewDialog(PreviewSpec previewSpec);
 
         void showManagedDialog(ManagedDialogAction action);
@@ -132,6 +135,11 @@ public final class GboardPatchesSettingsContract {
     public static void showTextInputDialog(FeatureHost host, String title, String hint,
             String initialValue, TextValueConsumer consumer) {
         submit(host, adapter -> adapter.showTextInputDialog(title, hint, initialValue, consumer));
+    }
+
+    public static void showCodeEditorDialog(FeatureHost host, String title, String hint,
+            String initialValue, TextValueConsumer consumer) {
+        submit(host, adapter -> adapter.showCodeEditorDialog(title, hint, initialValue, consumer));
     }
 
     public static void showPreviewDialog(FeatureHost host, PreviewSpec previewSpec) {

@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.extension.clipboard;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,11 +26,20 @@ final class GboardClipboardSyncSettingsSection {
     private final String sectionGeneral;
     private final String sectionSecurity;
     private final String sectionNetwork;
+    private final String sectionCustomization;
     private final String sectionConnectedClients;
     private final String titleEnable;
     private final String titlePort;
     private final String titlePairing;
     private final String titlePairingCode;
+    private final String titleInjectSystemColors;
+    private final String summaryInjectSystemColors;
+    private final String titleCustomCss;
+    private final String summaryCustomCss;
+    private final String hintCustomCss;
+    private final String hintCustomCssMaterialYou;
+    private final String titleCustomCssPath;
+    private final String summaryCustomCssPath;
     private final String titleUrls;
     private final String titleClients;
     private final String errorPairingCode;
@@ -74,11 +84,20 @@ final class GboardClipboardSyncSettingsSection {
         sectionGeneral = textLookup.sectionGeneral();
         sectionSecurity = textLookup.sectionSecurity();
         sectionNetwork = textLookup.sectionNetwork();
+        sectionCustomization = textLookup.sectionCustomization();
         sectionConnectedClients = textLookup.sectionConnectedClients();
         titleEnable = textLookup.titleEnable();
         titlePort = textLookup.titlePort();
         titlePairing = textLookup.titlePairing();
         titlePairingCode = textLookup.titlePairingCode();
+        titleInjectSystemColors = textLookup.titleInjectSystemColors();
+        summaryInjectSystemColors = textLookup.summaryInjectSystemColors();
+        titleCustomCss = textLookup.titleCustomCss();
+        summaryCustomCss = textLookup.summaryCustomCss();
+        hintCustomCss = textLookup.hintCustomCss();
+        hintCustomCssMaterialYou = textLookup.hintCustomCssMaterialYou();
+        titleCustomCssPath = textLookup.titleCustomCssPath();
+        summaryCustomCssPath = textLookup.summaryCustomCssPath();
         titleUrls = textLookup.titleUrls();
         titleClients = textLookup.titleClients();
         errorPairingCode = textLookup.errorPairingCode();
@@ -111,6 +130,7 @@ final class GboardClipboardSyncSettingsSection {
         int port = WebClipboardPreferences.getPort(preferences);
         boolean enabled = WebClipboardPreferences.isEnabled(preferences);
         boolean pairingRequired = WebClipboardPreferences.isPairingRequired(preferences);
+        boolean injectSystemColors = WebClipboardPreferences.isInjectSystemColors(preferences);
         String pairingCode = WebClipboardPreferences.getPairingCode(preferences);
         List<ClipboardSyncWebPortal.ConnectedClientSnapshot> clients =
                 ClipboardSyncService.getConnectedClientSnapshots();
@@ -178,6 +198,43 @@ final class GboardClipboardSyncSettingsSection {
                 enabled,
                 true));
 
+        List<GboardPatchesSettingsContract.Row> customizationRows =
+                new ArrayList<GboardPatchesSettingsContract.Row>();
+        customizationRows.add(new GboardPatchesSettingsContract.ToggleRow(
+                titleInjectSystemColors,
+                summaryInjectSystemColors,
+                enabled,
+                injectSystemColors,
+                value -> {
+                    WebClipboardPreferences.setInjectSystemColors(preferences, value);
+                    WebClipboardTileController.requestTileRefresh(context);
+                    GboardPatchesSettingsContract.refresh(host);
+                }));
+
+        String currentCss = WebClipboardPreferences.readCustomCss(context);
+        customizationRows.add(new GboardPatchesSettingsContract.SelectorRow(
+                titleCustomCss,
+                summaryCustomCss,
+                currentCss.isEmpty() ? "None" : "Customized",
+                enabled,
+                () -> GboardPatchesSettingsContract.showCodeEditorDialog(host,
+                        titleCustomCss,
+                        injectSystemColors ? hintCustomCssMaterialYou : hintCustomCss,
+                        currentCss,
+                        value -> {
+                            WebClipboardPreferences.writeCustomCss(context, value);
+                            GboardPatchesSettingsContract.refresh(host);
+                        })));
+
+        File externalCssDir = context.getExternalFilesDir("web-clipboard");
+        String customCssPath = externalCssDir != null
+                ? externalCssDir.getAbsolutePath()
+                : "unavailable";
+        customizationRows.add(new GboardPatchesSettingsContract.InfoRow(
+                titleCustomCssPath,
+                textLookup.formatCustomCssPath(customCssPath),
+                enabled));
+
         List<GboardPatchesSettingsContract.Row> clientsRows =
                 new ArrayList<GboardPatchesSettingsContract.Row>();
         clientsRows.add(new GboardPatchesSettingsContract.NavigationRow(
@@ -197,6 +254,9 @@ final class GboardClipboardSyncSettingsSection {
                         new GboardPatchesSettingsContract.Section(sectionGeneral, generalRows),
                         new GboardPatchesSettingsContract.Section(sectionSecurity, securityRows),
                         new GboardPatchesSettingsContract.Section(sectionNetwork, networkRows),
+                        new GboardPatchesSettingsContract.Section(
+                                sectionCustomization,
+                                customizationRows),
                         new GboardPatchesSettingsContract.Section(
                                 sectionConnectedClients,
                                 clientsRows)),
@@ -299,11 +359,21 @@ final class GboardClipboardSyncSettingsSection {
         String sectionGeneral();
         String sectionSecurity();
         String sectionNetwork();
+        String sectionCustomization();
         String sectionConnectedClients();
         String titleEnable();
         String titlePort();
         String titlePairing();
         String titlePairingCode();
+        String titleInjectSystemColors();
+        String summaryInjectSystemColors();
+        String titleCustomCss();
+        String summaryCustomCss();
+        String hintCustomCss();
+        String hintCustomCssMaterialYou();
+        String titleCustomCssPath();
+        String summaryCustomCssPath();
+        String formatCustomCssPath(String path);
         String titleUrls();
         String titleClients();
         String errorPairingCode();
@@ -378,6 +448,13 @@ final class GboardClipboardSyncSettingsSection {
         }
 
         @Override
+        public String sectionCustomization() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_section_customization",
+                    "Customization");
+        }
+
+        @Override
         public String sectionConnectedClients() {
             return GboardSettingsText.get(
                     context,
@@ -410,6 +487,75 @@ final class GboardClipboardSyncSettingsSection {
             return GboardSettingsText.get(
                     context,
                     R.string.gboard_patches_web_clipboard_pairing_code_title);
+        }
+
+        @Override
+        public String titleInjectSystemColors() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_inject_system_colors_title",
+                    "Inject system colors");
+        }
+
+        @Override
+        public String summaryInjectSystemColors() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_inject_system_colors_summary",
+                    "Expose device Material You palette as CSS variables (e.g., --system-accent1-500).");
+        }
+
+        @Override
+        public String titleCustomCss() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_title",
+                    "Custom CSS");
+        }
+
+        @Override
+        public String summaryCustomCss() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_summary",
+                    "Inject custom styles into the web portal. Leave blank to disable.");
+        }
+
+        @Override
+        public String hintCustomCss() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_hint",
+                    "body { background: #000; }");
+        }
+
+        @Override
+        public String hintCustomCssMaterialYou() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_hint_material_you",
+                    "body { background: var(--system-neutral1-900); color: var(--system-accent1-100); }");
+        }
+
+        @Override
+        public String titleCustomCssPath() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_path_title",
+                    "File location");
+        }
+
+        @Override
+        public String summaryCustomCssPath() {
+            return getOptionalString(
+                    "gboard_patches_web_clipboard_custom_css_path_summary",
+                    "Internal: %1$s\n\nExternal (manual edit): /sdcard/Android/data/dev.jason.gboardpatches.extension/files/web-clipboard/custom.css");
+        }
+
+        @Override
+        public String formatCustomCssPath(String path) {
+            int resId = context.getResources().getIdentifier(
+                    "gboard_patches_web_clipboard_custom_css_path_summary",
+                    "string",
+                    context.getPackageName());
+            if (resId == 0) {
+                return "Internal: " + path + "\n\nExternal (manual edit): /sdcard/Android/data/" +
+                        context.getPackageName() + "/files/web-clipboard/custom.css";
+            }
+            return GboardSettingsText.format(context, resId, path);
         }
 
         @Override
@@ -574,6 +720,15 @@ final class GboardClipboardSyncSettingsSection {
                     context,
                     R.string.gboard_patches_web_clipboard_client_agent_fallback);
         }
+
+        private String getOptionalString(String name, String fallback) {
+            int resId = context.getResources().getIdentifier(name, "string",
+                    context.getPackageName());
+            if (resId != 0) {
+                return GboardSettingsText.get(context, resId);
+            }
+            return fallback;
+        }
     }
 
     private static final class TestTextLookup implements TextLookup {
@@ -612,6 +767,11 @@ final class GboardClipboardSyncSettingsSection {
         }
 
         @Override
+        public String sectionCustomization() {
+            return "Customization";
+        }
+
+        @Override
         public String sectionConnectedClients() {
             return "Connected clients";
         }
@@ -634,6 +794,53 @@ final class GboardClipboardSyncSettingsSection {
         @Override
         public String titlePairingCode() {
             return "Pairing code";
+        }
+
+        @Override
+        public String titleInjectSystemColors() {
+            return "Inject system colors";
+        }
+
+        @Override
+        public String summaryInjectSystemColors() {
+            return "Expose device Material You palette as CSS variables (e.g., --system-accent1-500).";
+        }
+
+        @Override
+        public String titleCustomCss() {
+            return "Custom CSS";
+        }
+
+        @Override
+        public String summaryCustomCss() {
+            return "Inject custom styles into the web portal. Leave blank to disable.";
+        }
+
+        @Override
+        public String hintCustomCss() {
+            return "body { background: #000; }";
+        }
+
+        @Override
+        public String hintCustomCssMaterialYou() {
+            return "body { background: var(--system-neutral1-900); color: var(--system-accent1-100); }";
+        }
+
+        @Override
+        public String titleCustomCssPath() {
+            return "File location";
+        }
+
+        @Override
+        public String summaryCustomCssPath() {
+            return "Internal: %1$s\n\nExternal (manual edit): /sdcard/Android/data/dev.jason.gboardpatches.extension/files/web-clipboard/custom.css";
+        }
+
+        @Override
+        public String formatCustomCssPath(String path) {
+            return String.format(Locale.US,
+                    "Internal: %1$s\n\nExternal (manual edit): /sdcard/Android/data/dev.jason.gboardpatches.extension/files/web-clipboard/custom.css",
+                    path);
         }
 
         @Override
