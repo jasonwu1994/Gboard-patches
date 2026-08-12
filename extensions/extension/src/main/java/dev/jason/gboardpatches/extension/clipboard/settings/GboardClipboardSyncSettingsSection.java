@@ -27,6 +27,8 @@ final class GboardClipboardSyncSettingsSection {
     private final String sectionNetwork;
     private final String sectionConnectedClients;
     private final String titleEnable;
+    private final String titleToast;
+    private final String toastSummary;
     private final String titlePort;
     private final String titlePairing;
     private final String titlePairingCode;
@@ -76,6 +78,8 @@ final class GboardClipboardSyncSettingsSection {
         sectionNetwork = textLookup.sectionNetwork();
         sectionConnectedClients = textLookup.sectionConnectedClients();
         titleEnable = textLookup.titleEnable();
+        titleToast = textLookup.titleToast();
+        toastSummary = textLookup.toastSummary();
         titlePort = textLookup.titlePort();
         titlePairing = textLookup.titlePairing();
         titlePairingCode = textLookup.titlePairingCode();
@@ -110,6 +114,7 @@ final class GboardClipboardSyncSettingsSection {
         WebClipboardPreferences.ensureDefaults(preferences);
         int port = WebClipboardPreferences.getPort(preferences);
         boolean enabled = WebClipboardPreferences.isEnabled(preferences);
+        boolean toastEnabled = WebClipboardPreferences.isToastEnabled(preferences);
         boolean pairingRequired = WebClipboardPreferences.isPairingRequired(preferences);
         String pairingCode = WebClipboardPreferences.getPairingCode(preferences);
         List<ClipboardSyncWebPortal.ConnectedClientSnapshot> clients =
@@ -123,6 +128,12 @@ final class GboardClipboardSyncSettingsSection {
                 true,
                 enabled,
                 value -> WebClipboardTileController.applyEnabled(context, value)));
+        generalRows.add(new GboardPatchesSettingsContract.ToggleRow(
+                titleToast,
+                toastSummary,
+                enabled,
+                toastEnabled,
+                value -> WebClipboardTileController.applyToastEnabled(context, value)));
 
         List<GboardPatchesSettingsContract.Row> securityRows =
                 new ArrayList<GboardPatchesSettingsContract.Row>();
@@ -301,6 +312,8 @@ final class GboardClipboardSyncSettingsSection {
         String sectionNetwork();
         String sectionConnectedClients();
         String titleEnable();
+        String titleToast();
+        String toastSummary();
         String titlePort();
         String titlePairing();
         String titlePairingCode();
@@ -389,6 +402,20 @@ final class GboardClipboardSyncSettingsSection {
             return GboardSettingsText.get(
                     context,
                     R.string.gboard_patches_web_clipboard_enable_title);
+        }
+
+        @Override
+        public String titleToast() {
+            return GboardSettingsText.get(
+                    context,
+                    R.string.gboard_patches_web_clipboard_toast_title);
+        }
+
+        @Override
+        public String toastSummary() {
+            return GboardSettingsText.get(
+                    context,
+                    R.string.gboard_patches_web_clipboard_toast_summary);
         }
 
         @Override
@@ -619,6 +646,16 @@ final class GboardClipboardSyncSettingsSection {
         @Override
         public String titleEnable() {
             return "Enable Web Clipboard";
+        }
+
+        @Override
+        public String titleToast() {
+            return "Show toast notification";
+        }
+
+        @Override
+        public String toastSummary() {
+            return "Show a brief notification when the clipboard is updated from a web client.";
         }
 
         @Override
