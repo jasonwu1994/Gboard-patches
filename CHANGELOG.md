@@ -1,3 +1,43 @@
+## [2.8.0](https://github.com/jasonwu1994/Gboard-patches/compare/v2.7.0...v2.8.0) (2026-08-12)
+
+### ✨ New Features
+
+* **Gboard:** add the `Incognito Mode Toggle` patch, which adds an Incognito toggle to the Access Point toolbar and lets you configure clipboard and voice typing availability while Incognito mode is active.
+* **Gboard:** refactor the `Patches` settings page with clearer feature categories and improved navigation and scroll-position handling.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** disable the custom top row by default to reduce confusion after users repeatedly mistook the feature for a bug and reported it on Reddit.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Incognito Mode Toggle` Patch，在 Access Point 工具列加入無痕模式切換按鈕，並可設定無痕模式啟用時是否允許使用剪貼簿與語音輸入。
+* **Gboard:** 重構 `Patches` 設定頁，重新整理功能分類，並改善頁面導覽與捲動位置保留體驗。
+
+### 🐛 修復
+
+* **Gboard:** 因多位使用者誤將自訂頂部列視為 Bug 並在 Reddit 回報，現將此功能改為預設停用，以減少使用上的困惑。
+
+## [2.8.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v2.7.0...v2.8.0-dev.2) (2026-08-11)
+
+### ✨ New Features
+
+* **Gboard:** add the `Incognito Mode Toggle` patch, which adds an Incognito toggle to the Access Point toolbar and lets you configure clipboard and voice typing availability while Incognito mode is active.
+* **Gboard:** refactor the `Patches` settings page with clearer feature categories and improved navigation and scroll-position handling.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** disable the custom top row by default to reduce confusion after users repeatedly mistook the feature for a bug and reported it on Reddit.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 `Incognito Mode Toggle` Patch，在 Access Point 工具列加入無痕模式切換按鈕，並可設定無痕模式啟用時是否允許使用剪貼簿與語音輸入。
+* **Gboard:** 重構 `Patches` 設定頁，重新整理功能分類，並改善頁面導覽與捲動位置保留體驗。
+
+### 🐛 修復
+
+* **Gboard:** 因多位使用者誤將自訂頂部列視為 Bug 並在 Reddit 回報，現將此功能改為預設停用，以減少使用上的困惑。
+
 ## [2.7.0](https://github.com/jasonwu1994/Gboard-patches/compare/v2.6.0...v2.7.0) (2026-08-08)
 
 ### ✨ New Features

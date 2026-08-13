@@ -17,7 +17,7 @@ public final class GboardAdvancedVoiceSettingsSourceTest {
                         + "advancedvoice/GboardAdvancedVoiceSettingsFeature.java");
         String keyboardGroup = read(root,
                 "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/"
-                        + "keyboard/GboardKeyboardSettingsGroupFeature.java");
+                        + "keyboard/GboardAiVoiceSettingsGroupFeature.java");
         String availability = read(root,
                 "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/"
                         + "settings/GboardPatchesFeatureAvailability.java");

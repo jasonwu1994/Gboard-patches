@@ -36,7 +36,7 @@ public final class GboardTopRowSwipeSettings {
                 return thread;
             });
     public static final int SLOT_COUNT = 10;
-    public static final boolean DEFAULT_ENABLED = true;
+    public static final boolean DEFAULT_ENABLED = false;
     public static final boolean DEFAULT_ZHUYIN_ENABLED = true;
     public static final boolean DEFAULT_ENGLISH_QWERTY_ENABLED = true;
     public static final int DEFAULT_TIMEOUT_MS = 1000;

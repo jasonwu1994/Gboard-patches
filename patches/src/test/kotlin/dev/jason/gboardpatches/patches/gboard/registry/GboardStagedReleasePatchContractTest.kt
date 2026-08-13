@@ -20,7 +20,7 @@ class GboardStagedReleasePatchContractTest {
         val names = inventory.getAsJsonArray("patches")
             .map { it.asJsonObject.get("name").asString }
 
-        assertEquals(24, names.size)
+        assertEquals(25, names.size)
         PUBLISHED_PATCHES.forEach { published ->
             assertTrue(registry.contains("val ${published.declaration} = resourcePatch("))
             assertTrue(activeRegistry.contains("val ${published.declaration} = resourcePatch("))

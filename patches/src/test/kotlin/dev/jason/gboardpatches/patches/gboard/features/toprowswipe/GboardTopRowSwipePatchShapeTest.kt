@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.patches.gboard.features.toprowswipe
 
 import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardVersionBindings
+import dev.jason.gboardpatches.patches.gboard.registry.gboardCustomTopRowSwipePatch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -9,6 +10,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class GboardTopRowSwipePatchShapeTest {
+    @Test
+    fun `public patch remains applied by default`() {
+        assertTrue(gboardCustomTopRowSwipePatch.default)
+    }
+
     @Test
     fun `softkey delegates point at the expected runtime methods`() {
         assertTrue(TOP_ROW_SWIPE_PATCH_INCOMING_METADATA_DELEGATE.contains("patchIncomingSoftKeyMetadata"))

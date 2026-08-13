@@ -135,6 +135,41 @@ public final class GboardPatchesSettingsActivitySourceTest {
         Assert.assertTrue(method.contains("showFatalFallbackScreen(\"Failed to apply settings screen\""));
     }
 
+    @Test
+    public void featureNavigationRestoresParentScrollPositions() throws Exception {
+        String source = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String openFeature = extractMethod(source, "public void openFeature(");
+        String navigateBack = extractMethod(source, "private boolean navigateBack(");
+        String applyScreen = extractMethod(source, "private void applyScreen(");
+
+        Assert.assertTrue(openFeature.contains(
+                "scrollState.enterFeature(state.getCurrent() == null, currentScrollY())"));
+        Assert.assertTrue(navigateBack.contains(
+                "scrollState.leaveFeature(returningToRoot)"));
+        Assert.assertTrue(applyScreen.contains(
+                "consumeRequestedScrollPositionOnNextScreenApply()"));
+        Assert.assertTrue(applyScreen.contains(
+                "scrollContentToPositionAfterLayout(requestedScrollY)"));
+    }
+
+    @Test
+    public void directFeaturePathsResetSyntheticParentScrollPositions() throws Exception {
+        String source = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String openFeaturePath = extractMethod(source, "private void openFeaturePath(");
+        String openInitialFeature = extractMethod(
+                source,
+                "private boolean openInitialFeatureFromIntentIfNeeded(");
+
+        Assert.assertTrue(openFeaturePath.contains(
+                "scrollState.resetForDirectPath(sanitizedPath.size() - 1)"));
+        Assert.assertTrue(openInitialFeature.contains(
+                "scrollState.resetForDirectPath(featurePath.size() - 1)"));
+    }
+
     private static String readSource(String path) throws Exception {
         return new String(Files.readAllBytes(Path.of(path)), StandardCharsets.UTF_8);
     }

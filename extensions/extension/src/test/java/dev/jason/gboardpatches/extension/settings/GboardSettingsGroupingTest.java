@@ -78,49 +78,42 @@ public final class GboardSettingsGroupingTest {
     }
 
     @Test
-    public void registryKeepsKeyboardChildrenInsideKeyboardGroup() throws Exception {
+    public void registryUsesFocusedKeyboardGroupsInRequestedOrder() throws Exception {
         String registrySource = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
                         + "GboardPatchesSettingsFeatureRegistry.java");
-        String keyboardGroupSource = readSource(
+        String aiVoiceGroupSource = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/keyboard/"
-                        + "GboardKeyboardSettingsGroupFeature.java");
-
-        Assert.assertTrue(registrySource.contains("new GboardKeyboardSettingsGroupFeature("));
-        Assert.assertFalse(registrySource.contains("new GboardSymbolFooterOrderSettingsFeature("));
-        Assert.assertFalse(registrySource.contains("new GboardAiWritingToolsSettingsFeature("));
-        Assert.assertFalse(registrySource.contains("new GboardEnglishUppercaseToggleSettingsFeature("));
-        Assert.assertFalse(registrySource.contains("new GboardZhuyinBottomRowWeightSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains(
-                "new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains(
-                "new GboardEnglishUppercaseToggleSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains("new GboardAiWritingToolsSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains("new GboardSymbolFooterOrderSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains(
-                "new GboardZhuyinBottomRowWeightSettingsFeature("));
-        Assert.assertTrue(keyboardGroupSource.contains(
-                "new GboardBluetoothMicrophoneSettingsFeature("));
-    }
-
-    @Test
-    public void keyboardGroupKeepsRequestedRowOrder() throws Exception {
-        String source = readSource(
+                        + "GboardAiVoiceSettingsGroupFeature.java");
+        String toolsGroupSource = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/keyboard/"
-                        + "GboardKeyboardSettingsGroupFeature.java");
-        String featureList = source.substring(source.indexOf("Arrays.asList("));
+                        + "GboardKeyboardToolsSettingsGroupFeature.java");
+        String layoutGroupSource = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/keyboard/"
+                        + "GboardKeyboardLayoutSettingsGroupFeature.java");
 
-        assertInOrder(featureList,
+        assertInOrder(registrySource,
+                "new GboardAiVoiceSettingsGroupFeature(context)",
+                "new GboardKeyboardToolsSettingsGroupFeature(context)",
+                "new GboardKeyboardLayoutSettingsGroupFeature(context)",
+                "new GboardClipboardSettingsFeature()",
+                "new GboardSettingsHomepageSettingsFeature()",
+                "new GboardDeveloperOptionsSettingsFeature(context)");
+        assertInOrder(aiVoiceGroupSource.substring(aiVoiceGroupSource.indexOf("Arrays.asList(")),
                 "new GboardAiWritingToolsSettingsFeature(context)",
                 "new GboardAdvancedVoiceSettingsFeature(context)",
+                "new GboardBluetoothMicrophoneSettingsFeature(context)");
+        assertInOrder(toolsGroupSource.substring(toolsGroupSource.indexOf("Arrays.asList(")),
                 "new GboardTopRowSwipeSettingsFeature(context)",
+                "new GboardManualIncognitoSettingsFeature(context)",
                 "new GboardLongPressQuickActionsSettingsFeature(context)",
+                "new GboardOcrSettingsFeature(context)");
+        assertInOrder(layoutGroupSource.substring(layoutGroupSource.indexOf("Arrays.asList(")),
                 "new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature(context)",
                 "new GboardEnglishUppercaseToggleSettingsFeature(context)",
                 "new GboardZhuyinBottomRowWeightSettingsFeature(context)",
-                "new GboardSymbolFooterOrderSettingsFeature(context)",
-                "new GboardBluetoothMicrophoneSettingsFeature(context)");
-        Assert.assertFalse(featureList.contains("GboardOcrEngineSettingsFeature"));
+                "new GboardSymbolFooterOrderSettingsFeature(context)");
+        Assert.assertFalse(registrySource.contains("GboardKeyboardSettingsGroupFeature"));
     }
 
     @Test
@@ -195,9 +188,9 @@ public final class GboardSettingsGroupingTest {
 
         List<?> rootSections = reflectList(rootScreen, "getSections");
         Assert.assertEquals(3, rootSections.size());
-        Assert.assertEquals("Preferences", reflectString(rootSections.get(0), "getTitle"));
-        Assert.assertEquals("Features", reflectString(rootSections.get(1), "getTitle"));
-        Assert.assertEquals("About", reflectString(rootSections.get(2), "getTitle"));
+        Assert.assertEquals("Features", reflectString(rootSections.get(0), "getTitle"));
+        Assert.assertEquals("About", reflectString(rootSections.get(1), "getTitle"));
+        Assert.assertEquals("Preferences", reflectString(rootSections.get(2), "getTitle"));
 
         Object keyboardRow = findItem(rootScreen, "Keyboard");
         Assert.assertEquals("NavigationRow", keyboardRow.getClass().getSimpleName());

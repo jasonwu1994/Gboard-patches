@@ -49,6 +49,10 @@ import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gbo
 import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gboardLongPressQuickActionsInputEventPatch
 import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gboardLongPressQuickActionsPointerOwnerPatch
 import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gboardLongPressQuickActionsSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoAccessPointPatch
+import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoLifecyclePatch
+import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoPolicyPatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrRuntimePatch
@@ -128,6 +132,24 @@ val gboardLongPressQuickActionsPatch = resourcePatch(
         gboardLongPressQuickActionsSoftKeyPatch,
         gboardLongPressQuickActionsInputEventPatch,
         gboardLongPressQuickActionsPointerOwnerPatch,
+    )
+}
+
+@Suppress("unused")
+val gboardManualIncognitoModePatch = resourcePatch(
+    name = "Incognito Mode Toggle",
+    description = "在 Access Point 工具列新增無痕模式切換按鈕，並可設定無痕模式下是否啟用剪貼簿與語音輸入\n" +
+        "Add an Incognito toggle to the Access Point toolbar and configure clipboard and voice typing availability while Incognito mode is active.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardManualIncognitoFeatureMarkerPatch,
+        gboardManualIncognitoLifecyclePatch,
+        gboardManualIncognitoPolicyPatch,
+        gboardManualIncognitoAccessPointPatch,
     )
 }
 
@@ -476,6 +498,7 @@ object GboardPublishedPatchCatalog {
         gboardZhuyinSlideInputPatch,
         gboardEnglishQwertySlideUppercaseTogglePatch,
         gboardLongPressQuickActionsPatch,
+        gboardManualIncognitoModePatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
