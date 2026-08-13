@@ -40,6 +40,15 @@ public final class GboardTopRowSwipeSettingsFeatureTest {
 
             GboardPatchesSettingsContract.Screen screen = feature.buildScreen(host);
 
+            GboardPatchesSettingsContract.ToggleRow enabledRow =
+                    (GboardPatchesSettingsContract.ToggleRow)
+                            screen.getSections().get(0).getItems().get(0);
+            GboardPatchesSettingsContract.ToggleRow zhuyinRow =
+                    (GboardPatchesSettingsContract.ToggleRow)
+                            screen.getSections().get(1).getItems().get(0);
+            Assert.assertFalse(enabledRow.isChecked());
+            Assert.assertFalse(zhuyinRow.isEnabled());
+            Assert.assertTrue(zhuyinRow.isChecked());
             Assert.assertEquals(
                     Arrays.asList("行為", "支援的版面", "JavaScript", "Slot", "匯入匯出", "進階",
                             "JavaScript 說明"),

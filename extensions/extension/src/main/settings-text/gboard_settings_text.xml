@@ -132,13 +132,29 @@
         <translation locale="en">System default (%1$s)</translation>
         <translation locale="zh-Hant">跟隨系統（%1$s）</translation>
     </string>
-    <string name="gboard_patches_group_keyboard_title">
-        <translation locale="en">Keyboard</translation>
-        <translation locale="zh-Hant">鍵盤</translation>
+    <string name="gboard_patches_group_keyboard_tools_title">
+        <translation locale="en">Keyboard Tools &amp; Shortcuts</translation>
+        <translation locale="zh-Hant">鍵盤工具與快捷操作</translation>
     </string>
-    <string name="gboard_patches_group_keyboard_summary">
-        <translation locale="en">Keyboard-related patch settings.</translation>
-        <translation locale="zh-Hant">鍵盤相關的 patch 設定。</translation>
+    <string name="gboard_patches_group_keyboard_tools_summary">
+        <translation locale="en">Customize the top row, incognito mode, long-press shortcuts, and OCR.</translation>
+        <translation locale="zh-Hant">自訂第一排按鍵、無痕模式、長按快捷操作與 OCR。</translation>
+    </string>
+    <string name="gboard_patches_group_ai_voice_title">
+        <translation locale="en">AI &amp; Voice</translation>
+        <translation locale="zh-Hant">AI 與語音</translation>
+    </string>
+    <string name="gboard_patches_group_ai_voice_summary">
+        <translation locale="en">AI writing tools, advanced voice typing, and Bluetooth microphone.</translation>
+        <translation locale="zh-Hant">AI 撰寫工具、進階語音輸入與藍牙麥克風。</translation>
+    </string>
+    <string name="gboard_patches_group_keyboard_layout_title">
+        <translation locale="en">Keys, Layout &amp; Symbols</translation>
+        <translation locale="zh-Hant">按鍵、版面與符號</translation>
+    </string>
+    <string name="gboard_patches_group_keyboard_layout_summary">
+        <translation locale="en">Globe key behavior, English uppercase, Zhuyin bottom row, and emoji, sticker, and GIF tab order.</translation>
+        <translation locale="zh-Hant">地球鍵、英文大小寫、注音底排與表情符號、貼圖及 GIF 分頁排序。</translation>
     </string>
     <string name="gboard_patches_group_keyboard_header_summary">
         <translation locale="en"></translation>
@@ -1521,6 +1537,50 @@
     <string name="gboard_patches_symbol_tab_sticker">
         <translation locale="en">Sticker</translation>
         <translation locale="zh-Hant">貼圖</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_title">
+        <translation locale="en">Incognito mode</translation>
+        <translation locale="zh-Hant">無痕模式</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_summary">
+        <translation locale="en">Add a manual Incognito toolbar button and configure clipboard and voice typing behavior.</translation>
+        <translation locale="zh-Hant">新增手動無痕模式按鈕，並設定無痕模式下的剪貼簿與語音輸入行為。</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_section_behavior">
+        <translation locale="en">Behavior</translation>
+        <translation locale="zh-Hant">行為</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_enabled_title">
+        <translation locale="en">Add Incognito button</translation>
+        <translation locale="zh-Hant">新增無痕模式按鈕</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_enabled_summary">
+        <translation locale="en">Adds an Incognito button to the Access Point toolbar. Force-stop and restart Gboard for the change to take effect.</translation>
+        <translation locale="zh-Hant">啟用後會在 Access Point 工具列中新增 Incognito 按鈕。強制關閉並重新啟動 Gboard 後生效。</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_clipboard_title">
+        <translation locale="en">Enable clipboard in incognito</translation>
+        <translation locale="zh-Hant">無痕模式時啟用剪貼簿</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_clipboard_summary">
+        <translation locale="en">Allow Gboard to process new system clipboard changes while incognito is active. Applies when the keyboard is reopened.</translation>
+        <translation locale="zh-Hant">允許 Gboard 在無痕模式中處理新的系統剪貼簿內容。重新開啟鍵盤後套用。</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_voice_title">
+        <translation locale="en">Enable voice typing in incognito</translation>
+        <translation locale="zh-Hant">無痕模式時啟用語音輸入</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_voice_summary">
+        <translation locale="en">Allow voice typing while incognito is active. Google services or the network may still be used. Applies when the keyboard is reopened.</translation>
+        <translation locale="zh-Hant">允許在無痕模式中使用語音輸入。Google 服務或網路仍可能被使用。重新開啟鍵盤後套用。</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_error_title">
+        <translation locale="en">Incognito settings unavailable</translation>
+        <translation locale="zh-Hant">無痕模式設定無法使用</translation>
+    </string>
+    <string name="gboard_patches_manual_incognito_error_summary">
+        <translation locale="en">The incognito settings screen failed to load. Reopen Gboard settings and try again.</translation>
+        <translation locale="zh-Hant">無痕模式設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
     </string>
     <string name="gboard_patches_long_press_quick_actions_title">
         <translation locale="en">Long-Press Editing Shortcuts</translation>

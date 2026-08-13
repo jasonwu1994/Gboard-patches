@@ -30,10 +30,7 @@ class GboardOcrPatchContractTest {
             keyboardGroup.indexOf("new GboardLongPressQuickActionsSettingsFeature(context)") <
                 keyboardGroup.indexOf("new GboardOcrSettingsFeature(context)"),
         )
-        assertTrue(
-            keyboardGroup.indexOf("new GboardOcrSettingsFeature(context)") <
-                keyboardGroup.indexOf("new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature(context)"),
-        )
+        assertTrue(!keyboardGroup.contains("GboardLatinGlobeKeyIgnoreIntervalSettingsFeature"))
         assertTrue(availability.contains("FEATURE_OCR_SCAN_TEXT"))
         assertTrue(availability.contains("dev.jason.gboardpatches.feature.ocr_scan_text"))
         assertTrue(settingsText.contains("<translation locale=\"zh-Hant\">OCR / 掃描文字</translation>"))
@@ -78,7 +75,7 @@ class GboardOcrPatchContractTest {
                 "GboardPatchRegistry.kt"
         const val KEYBOARD_GROUP =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/keyboard/" +
-                "GboardKeyboardSettingsGroupFeature.java"
+                "GboardKeyboardToolsSettingsGroupFeature.java"
         const val AVAILABILITY =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
                 "GboardPatchesFeatureAvailability.java"

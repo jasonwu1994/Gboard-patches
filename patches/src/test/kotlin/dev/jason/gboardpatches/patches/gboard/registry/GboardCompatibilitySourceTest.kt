@@ -30,7 +30,7 @@ class GboardCompatibilitySourceTest {
         val publicPatchBlocks = activeRegistry.split("@Suppress(\"unused\")")
             .filter { block -> block.contains("resourcePatch(") }
 
-        assertEquals(24, publicPatchBlocks.size)
+        assertEquals(25, publicPatchBlocks.size)
         publicPatchBlocks.forEach { block ->
             assertEquals(
                 1,

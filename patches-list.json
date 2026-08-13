@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -136,6 +136,18 @@
     {
       "name": "Grammar Checker",
       "description": "啟用 修正和建議 > 文法檢查\nEnable Text correction > Grammar check.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "17.7.7.932364120-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Incognito Mode Toggle",
+      "description": "在 Access Point 工具列新增無痕模式切換按鈕，並可設定無痕模式下是否啟用剪貼簿與語音輸入\nAdd an Incognito toggle to the Access Point toolbar and configure clipboard and voice typing availability while Incognito mode is active.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

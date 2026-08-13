@@ -106,6 +106,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final int REQUEST_CREATE_TEXT_DOCUMENT = 0x4742;
     private static final int REQUEST_OPEN_TEXT_DOCUMENT = 0x4743;
     private static final int TOOLBAR_HEIGHT_DP = 56;
+    private static final int NO_SCROLL_POSITION_REQUESTED = -1;
     private static final String TOOLBAR_TITLE_PATCHES = "Patches";
     private static final String ABOUT_AUTHOR_URL = "https://github.com/jasonwu1994";
     private static final String ABOUT_PATCH_REPOSITORY_URL =
@@ -129,6 +130,8 @@ public final class GboardPatchesSettingsActivity extends Activity
             settingsOrchestrator =
             new GboardPatchesSettingsOrchestrator<GboardPatchesSettingsContract.Feature,
                     GboardPatchesSettingsContract.Intent>();
+    private final GboardPatchesSettingsScrollState scrollState =
+            new GboardPatchesSettingsScrollState();
     private boolean featuresInitialized;
     private Object backInvokedCallback;
     private final Handler screenRefreshHandler = new Handler(Looper.getMainLooper());
@@ -147,7 +150,7 @@ public final class GboardPatchesSettingsActivity extends Activity
                 return thread;
             });
     private final Object screenBuildLock = new Object();
-    private boolean scrollToTopOnNextScreenApply = true;
+    private int requestedScrollYOnNextScreenApply = 0;
     private boolean initialFeatureFromIntentHandled;
     private PendingTextDocumentWrite pendingTextDocumentWrite;
     private GboardPatchesSettingsContract.StringValueConsumer pendingTextDocumentReader;
@@ -225,8 +228,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     @Override
     @SuppressLint("GestureBackNavigation")
     public void onBackPressed() {
-        if (!applyOrchestration(settingsOrchestrator.accept(
-                GboardPatchesSettingsOrchestrator.Event.back()))) {
+        if (!navigateBack()) {
             return;
         }
         super.onBackPressed();
@@ -276,6 +278,10 @@ public final class GboardPatchesSettingsActivity extends Activity
         if (feature == null) {
             return;
         }
+        GboardPatchesSettingsOrchestrator.State<GboardPatchesSettingsContract.Feature> state =
+                settingsOrchestrator.snapshot();
+        scrollState.enterFeature(state.getCurrent() == null, currentScrollY());
+        requestScrollPositionOnNextScreenApply(0);
         applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.open(feature)));
     }
@@ -1498,7 +1504,18 @@ public final class GboardPatchesSettingsActivity extends Activity
     }
 
     private boolean navigateToRootIfNeeded() {
-        return !applyOrchestration(settingsOrchestrator.accept(
+        return !navigateBack();
+    }
+
+    private boolean navigateBack() {
+        GboardPatchesSettingsOrchestrator.State<GboardPatchesSettingsContract.Feature> state =
+                settingsOrchestrator.snapshot();
+        if (state.getCurrent() != null) {
+            boolean returningToRoot = state.getBackStack().isEmpty();
+            requestScrollPositionOnNextScreenApply(
+                    scrollState.leaveFeature(returningToRoot));
+        }
+        return applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.back()));
     }
 
@@ -1630,7 +1647,9 @@ public final class GboardPatchesSettingsActivity extends Activity
                     refreshOfflineSpeechLanguagesForCurrentFeature();
                     break;
                 case SCROLL_TO_TOP:
-                    requestScrollToTopOnNextScreenApply();
+                    if (requestedScrollYOnNextScreenApply == NO_SCROLL_POSITION_REQUESTED) {
+                        requestScrollPositionOnNextScreenApply(0);
+                    }
                     break;
                 case SCHEDULE_REFRESH:
                     scheduleScreenRefresh(effect.getDelayMs());
@@ -1843,8 +1862,9 @@ public final class GboardPatchesSettingsActivity extends Activity
         for (GboardPatchesSettingsContract.Section section : screen.getSections()) {
             panelContainer.addView(createSectionView(section));
         }
-        if (consumeScrollToTopOnNextScreenApply()) {
-            scrollContentToTopAfterLayout();
+        int requestedScrollY = consumeRequestedScrollPositionOnNextScreenApply();
+        if (requestedScrollY >= 0) {
+            scrollContentToPositionAfterLayout(requestedScrollY);
         }
     }
 
@@ -1880,6 +1900,8 @@ public final class GboardPatchesSettingsActivity extends Activity
         if (sanitizedPath.isEmpty()) {
             return;
         }
+        scrollState.resetForDirectPath(sanitizedPath.size() - 1);
+        requestScrollPositionOnNextScreenApply(0);
         applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.replacePath(sanitizedPath)));
     }
@@ -1904,9 +1926,14 @@ public final class GboardPatchesSettingsActivity extends Activity
         }
         GboardPatchesSettingsContract.Feature webClipboardFeature =
                 clipboardFeature.getWebClipboardFeature();
-        runOnUiThread(() -> applyOrchestration(settingsOrchestrator.accept(
-                GboardPatchesSettingsOrchestrator.Event.replacePath(
-                        Arrays.asList(clipboardFeature, webClipboardFeature)))));
+        runOnUiThread(() -> {
+            List<GboardPatchesSettingsContract.Feature> featurePath =
+                    Arrays.asList(clipboardFeature, webClipboardFeature);
+            scrollState.resetForDirectPath(featurePath.size() - 1);
+            requestScrollPositionOnNextScreenApply(0);
+            applyOrchestration(settingsOrchestrator.accept(
+                    GboardPatchesSettingsOrchestrator.Event.replacePath(featurePath)));
+        });
         return true;
     }
 
@@ -1919,27 +1946,31 @@ public final class GboardPatchesSettingsActivity extends Activity
         return null;
     }
 
-    private void requestScrollToTopOnNextScreenApply() {
-        scrollToTopOnNextScreenApply = true;
+    private int currentScrollY() {
+        return contentScrollView == null ? 0 : contentScrollView.getScrollY();
     }
 
-    private boolean consumeScrollToTopOnNextScreenApply() {
-        boolean shouldScrollToTop = scrollToTopOnNextScreenApply;
-        scrollToTopOnNextScreenApply = false;
-        return shouldScrollToTop;
+    private void requestScrollPositionOnNextScreenApply(int scrollY) {
+        requestedScrollYOnNextScreenApply = Math.max(0, scrollY);
     }
 
-    private void scrollContentToTopAfterLayout() {
+    private int consumeRequestedScrollPositionOnNextScreenApply() {
+        int requestedScrollY = requestedScrollYOnNextScreenApply;
+        requestedScrollYOnNextScreenApply = NO_SCROLL_POSITION_REQUESTED;
+        return requestedScrollY;
+    }
+
+    private void scrollContentToPositionAfterLayout(int scrollY) {
         if (contentScrollView == null) {
             return;
         }
-        contentScrollView.scrollTo(0, 0);
+        int targetScrollY = Math.max(0, scrollY);
+        contentScrollView.scrollTo(0, targetScrollY);
         contentScrollView.post(() -> {
             if (contentScrollView == null) {
                 return;
             }
-            contentScrollView.scrollTo(0, 0);
-            contentScrollView.fullScroll(View.FOCUS_UP);
+            contentScrollView.scrollTo(0, targetScrollY);
         });
     }
 
@@ -2064,16 +2095,16 @@ public final class GboardPatchesSettingsActivity extends Activity
                 Arrays.asList(
                         new GboardPatchesSettingsContract.Section(
                                 GboardSettingsText.get(context,
-                                        R.string.gboard_patches_section_preferences),
-                                preferenceRows),
-                        new GboardPatchesSettingsContract.Section(
-                                GboardSettingsText.get(context,
                                         R.string.gboard_patches_section_features),
                                 featureRows),
                         new GboardPatchesSettingsContract.Section(
                                 GboardSettingsText.get(context,
                                         R.string.gboard_patches_section_about),
-                                aboutRows)));
+                                aboutRows),
+                        new GboardPatchesSettingsContract.Section(
+                                GboardSettingsText.get(context,
+                                        R.string.gboard_patches_section_preferences),
+                                preferenceRows)));
     }
 
     private static void showLanguageDialog(GboardPatchesSettingsContract.FeatureHost host) {

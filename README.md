@@ -63,6 +63,12 @@ Gboard Patches is a public Morphe source for a curated set of Gboard enhancement
 </details>
 
 <details>
+  <summary><code>Incognito Mode Toggle</code></summary>
+
+  Add an Incognito toggle to the Access Point toolbar and configure clipboard and voice typing availability while Incognito mode is active.
+</details>
+
+<details>
   <summary><code>Enable OCR / Scan Text</code></summary>
 
   Enable the OCR / Scan Text feature with Latin, Chinese, Japanese, Korean, and Devanagari recognition backends.

@@ -31,13 +31,24 @@ public final class GboardTopRowSwipeSettingsTest {
     }
 
     @Test
-    public void defaultsEnableBothSupportedLayouts() {
+    public void defaultsDisableFeatureButEnableBothSupportedLayouts() {
         InMemorySharedPreferences preferences = new InMemorySharedPreferences();
 
         GboardTopRowSwipeSettings.ensureDefaults(preferences);
 
+        assertFalse(GboardTopRowSwipeSettings.readEnabled(preferences));
         assertTrue(GboardTopRowSwipeSettings.readZhuyinEnabled(preferences));
         assertTrue(GboardTopRowSwipeSettings.readEnglishQwertyEnabled(preferences));
+    }
+
+    @Test
+    public void ensureDefaultsPreservesExistingFeatureChoice() {
+        InMemorySharedPreferences preferences = new InMemorySharedPreferences();
+        GboardTopRowSwipeSettings.writeEnabled(preferences, true);
+
+        GboardTopRowSwipeSettings.ensureDefaults(preferences);
+
+        assertTrue(GboardTopRowSwipeSettings.readEnabled(preferences));
     }
 
     @Test

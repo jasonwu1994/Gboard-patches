@@ -1,7 +1,7 @@
 {
-    "created_at":  "2026-08-09T03:52:08",
-    "description":  "### ✨ New Features\n\n* **Gboard:** add the `OCR / Scan Text` patch with support for Latin, Chinese, Japanese, Korean, and Devanagari recognition backends.\n* **Gboard:** add OCR model downloads through Google Play services for the official recognition models.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** harden Web Clipboard loopback authentication.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `OCR / Scan Text` Patch，支援拉丁文、中文、日文、韓文與天城文辨識後端。\n* **Gboard:** OCR 功能新增模型下載，透過 Google Play services 下載官方辨識模型。\n\n### 🐛 修復\n\n* **Gboard:** 強化 Web Clipboard 的 loopback 驗證機制。",
-    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v2.7.0/patches-2.7.0.mpp",
+    "created_at":  "2026-08-12T20:54:36",
+    "description":  "### ✨ New Features\n\n* **Gboard:** add the `Incognito Mode Toggle` patch, which adds an Incognito toggle to the Access Point toolbar and lets you configure clipboard and voice typing availability while Incognito mode is active.\n* **Gboard:** refactor the `Patches` settings page with clearer feature categories and improved navigation and scroll-position handling.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** disable the custom top row by default to reduce confusion after users repeatedly mistook the feature for a bug and reported it on Reddit.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Incognito Mode Toggle` Patch，在 Access Point 工具列加入無痕模式切換按鈕，並可設定無痕模式啟用時是否允許使用剪貼簿與語音輸入。\n* **Gboard:** 重構 `Patches` 設定頁，重新整理功能分類，並改善頁面導覽與捲動位置保留體驗。\n\n### 🐛 修復\n\n* **Gboard:** 因多位使用者誤將自訂頂部列視為 Bug 並在 Reddit 回報，現將此功能改為預設停用，以減少使用上的困惑。",
+    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v2.8.0/patches-2.8.0.mpp",
     "signature_download_url":  "",
-    "version":  "2.7.0"
+    "version":  "2.8.0"
 }
