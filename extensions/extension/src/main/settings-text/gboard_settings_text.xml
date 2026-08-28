@@ -1418,6 +1418,42 @@
         <translation locale="en">Recommended: turn on Quick Settings Tile.</translation>
         <translation locale="zh-Hant">建議：開啟快速設定磁貼。</translation>
     </string>
+    <string name="gboard_patches_web_clipboard_section_customization">
+        <translation locale="en">Customization</translation>
+        <translation locale="zh-Hant">自訂</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_title">
+        <translation locale="en">Custom CSS</translation>
+        <translation locale="zh-Hant">自訂 CSS</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_summary">
+        <translation locale="en">Inject custom styles into the web portal. Leave blank to disable.</translation>
+        <translation locale="zh-Hant">在網頁入口插入自訂樣式。留白即可停用。</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_hint">
+        <translation locale="en">body { background: #000; }</translation>
+        <translation locale="zh-Hant">body { background: #000; }</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_hint_material_you">
+        <translation locale="en">body { background: var(--system-neutral1-900); color: var(--system-accent1-100); }</translation>
+        <translation locale="zh-Hant">body { background: var(--system-neutral1-900); color: var(--system-accent1-100); }</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_path_title">
+        <translation locale="en">File location</translation>
+        <translation locale="zh-Hant">檔案路徑</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_custom_css_path_summary">
+        <translation locale="en">Internal: %1$s\n\nExternal (manual edit): /sdcard/Android/data/dev.jason.gboardpatches.extension/files/web-clipboard/custom.css</translation>
+        <translation locale="zh-Hant">內部路徑：%1$s\n\n外部路徑（手動編輯）：/sdcard/Android/data/dev.jason.gboardpatches.extension/files/web-clipboard/custom.css</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_inject_system_colors_title">
+        <translation locale="en">Inject system colors</translation>
+        <translation locale="zh-Hant">插入系統顏色</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_inject_system_colors_summary">
+        <translation locale="en">Expose device Material You palette as CSS variables (e.g., --system-accent1-500).</translation>
+        <translation locale="zh-Hant">將裝置的 Material You 調色盤提供為 CSS 變數（例如 --system-accent1-500）。</translation>
+    </string>
     <string name="gboard_patches_settings_homepage_title">
         <translation locale="en">Settings Style</translation>
         <translation locale="zh-Hant">設定樣式</translation>

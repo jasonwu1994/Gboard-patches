@@ -574,6 +574,69 @@ public final class GboardPatchesSettingsActivity extends Activity
     }
 
     @Override
+    public void showCodeEditorDialog(String title, String hint, String initialValue,
+            GboardPatchesSettingsContract.TextValueConsumer consumer) {
+        EditText input = new EditText(this);
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        input.setHint(hint);
+        input.setText(initialValue == null ? "" : initialValue);
+        input.setSelectAllOnFocus(false);
+        input.setGravity(Gravity.TOP);
+        input.setBackground(null);
+        input.setPadding(0, 0, 0, 0);
+        input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
+        input.setTypeface(Typeface.MONOSPACE);
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(dp(24), dp(16), dp(24), dp(8));
+
+        LinearLayout inputWrapper = new LinearLayout(this);
+        inputWrapper.setPadding(dp(12), dp(12), dp(12), dp(12));
+        inputWrapper.setBackground(buildCardDrawable(palette.surfaceAlt, palette.surfaceStroke, dp(12)));
+        inputWrapper.addView(input, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(480)));
+
+        container.addView(inputWrapper);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(container)
+                .setPositiveButton(text(R.string.gboard_patches_dialog_save), null)
+                .setNegativeButton(
+                        text(R.string.gboard_patches_dialog_cancel),
+                        null)
+                .create();
+        dialog.setOnShowListener(ignored -> {
+            tintDialogButtons(dialog);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                try {
+                    consumer.accept(input.getText() == null ? "" : input.getText().toString());
+                    dialog.dismiss();
+                    renderCurrentScreenSafely();
+                } catch (IllegalArgumentException exception) {
+                    input.setError(exception.getMessage());
+                } catch (Throwable throwable) {
+                    Log.w(TAG, "Failed to persist code setting", throwable);
+                    input.setError(text(R.string.gboard_patches_dialog_error_save_failed));
+                }
+            });
+        });
+        dialog.setOnDismissListener(ignored -> onManagedDialogDismissed());
+        try {
+            dialog.show();
+            onManagedDialogShown();
+            input.requestFocus();
+            input.setSelection(input.getText().length());
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Failed to show code editor dialog", throwable);
+        }
+    }
+
+    @Override
     public void showPreviewDialog(GboardPatchesSettingsContract.PreviewSpec previewSpec) {
         ScrollView scrollView = new ScrollView(this);
         scrollView.setFillViewport(true);
