@@ -28,6 +28,7 @@ public final class GboardPatchesSettingsFeatureRegistry {
         addIfAvailable(context, features, new GboardKeyboardLayoutSettingsGroupFeature(context));
         addIfAvailable(context, features, new GboardClipboardSettingsFeature());
         addIfAvailable(context, features, new GboardSettingsHomepageSettingsFeature());
+        addIfAvailable(context, features, new GboardBackupSettingsFeature(context));
         addIfAvailable(context, features, new GboardDeveloperOptionsSettingsFeature(context));
         return Collections.unmodifiableList(features);
     }
