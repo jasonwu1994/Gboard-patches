@@ -48,6 +48,42 @@
         <translation locale="en">Open keyboard</translation>
         <translation locale="zh-Hant">打開鍵盤</translation>
     </string>
+    <string name="gboard_patches_backup_title">
+        <translation locale="en">Backup &amp; restore</translation>
+        <translation locale="zh-Hant">備份與還原</translation>
+    </string>
+    <string name="gboard_patches_backup_summary">
+        <translation locale="en">Export or import all settings</translation>
+        <translation locale="zh-Hant">匯出或匯入所有設定</translation>
+    </string>
+    <string name="gboard_patches_backup_export_title">
+        <translation locale="en">Export settings</translation>
+        <translation locale="zh-Hant">匯出設定</translation>
+    </string>
+    <string name="gboard_patches_backup_export_summary">
+        <translation locale="en">Save all current settings to a JSON file</translation>
+        <translation locale="zh-Hant">將所有目前的設定儲存為 JSON 檔案</translation>
+    </string>
+    <string name="gboard_patches_backup_import_title">
+        <translation locale="en">Import settings</translation>
+        <translation locale="zh-Hant">匯入設定</translation>
+    </string>
+    <string name="gboard_patches_backup_import_summary">
+        <translation locale="en">Restore settings from a JSON file</translation>
+        <translation locale="zh-Hant">從 JSON 檔案還原設定</translation>
+    </string>
+    <string name="gboard_patches_backup_export_done">
+        <translation locale="en">Settings exported successfully</translation>
+        <translation locale="zh-Hant">設定匯出成功</translation>
+    </string>
+    <string name="gboard_patches_backup_import_done">
+        <translation locale="en">Settings imported successfully. Please restart Gboard to apply changes.</translation>
+        <translation locale="zh-Hant">設定匯入成功。請重新啟動 Gboard 以套用變更。</translation>
+    </string>
+    <string name="gboard_patches_backup_import_failed">
+        <translation locale="en">Failed to import settings. The file might be invalid.</translation>
+        <translation locale="zh-Hant">匯入設定失敗。檔案可能無效。</translation>
+    </string>
     <string name="gboard_patches_keyboard_preview_title">
         <translation locale="en">Gboard Patches</translation>
         <translation locale="zh-Hant">Gboard Patches</translation>
