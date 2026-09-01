@@ -1,7 +1,7 @@
 {
-    "created_at":  "2026-09-01T04:42:31",
-    "description":  "### ✨ New Features\n\n* **Gboard:** add the `Simple Calculator` patch. Enter an expression directly to display both the expression and its result in Gboard\u0027s suggestion strip.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Simple Calculator` Patch；直接輸入算式，即可在 Gboard 推薦列顯示算式與計算結果。",
-    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v3.9.0-dev.1/patches-3.9.0-dev.1.mpp",
+    "created_at":  "2026-09-01T22:33:22",
+    "description":  "### ✨ New Features\n\n* **Gboard:** add the `Backup \u0026 Restore` patch for exporting and restoring all patch settings, and for backing up, comparing, and restoring Gboard\u0027s PB/XML flag stores.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Backup \u0026 Restore` Patch，可匯出與還原所有 Patch 設定，並支援備份、比較及還原 Gboard 的 PB/XML flag store。",
+    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v3.10.0-dev.3/patches-3.10.0-dev.3.mpp",
     "signature_download_url":  "",
-    "version":  "3.9.0-dev.1"
+    "version":  "3.10.0-dev.3"
 }

@@ -86,6 +86,12 @@ public final class GboardPatchesSettingsContract {
                 String currentValue, String customValue, Runnable customAction,
                 StringValueConsumer valueConsumer);
 
+        default void showMultiChoiceDialog(String title, String[] labels, String[] values,
+                boolean[] initiallySelected,
+                String positiveLabel, StringListConsumer valueConsumer) {
+            throw new UnsupportedOperationException("Multi-choice dialog is unavailable");
+        }
+
         void showPositiveIntegerDialog(String title, String hint, int initialValue,
                 PositiveIntegerConsumer consumer);
 
@@ -100,6 +106,20 @@ public final class GboardPatchesSettingsContract {
                 Runnable completionAction);
 
         void openTextDocument(String[] mimeTypes, StringValueConsumer valueConsumer);
+
+        default void createBinaryDocument(String fileName, String mimeType, byte[] data,
+                Runnable completionAction) {
+            throw new UnsupportedOperationException("Binary document export is unavailable");
+        }
+
+        default void openBinaryDocument(String[] mimeTypes,
+                BinaryDocumentConsumer documentConsumer) {
+            throw new UnsupportedOperationException("Binary document import is unavailable");
+        }
+
+        default void requestTargetRestart() {
+            throw new UnsupportedOperationException("Target restart is unavailable");
+        }
 
         default void openDocumentTree(String initialTreeUri,
                 StringValueConsumer valueConsumer) {
@@ -158,6 +178,13 @@ public final class GboardPatchesSettingsContract {
                 customValue, customAction, valueConsumer));
     }
 
+    public static void showMultiChoiceDialog(FeatureHost host, String title,
+            String[] labels, String[] values, boolean[] initiallySelected,
+            String positiveLabel, StringListConsumer valueConsumer) {
+        submit(host, adapter -> adapter.showMultiChoiceDialog(title, labels, values,
+                initiallySelected, positiveLabel, valueConsumer));
+    }
+
     public static void showPositiveIntegerDialog(FeatureHost host, String title, String hint,
             int initialValue, PositiveIntegerConsumer consumer) {
         submit(host, adapter ->
@@ -186,6 +213,21 @@ public final class GboardPatchesSettingsContract {
     public static void openTextDocument(FeatureHost host, String[] mimeTypes,
             StringValueConsumer valueConsumer) {
         submit(host, adapter -> adapter.openTextDocument(mimeTypes, valueConsumer));
+    }
+
+    public static void createBinaryDocument(FeatureHost host, String fileName, String mimeType,
+            byte[] data, Runnable completionAction) {
+        submit(host, adapter ->
+                adapter.createBinaryDocument(fileName, mimeType, data, completionAction));
+    }
+
+    public static void openBinaryDocument(FeatureHost host, String[] mimeTypes,
+            BinaryDocumentConsumer documentConsumer) {
+        submit(host, adapter -> adapter.openBinaryDocument(mimeTypes, documentConsumer));
+    }
+
+    public static void requestTargetRestart(FeatureHost host) {
+        submit(host, Host::requestTargetRestart);
     }
 
     public static void openDocumentTree(FeatureHost host, String initialTreeUri,
@@ -268,6 +310,30 @@ public final class GboardPatchesSettingsContract {
 
     public interface StringValueConsumer {
         void accept(String value);
+    }
+
+    public interface StringListConsumer {
+        void accept(List<String> values);
+    }
+
+    public interface BinaryDocumentConsumer {
+        void accept(BinaryDocument document);
+    }
+
+    public static final class BinaryDocument {
+        private final String displayName;
+        private final String mimeType;
+        private final byte[] data;
+
+        public BinaryDocument(String displayName, String mimeType, byte[] data) {
+            this.displayName = displayName;
+            this.mimeType = mimeType;
+            this.data = data == null ? new byte[0] : data.clone();
+        }
+
+        public String getDisplayName() { return displayName; }
+        public String getMimeType() { return mimeType; }
+        public byte[] getData() { return data.clone(); }
     }
 
     public interface PositiveIntegerConsumer {
@@ -512,6 +578,7 @@ public final class GboardPatchesSettingsContract {
         private final List<Section> sections;
         private final RefreshPolicy refreshPolicy;
         private final PanelStyle panelStyle;
+        private final CommandRow primaryAction;
 
         public Screen(String toolbarTitle, String headerBadge, String headerTitle,
                 String headerSummary, List<Row> rows) {
@@ -521,7 +588,8 @@ public final class GboardPatchesSettingsContract {
                             ? Collections.emptyList()
                             : Collections.singletonList(new Section(null, rows)),
                     RefreshPolicy.none(),
-                    PanelStyle.FLAT);
+                    PanelStyle.FLAT,
+                    null);
         }
 
         public Screen(String toolbarTitle, String headerBadge, String headerTitle,
@@ -534,26 +602,35 @@ public final class GboardPatchesSettingsContract {
                     refreshIntervalMs > 0L
                             ? RefreshPolicy.fullScreen(refreshIntervalMs)
                             : RefreshPolicy.none(),
-                    PanelStyle.FLAT);
+                    PanelStyle.FLAT,
+                    null);
         }
 
         public Screen(String toolbarTitle, String headerBadge, String headerTitle,
                 String headerSummary, List<StatusBlock> statusBlocks, List<Section> sections) {
             this(toolbarTitle, headerBadge, headerTitle, headerSummary, statusBlocks, sections,
                     RefreshPolicy.none(),
-                    PanelStyle.FLAT);
+                    PanelStyle.FLAT,
+                    null);
         }
 
         public Screen(String toolbarTitle, String headerBadge, String headerTitle,
                 String headerSummary, List<StatusBlock> statusBlocks, List<Section> sections,
                 RefreshPolicy refreshPolicy) {
             this(toolbarTitle, headerBadge, headerTitle, headerSummary, statusBlocks, sections,
-                    refreshPolicy, PanelStyle.FLAT);
+                    refreshPolicy, PanelStyle.FLAT, null);
         }
 
         public Screen(String toolbarTitle, String headerBadge, String headerTitle,
                 String headerSummary, List<StatusBlock> statusBlocks, List<Section> sections,
                 RefreshPolicy refreshPolicy, PanelStyle panelStyle) {
+            this(toolbarTitle, headerBadge, headerTitle, headerSummary, statusBlocks, sections,
+                    refreshPolicy, panelStyle, null);
+        }
+
+        public Screen(String toolbarTitle, String headerBadge, String headerTitle,
+                String headerSummary, List<StatusBlock> statusBlocks, List<Section> sections,
+                RefreshPolicy refreshPolicy, PanelStyle panelStyle, CommandRow primaryAction) {
             this.toolbarTitle = toolbarTitle;
             this.headerBadge = headerBadge;
             this.headerTitle = headerTitle;
@@ -562,6 +639,7 @@ public final class GboardPatchesSettingsContract {
             this.sections = Collections.unmodifiableList(new ArrayList<>(sections));
             this.refreshPolicy = refreshPolicy == null ? RefreshPolicy.none() : refreshPolicy;
             this.panelStyle = panelStyle == null ? PanelStyle.FLAT : panelStyle;
+            this.primaryAction = primaryAction;
         }
 
         public String getToolbarTitle() {
@@ -594,6 +672,10 @@ public final class GboardPatchesSettingsContract {
 
         public PanelStyle getPanelStyle() {
             return panelStyle;
+        }
+
+        public CommandRow getPrimaryAction() {
+            return primaryAction;
         }
 
         public long getRefreshIntervalMs() {
