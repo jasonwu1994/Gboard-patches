@@ -133,6 +133,21 @@
       ]
     },
     {
+      "feature_id": "backup_restore",
+      "public_patch_name": "Backup & Restore",
+      "feature_marker": "dev.jason.gboardpatches.feature.backup_restore",
+      "target_family_ids": [],
+      "migration_scope": "version-neutral-extension",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreManifestPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        { "contribution_id": "backup_restore.resources", "anchor_family_id": "resource_only", "phase": "resource", "order": 100, "required_bindings": [], "runtime_calls": [] }
+      ]
+    },
+    {
       "feature_id": "change_emoji_size",
       "public_patch_name": "Change emoji size",
       "feature_marker": "dev.jason.gboardpatches.feature.emoji_size",

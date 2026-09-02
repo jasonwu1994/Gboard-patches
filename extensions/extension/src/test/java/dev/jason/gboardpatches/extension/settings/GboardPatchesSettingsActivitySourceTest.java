@@ -179,6 +179,25 @@ public final class GboardPatchesSettingsActivitySourceTest {
     }
 
     @Test
+    public void screenPrimaryActionRendersBelowScrollableContent() throws Exception {
+        String contractSource = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsContract.java");
+        String activitySource = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String buildContent = extractMethod(activitySource, "private View buildContentView(");
+        String applyScreen = extractMethod(activitySource, "private void applyScreen(");
+
+        Assert.assertTrue(contractSource.contains("CommandRow getPrimaryAction()"));
+        assertOccursInOrder(buildContent,
+                "shell.addView(contentScrollView);",
+                "shell.addView(screenActionContainer" );
+        Assert.assertTrue(applyScreen.contains("screen.getPrimaryAction()"));
+        Assert.assertTrue(applyScreen.contains("screenActionContainer.setVisibility(View.VISIBLE)"));
+    }
+
+    @Test
     public void directFeaturePathsResetSyntheticParentScrollPositions() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
