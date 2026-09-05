@@ -136,6 +136,21 @@ public final class WebClipboardTileController {
         }
     }
 
+    public static void applyToastEnabled(Context context, boolean enabled) {
+        if (context == null) {
+            return;
+        }
+        try {
+            Context appContext = context.getApplicationContext() != null
+                    ? context.getApplicationContext()
+                    : context;
+            SharedPreferences preferences = WebClipboardPreferences.preferences(appContext);
+            WebClipboardPreferences.setToastEnabled(preferences, enabled);
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Failed to apply Web Clipboard toast-enabled state", throwable);
+        }
+    }
+
     public static String regeneratePairingCode(Context context) {
         if (context == null) {
             return WebClipboardPreferences.DEFAULT_PAIRING_CODE;

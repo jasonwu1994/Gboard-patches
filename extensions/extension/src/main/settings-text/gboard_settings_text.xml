@@ -1322,6 +1322,18 @@
         <translation locale="en">Enable Web Clipboard</translation>
         <translation locale="zh-Hant">啟用網頁剪貼簿</translation>
     </string>
+    <string name="gboard_patches_web_clipboard_toast_title">
+        <translation locale="en">Show toast notification</translation>
+        <translation locale="zh-Hant">顯示懸浮通知</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_toast_summary">
+        <translation locale="en">Show a brief notification when the clipboard is updated from a web client.</translation>
+        <translation locale="zh-Hant">當剪貼簿從網頁用戶端更新時，顯示簡短通知。</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_toast_applied">
+        <translation locale="en">Copied from web: %1$s</translation>
+        <translation locale="zh-Hant">已從網頁複製：%1$s</translation>
+    </string>
     <string name="gboard_patches_web_clipboard_port_title">
         <translation locale="en">Web server port</translation>
         <translation locale="zh-Hant">Web 伺服器連接埠</translation>
