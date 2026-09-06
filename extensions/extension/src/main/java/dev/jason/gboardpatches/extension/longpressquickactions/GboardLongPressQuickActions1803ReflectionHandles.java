@@ -227,8 +227,9 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
                 && "globe".equals(firstEntryPayload(longPressAction));
     }
 
-    public Object appendLongPressAction(Context context, Object metadata,
-            GboardLongPressQuickActions1803Policy.QuickAction action)
+    public Object insertLongPressAction(Context context, Object metadata,
+            GboardLongPressQuickActions1803Policy.QuickAction action,
+            int configuredPosition)
             throws Throwable {
         Object existingAction = findExactAction(metadata, longPressActionType);
         Object actionBuilder = actionBuilderConstructor.newInstance();
@@ -248,19 +249,22 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
                     actionBuilder, resolvedPopupLayoutResId);
         }
 
+        int insertionIndex = GboardLongPressQuickActionsSettings.insertionIndex(
+                configuredPosition, existingEntries.length);
         Object updatedEntries = Array.newInstance(actionEntryClass, existingEntries.length + 1);
-        System.arraycopy(existingEntries, 0, updatedEntries, 0, existingEntries.length);
-        Array.set(updatedEntries, existingEntries.length,
+        System.arraycopy(existingEntries, 0, updatedEntries, 0, insertionIndex);
+        Array.set(updatedEntries, insertionIndex,
                 entryConstructor.newInstance(
                         action.actionCode, null, null, Integer.MAX_VALUE));
+        System.arraycopy(existingEntries, insertionIndex, updatedEntries, insertionIndex + 1,
+                existingEntries.length - insertionIndex);
         actionBuilderEntriesField.set(actionBuilder, updatedEntries);
 
-        String[] labels = normalizeLabels(existingLabels, existingEntries.length + 1);
-        labels[existingEntries.length] = null;
+        String[] labels = insertLabel(existingLabels, existingEntries.length, insertionIndex);
         actionBuilderLabelsField.set(actionBuilder, labels);
 
-        int[] icons = normalizeIcons(existingIcons, existingEntries.length + 1);
-        icons[existingEntries.length] = action.iconResId;
+        int[] icons = insertIcon(existingIcons, existingEntries.length, insertionIndex,
+                action.iconResId);
         actionBuilderIconsField.set(actionBuilder, icons);
 
         Object patchedAction = buildActionMethod.invoke(actionBuilder);
@@ -430,7 +434,7 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
     private static String[] normalizeLabels(String[] source, int size) {
         String[] result = new String[size];
         if (source != null && source.length == 1 && size > 1) {
-            for (int index = 0; index < size - 1; index++) {
+            for (int index = 0; index < size; index++) {
                 result[index] = source[0];
             }
         } else if (source != null) {
@@ -439,15 +443,34 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
         return result;
     }
 
+    static String[] insertLabel(String[] source, int existingCount, int insertionIndex) {
+        String[] normalized = normalizeLabels(source, existingCount);
+        String[] result = new String[existingCount + 1];
+        System.arraycopy(normalized, 0, result, 0, insertionIndex);
+        System.arraycopy(normalized, insertionIndex, result, insertionIndex + 1,
+                existingCount - insertionIndex);
+        return result;
+    }
+
     private static int[] normalizeIcons(int[] source, int size) {
         int[] result = new int[size];
         if (source != null && source.length == 1 && size > 1) {
-            for (int index = 0; index < size - 1; index++) {
+            for (int index = 0; index < size; index++) {
                 result[index] = source[0];
             }
         } else if (source != null) {
             System.arraycopy(source, 0, result, 0, Math.min(source.length, size));
         }
+        return result;
+    }
+
+    static int[] insertIcon(int[] source, int existingCount, int insertionIndex, int iconResId) {
+        int[] normalized = normalizeIcons(source, existingCount);
+        int[] result = new int[existingCount + 1];
+        System.arraycopy(normalized, 0, result, 0, insertionIndex);
+        result[insertionIndex] = iconResId;
+        System.arraycopy(normalized, insertionIndex, result, insertionIndex + 1,
+                existingCount - insertionIndex);
         return result;
     }
 
