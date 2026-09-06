@@ -1,3 +1,4 @@
+import java.io.File
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -87,8 +88,13 @@ val versionBindingsProfile = objects.fileProperty().apply {
 val gboardProductCatalog = layout.projectDirectory.file(
     "src/main/resources/gboard/gboard-port-product-catalog.json"
 )
-val syncExtensionTask = project(":extensions:extension").tasks.named("syncExtension")
-val runtimeAbiOutputDirectory = syncExtensionTask.map { task -> task.outputs.files.singleFile }
+val syncExtensionTasks = listOf(
+    project(":extensions:extension").tasks.named("syncExtension"),
+    project(":extensions:calculator").tasks.named("syncExtension"),
+)
+val runtimeAbiOutputDirectories = syncExtensionTasks.map { task ->
+    task.map { it.outputs.files.singleFile }
+}
 val compiledPatchClasses = layout.buildDirectory.dir("classes/kotlin/main")
 
 configurations.named(patchMetadataSourceSet.implementationConfigurationName) {
@@ -237,19 +243,20 @@ tasks {
     named<Test>("test") {
         val builtMpp = mppJar.flatMap { task -> task.archiveFile }
         dependsOn(mppJar)
-        dependsOn(syncExtensionTask)
+        dependsOn(syncExtensionTasks)
         inputs.file(builtMpp)
-        inputs.dir(runtimeAbiOutputDirectory)
-            .withPathSensitivity(PathSensitivity.RELATIVE)
+        runtimeAbiOutputDirectories.forEach { directory ->
+            inputs.dir(directory).withPathSensitivity(PathSensitivity.RELATIVE)
+        }
         inputs.dir(compiledPatchClasses)
             .withPathSensitivity(PathSensitivity.RELATIVE)
         doFirst {
             systemProperty("gboard.test.mpp", builtMpp.get().asFile.absolutePath)
             systemProperty(
-                "gboard.runtimeAbiOutputDirectory",
-                runtimeAbiOutputDirectory.get()
-                    .relativeTo(projectDir)
-                    .invariantSeparatorsPath,
+                "gboard.runtimeAbiOutputDirectories",
+                runtimeAbiOutputDirectories.joinToString(File.pathSeparator) { directory ->
+                    directory.get().relativeTo(projectDir).invariantSeparatorsPath
+                },
             )
             systemProperty(
                 "gboard.compiledPatchClasses",

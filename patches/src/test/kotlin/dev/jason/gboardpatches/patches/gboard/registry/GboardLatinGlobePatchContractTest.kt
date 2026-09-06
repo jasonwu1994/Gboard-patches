@@ -51,9 +51,9 @@ class GboardLatinGlobePatchContractTest {
     }
 
     @Test
-    fun generatedInventoryContainsThirtySevenRowsAndExactlyOneLatinGlobe() {
+    fun generatedInventoryMatchesRegistrationsAndContainsExactlyOneLatinGlobe() {
         val patches = generatedPublishedPatches()
-        assertEquals(37, patches.size)
+        assertMatchesPublishedRegistrationCount(patches.size)
         val rows = patches.filter { row ->
             row.get("name").asString == "Latin Globe Key Ignore Interval"
         }

@@ -41,6 +41,7 @@
     "migrationScope": {
       "enum": [
         "generic",
+        "version-neutral-extension",
         "version-sensitive"
       ]
     },

@@ -9,7 +9,7 @@ import org.junit.Test
 
 class GboardWebClipboardManifestPatchSourceTest {
     @Test
-    fun manifestPatchExportsDedicatedTilePreferencesActivityInsteadOfSharedSettingsRoot() {
+    fun manifestPatchUsesGenericMetadataDrivenTilePreferencesDispatcher() {
         val source = String(
             Files.readAllBytes(
                 Path.of(
@@ -21,7 +21,10 @@ class GboardWebClipboardManifestPatchSourceTest {
         )
 
         assertFalse(source.contains("settingsActivity.setAndroidAttribute(\"exported\", \"true\")"))
-        assertTrue(source.contains("WEB_CLIPBOARD_TILE_PREFERENCES_ACTIVITY_CLASS"))
+        assertTrue(source.contains("GboardTilePreferencesActivity"))
+        assertTrue(source.contains("TILE_NAVIGATION_PATH_META_DATA"))
+        assertTrue(source.contains("GboardClipboardSettingsFeature;"))
+        assertFalse(source.contains("WebClipboardTilePreferencesActivity"))
         assertTrue(source.contains("ACTION_QS_TILE_PREFERENCES"))
     }
 }

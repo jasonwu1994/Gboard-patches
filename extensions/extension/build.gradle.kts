@@ -1,5 +1,8 @@
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.Base64
+import java.util.Properties
+import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -66,6 +69,9 @@ val generatedSettingsTextResDir = layout.buildDirectory.dir(
 val generatedSettingsTextJavaDir = layout.buildDirectory.dir(
     "generated/source/settingsText/java"
 )
+val generatedLanFtpMessagesJavaDir = layout.buildDirectory.dir(
+    "generated/source/lanFtpMessages/java"
+)
 
 android {
     namespace = "dev.jason.gboardpatches.extension"
@@ -88,11 +94,14 @@ android {
     sourceSets.named("main") {
         java.directories.add(generatedQuickJsPayloadDir.get().asFile.absolutePath)
         java.directories.add(generatedSettingsTextJavaDir.get().asFile.absolutePath)
+        java.directories.add(generatedLanFtpMessagesJavaDir.get().asFile.absolutePath)
         res.directories.add(generatedSettingsTextResDir.get().asFile.absolutePath)
     }
 }
 
 dependencies {
+    implementation(libs.apache.ftpserver.core)
+    implementation(libs.apache.mina.core)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
 }
@@ -341,7 +350,133 @@ val generateSettingsText = tasks.register("generateSettingsText") {
     }
 }
 
+val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
+    val runtimeClasspath = configurations.named("releaseRuntimeClasspath")
+    val outputFile = generatedLanFtpMessagesJavaDir.map { directory ->
+        directory.file(
+            "dev/jason/gboardpatches/extension/lanftp/runtime/LanFtpMessageResource.java"
+        )
+    }
+    inputs.files(runtimeClasspath)
+    outputs.file(outputFile)
+
+    doLast {
+        val ftpServerJar = runtimeClasspath.get().files.singleOrNull { file ->
+            file.name.startsWith("ftpserver-core-") && file.extension == "jar"
+        } ?: throw GradleException("Apache FTPServer core dependency was not resolved exactly once")
+        val messages = Properties()
+        ZipFile(ftpServerJar).use { archive ->
+            val entry = archive.getEntry("org/apache/ftpserver/message/FtpStatus.properties")
+                ?: throw GradleException("Apache FTPServer status messages are missing")
+            archive.getInputStream(entry).use(messages::load)
+        }
+        val renderedMessages = messages.stringPropertyNames().sorted().joinToString("\n") { key ->
+            val value = messages.getProperty(key)
+            "        messages.put(\"${escapeJavaString(key)}\", " +
+                "\"${escapeJavaString(value)}\");"
+        }
+        val output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.writeText(
+            """
+            package dev.jason.gboardpatches.extension.lanftp.runtime;
+
+            import java.util.Collections;
+            import java.util.HashMap;
+            import java.util.List;
+            import java.util.Map;
+
+            import org.apache.ftpserver.message.MessageResource;
+
+            /** Message table embedded in dex because Morphe extensions carry classes, not JAR resources. */
+            public final class LanFtpMessageResource implements MessageResource {
+                private static final Map<String, String> MESSAGES = createMessages();
+
+                private LanFtpMessageResource() {
+                }
+
+                public static MessageResource create() {
+                    return new LanFtpMessageResource();
+                }
+
+                @Override
+                public List<String> getAvailableLanguages() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public String getMessage(int code, String subId, String language) {
+                    String key = Integer.toString(code);
+                    if (subId != null) {
+                        String specific = MESSAGES.get(key + "." + subId);
+                        if (specific != null) {
+                            return specific;
+                        }
+                    }
+                    return MESSAGES.get(key);
+                }
+
+                @Override
+                public Map<String, String> getMessages(String language) {
+                    return MESSAGES;
+                }
+
+                private static Map<String, String> createMessages() {
+                    Map<String, String> messages = new HashMap<String, String>();
+$renderedMessages
+                    return Collections.unmodifiableMap(messages);
+                }
+            }
+            """.trimIndent()
+        )
+    }
+}
+
 tasks.named("preBuild") {
     dependsOn(generateQuickJsNativePayload)
     dependsOn(generateSettingsText)
+    dependsOn(generateLanFtpMessageResource)
+}
+
+tasks.named("syncExtension") {
+    doLast {
+        val extensionDex = layout.buildDirectory.file(
+            "morphe/extensions/gboard-patches.rve"
+        ).get().asFile
+        check(extensionDex.isFile) {
+            "Morphe extension dex was not generated: $extensionDex"
+        }
+        val dexText = String(extensionDex.readBytes(), StandardCharsets.ISO_8859_1)
+        val requiredLanFtpTypes = listOf(
+            "Ldev/jason/gboardpatches/extension/lanftp/android/LanFtpServerConfigSnapshot;",
+            "Ldev/jason/gboardpatches/extension/lanftp/android/LanFtpServerState;",
+            "Ldev/jason/gboardpatches/extension/lanftp/runtime/LanFtpServerConfig;",
+            "Ldev/jason/gboardpatches/extension/lanftp/runtime/LanFtpSessionInfo;",
+        )
+        requiredLanFtpTypes.forEach { descriptor ->
+            check(dexText.contains(descriptor)) {
+                "Morphe extension dex is missing required LAN FTP type: $descriptor"
+            }
+        }
+        check(!dexText.contains("Lcom/android/tools/r8/RecordTag;")) {
+            "Morphe extension dex contains record classes without the required D8 global synthetic"
+        }
+        val ftpServerJar = configurations.getByName("releaseRuntimeClasspath").files
+            .singleOrNull { file ->
+                file.name.startsWith("ftpserver-core-") && file.extension == "jar"
+            } ?: throw GradleException(
+                "Apache FTPServer core dependency was not resolved exactly once"
+            )
+        val messageOutput = layout.buildDirectory.file(
+            "morphe/lan-ftp-res/FtpStatus.properties"
+        ).get().asFile
+        messageOutput.parentFile.mkdirs()
+        ZipFile(ftpServerJar).use { archive ->
+            val entry = archive.getEntry("org/apache/ftpserver/message/FtpStatus.properties")
+                ?: throw GradleException("Apache FTPServer status messages are missing")
+            archive.getInputStream(entry).use { input ->
+                messageOutput.outputStream().use(input::copyTo)
+            }
+        }
+    }
 }

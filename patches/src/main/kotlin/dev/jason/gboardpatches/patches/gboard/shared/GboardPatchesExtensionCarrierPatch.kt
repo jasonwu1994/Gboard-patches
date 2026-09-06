@@ -16,7 +16,7 @@ internal val gboardPatchesExtensionCarrierPatch = bytecodePatch(
     }
 }
 
-private fun mergeBundledExtension(context: BytecodePatchContext, extension: String) {
+internal fun mergeBundledExtension(context: BytecodePatchContext, extension: String) {
     val resourceClassLoader = object {}.javaClass.classLoader
     val runtimeClassLoader = context.javaClass.classLoader
     val extensionStream = resourceClassLoader.getResourceAsStream(extension)

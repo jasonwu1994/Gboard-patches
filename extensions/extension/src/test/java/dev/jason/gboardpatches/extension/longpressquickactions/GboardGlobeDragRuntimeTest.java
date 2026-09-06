@@ -10,6 +10,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class GboardGlobeDragRuntimeTest {
     @Test
+    public void exactMarkerDownWithPatchedMetadataArmsSession() {
+        Assert.assertSame(GboardGlobeDragRuntime.MarkerDownDisposition.ARM_SESSION,
+                GboardGlobeDragRuntime.markerDownDisposition(true, true));
+    }
+
+    @Test
+    public void exactMarkerDownWithUnknownMetadataIsConsumedWithoutArmingSession() {
+        Assert.assertSame(GboardGlobeDragRuntime.MarkerDownDisposition.CONSUME_ONLY,
+                GboardGlobeDragRuntime.markerDownDisposition(true, false));
+    }
+
+    @Test
+    public void nonMarkerEventPassesThroughRegardlessOfMetadataIdentity() {
+        Assert.assertSame(GboardGlobeDragRuntime.MarkerDownDisposition.PASS_THROUGH,
+                GboardGlobeDragRuntime.markerDownDisposition(false, false));
+        Assert.assertSame(GboardGlobeDragRuntime.MarkerDownDisposition.PASS_THROUGH,
+                GboardGlobeDragRuntime.markerDownDisposition(false, true));
+    }
+
+    @Test
     public void controlChordRetriesKeyUpAndReleasesControlAfterEditorThrows() {
         AtomicInteger events = new AtomicInteger();
         InputConnection connection = (InputConnection) Proxy.newProxyInstance(

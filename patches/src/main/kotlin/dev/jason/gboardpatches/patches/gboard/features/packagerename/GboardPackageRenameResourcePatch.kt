@@ -2,6 +2,8 @@ package dev.jason.gboardpatches.patches.gboard.features.packagerename
 
 import app.morphe.patcher.patch.ResourcePatchContext
 import app.morphe.patcher.patch.resourcePatch
+import dev.jason.gboardpatches.patches.gboard.features.lanftp.LAN_FTP_STATUS_PROVIDER_AUTHORITY_SUFFIX
+import dev.jason.gboardpatches.patches.gboard.features.lanftp.LAN_FTP_STATUS_PROVIDER_CLASS
 import dev.jason.gboardpatches.patches.gboard.shared.ANDROID_NS
 import dev.jason.gboardpatches.patches.gboard.shared.GBOARD_PATCHES_SETTINGS_ACTIVITY_CLASS
 import dev.jason.gboardpatches.patches.gboard.shared.GBOARD_PATCHES_SETTINGS_PROVIDER_AUTHORITY_SUFFIX
@@ -237,7 +239,14 @@ internal fun applyGboardPackageRename(
         settingsDocuments = settingsDocuments,
         state = state,
     )
-    val allowedPackageAttributes = selectedAttributes + listOfNotNull(settingsIdentity.providerAuthority)
+    val lanFtpStatusProviderAuthority = validateLanFtpStatusProviderIdentity(
+        manifestDocument = manifestDocument,
+        state = state,
+    )
+    val allowedPackageAttributes = selectedAttributes + listOfNotNull(
+        settingsIdentity.providerAuthority,
+        lanFtpStatusProviderAuthority,
+    )
     val unexpectedPackageAttribute = allManifestAttributes.firstOrNull { (_, attribute) ->
         attribute.nodeValue.contains(GBOARD_PACKAGE_NAME) &&
             allowedPackageAttributes.none { allowed -> allowed === attribute }
@@ -258,10 +267,40 @@ internal fun applyGboardPackageRename(
     }
     settingsIdentity.providerAuthority?.value =
         GBOARD_PATCHED_PACKAGE_NAME + GBOARD_PATCHES_SETTINGS_PROVIDER_AUTHORITY_SUFFIX
+    lanFtpStatusProviderAuthority?.value =
+        GBOARD_PATCHED_PACKAGE_NAME + LAN_FTP_STATUS_PROVIDER_AUTHORITY_SUFFIX
     settingsIdentity.targetPackages.forEach { attribute ->
         attribute.value = GBOARD_PATCHED_PACKAGE_NAME
     }
     return GboardPackageRenameResult.RENAMED
+}
+
+private fun validateLanFtpStatusProviderIdentity(
+    manifestDocument: Document,
+    state: PackageState,
+): Attr? {
+    val providers = manifestDocument.getElementsByTagName("*")
+        .elements()
+        .filter { element ->
+            element.localElementName() == "provider" &&
+                element.androidAttribute("name")?.value == LAN_FTP_STATUS_PROVIDER_CLASS
+        }
+        .toList()
+    check(providers.size <= 1) {
+        "Expected at most one LAN FTP status provider, found ${providers.size}"
+    }
+    val authority = providers.singleOrNull()?.androidAttribute("authorities")
+    check(providers.isEmpty() || authority != null) {
+        "LAN FTP status provider is missing android:authorities"
+    }
+    if (authority != null) {
+        val expectedAuthority = state.packageName + LAN_FTP_STATUS_PROVIDER_AUTHORITY_SUFFIX
+        check(authority.value == expectedAuthority) {
+            "Unexpected LAN FTP status provider authority '${authority.value}'; " +
+                "expected '$expectedAuthority'"
+        }
+    }
+    return authority
 }
 
 private fun sanitizeStandaloneSplitManifest(manifestDocument: Document) {

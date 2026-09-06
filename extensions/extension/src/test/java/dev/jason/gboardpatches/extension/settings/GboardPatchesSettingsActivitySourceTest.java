@@ -111,6 +111,19 @@ public final class GboardPatchesSettingsActivitySourceTest {
     }
 
     @Test
+    public void choiceDialogAllowsSelectionsWithoutACustomAction() throws Exception {
+        String source = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String method = extractMethod(source, "public void showChoiceDialog(");
+
+        Assert.assertTrue(method.contains("customValue != null"));
+        Assert.assertTrue(method.contains("customAction != null"));
+        Assert.assertTrue(method.contains("customValue.equals(selectedValue)"));
+        Assert.assertFalse(method.contains("if (customValue.equals(selectedValue))"));
+    }
+
+    @Test
     public void positiveIntegerDialogShowsFeatureRangeErrorsInline() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
@@ -166,19 +179,38 @@ public final class GboardPatchesSettingsActivitySourceTest {
     }
 
     @Test
+    public void screenPrimaryActionRendersBelowScrollableContent() throws Exception {
+        String contractSource = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsContract.java");
+        String activitySource = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String buildContent = extractMethod(activitySource, "private View buildContentView(");
+        String applyScreen = extractMethod(activitySource, "private void applyScreen(");
+
+        Assert.assertTrue(contractSource.contains("CommandRow getPrimaryAction()"));
+        assertOccursInOrder(buildContent,
+                "shell.addView(contentScrollView);",
+                "shell.addView(screenActionContainer" );
+        Assert.assertTrue(applyScreen.contains("screen.getPrimaryAction()"));
+        Assert.assertTrue(applyScreen.contains("screenActionContainer.setVisibility(View.VISIBLE)"));
+    }
+
+    @Test
     public void directFeaturePathsResetSyntheticParentScrollPositions() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
                         + "GboardPatchesSettingsActivity.java");
         String openFeaturePath = extractMethod(source, "private void openFeaturePath(");
-        String openInitialFeature = extractMethod(
+        String restoreNavigationPath = extractMethod(
                 source,
-                "private boolean openInitialFeatureFromIntentIfNeeded(");
+                "private boolean restoreNavigationPathFromIntent(");
 
         Assert.assertTrue(openFeaturePath.contains(
                 "scrollState.resetForDirectPath(sanitizedPath.size() - 1)"));
-        Assert.assertTrue(openInitialFeature.contains(
-                "scrollState.resetForDirectPath(featurePath.size() - 1)"));
+        Assert.assertTrue(restoreNavigationPath.contains(
+                "scrollState.resetForDirectPath(resolvedPath.size() - 1)"));
     }
 
     private static String readSource(String path) throws Exception {

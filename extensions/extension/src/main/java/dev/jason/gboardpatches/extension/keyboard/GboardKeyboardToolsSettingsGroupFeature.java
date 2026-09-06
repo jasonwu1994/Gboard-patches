@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import dev.jason.gboardpatches.extension.R;
+import dev.jason.gboardpatches.extension.calculator.GboardCalculatorSettingsFeature;
 import dev.jason.gboardpatches.extension.cursortrackpad.GboardCursorTrackpadSettingsFeature;
 import dev.jason.gboardpatches.extension.longpressquickactions.GboardLongPressQuickActionsSettingsFeature;
 import dev.jason.gboardpatches.extension.manualincognito.GboardManualIncognitoSettingsFeature;
@@ -41,7 +42,8 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         new GboardCursorTrackpadSettingsFeature(context),
                         new GboardOcrSettingsFeature(context),
                         new GboardQuickInsertSettingsFeature(context),
-                        new GboardFloatingWebSearchSettingsFeature(context)));
+                        new GboardFloatingWebSearchSettingsFeature(context),
+                        new GboardCalculatorSettingsFeature(context)));
     }
 
     @Override

@@ -15,6 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Stable ownership runtime; version-private details enter only through {@link GboardGlobeDragPort}. */
 public final class GboardGlobeDragRuntime {
+    enum MarkerDownDisposition {
+        PASS_THROUGH,
+        CONSUME_ONLY,
+        ARM_SESSION
+    }
+
     private static final String TAG = "GboardPatches";
     private static final String LOG_PREFIX = "[gboard-globe-drag-18.0.3] ";
     private static final String MARKER = "__gboard_patches_globe_drag__";
@@ -90,13 +96,13 @@ public final class GboardGlobeDragRuntime {
             long now = SystemClock.uptimeMillis();
             synchronized (LOCK) {
                 expireSession(now);
-                if (session == null && !isPatched(signal.metadata)) {
-                    return false;
+                boolean patchedMetadata = isPatched(signal.metadata);
+                MarkerDownDisposition markerDisposition = markerDownDisposition(
+                        signal.markerDown, patchedMetadata);
+                if (markerDisposition == MarkerDownDisposition.CONSUME_ONLY) {
+                    return true;
                 }
-                if (signal.markerUp && isPatched(signal.metadata)) {
-                    return false;
-                }
-                if (signal.markerDown && isPatched(signal.metadata)) {
+                if (markerDisposition == MarkerDownDisposition.ARM_SESSION) {
                     boolean actionsAdmitted = isEnabled();
                     Object tracker = latestGlobeTracker.get();
                     WeakReference<InputMethodService> serviceReference =
@@ -109,6 +115,12 @@ public final class GboardGlobeDragRuntime {
                             RELEASE_EVENT_GRACE_MS);
                     logInfo("session=" + session.id + " armed");
                     return true;
+                }
+                if (session == null && !patchedMetadata) {
+                    return false;
+                }
+                if (signal.markerUp && patchedMetadata) {
+                    return false;
                 }
                 if (session == null) {
                     return false;
@@ -412,6 +424,16 @@ public final class GboardGlobeDragRuntime {
                         now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CTRL_LEFT, 0));
             }
         }
+    }
+
+    static MarkerDownDisposition markerDownDisposition(
+            boolean markerDown, boolean patchedMetadata) {
+        if (!markerDown) {
+            return MarkerDownDisposition.PASS_THROUGH;
+        }
+        return patchedMetadata
+                ? MarkerDownDisposition.ARM_SESSION
+                : MarkerDownDisposition.CONSUME_ONLY;
     }
 
     private static void sendKeyEventBestEffort(InputConnection connection, KeyEvent event) {

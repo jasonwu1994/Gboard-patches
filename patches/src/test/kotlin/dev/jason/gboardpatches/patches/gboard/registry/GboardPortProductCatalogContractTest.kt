@@ -51,7 +51,7 @@ class GboardPortProductCatalogContractTest {
     @Test
     fun catalogIsDeterministicAndDeclaresSelectedOnlyZeroSelectionComposition() {
         assertEquals("gboard-port-product-catalog.v1", catalog["format"].asString)
-        assertEquals("1.10.0", catalog["catalog_version"].asString)
+        assertEquals("1.12.0", catalog["catalog_version"].asString)
         val composition = catalog.getAsJsonObject("composition")
         assertEquals(
             setOf("selected_only_call_chain", "runtime_feature_mask"),
@@ -65,9 +65,9 @@ class GboardPortProductCatalogContractTest {
             features.map { feature -> feature["feature_id"].asString }.sorted(),
             features.map { feature -> feature["feature_id"].asString },
         )
-        assertEquals(37, features.size)
-        assertEquals(37, features.map { it["feature_id"].asString }.distinct().size)
-        assertEquals(37, features.map { it["public_patch_name"].asString }.distinct().size)
+        assertMatchesPublishedRegistrationCount(features.size)
+        assertEquals(features.size, features.map { it["feature_id"].asString }.distinct().size)
+        assertEquals(features.size, features.map { it["public_patch_name"].asString }.distinct().size)
 
         val expectedDigest = Files.readString(
             repositoryRoot().resolve(DIGEST_PATH),
@@ -565,6 +565,7 @@ class GboardPortProductCatalogContractTest {
         assertEquals(
             setOf(
                 "generic",
+                "version-neutral-extension",
                 "version-sensitive",
             ),
             definitions.getAsJsonObject("migrationScope")
@@ -657,6 +658,7 @@ class GboardPortProductCatalogContractTest {
             "add_gboard_signature_bypass" to "version-sensitive",
             "advanced_voice_typing" to "version-sensitive",
             "ai_writing_tools" to "version-sensitive",
+            "backup_restore" to "version-neutral-extension",
             "change_emoji_size" to "version-sensitive",
             "clipboard_custom_character_limit" to "version-sensitive",
             "clipboard_enhancements" to "version-sensitive",
@@ -677,12 +679,14 @@ class GboardPortProductCatalogContractTest {
             "incognito_mode_toggle" to "version-sensitive",
             "inline_suggestions" to "version-sensitive",
             "key_shape_selection" to "version-sensitive",
+            "lan_ftp_server" to "version-neutral-extension",
             "latin_globe_key_ignore_interval" to "version-sensitive",
             "long_press_editing_shortcuts" to "version-sensitive",
             "package_rename" to "generic",
             "quick_insert" to "version-sensitive",
             "rounded_keyboard_panel" to "version-sensitive",
             "settings_homepage_override" to "version-sensitive",
+            "simple_calculator" to "version-sensitive",
             "swipeable_custom_top_row" to "version-sensitive",
             "use_bluetooth_microphone" to "version-sensitive",
             "web_clipboard" to "version-sensitive",

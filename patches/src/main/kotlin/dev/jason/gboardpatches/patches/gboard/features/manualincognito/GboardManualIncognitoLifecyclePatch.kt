@@ -6,6 +6,7 @@ import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
+import dev.jason.gboardpatches.patches.gboard.shared.applyVoidExitLifecycleDelegate
 import dev.jason.gboardpatches.patches.gboard.shared.isInvoke
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
 import dev.jason.gboardpatches.patches.gboard.shared.isOpcode
@@ -32,8 +33,9 @@ internal val gboardManualIncognitoLifecyclePatch = bytecodePatch(
                 RuntimeCallId.MANUAL_INCOGNITO_RUNTIME_ON_INPUT_VIEW_STARTING,
             )
         findMutableMethodOrThrow(GboardManualIncognitoTargets.onWindowHidden)
-            .applyManualIncognitoVoidExitDelegate(
+            .applyVoidExitLifecycleDelegate(
                 RuntimeCallId.MANUAL_INCOGNITO_RUNTIME_ON_INPUT_WINDOW_HIDDEN,
+                "p0",
             )
         findMutableMethodOrThrow(GboardManualIncognitoTargets.incognitoPredicate)
             .applyManualIncognitoBooleanReturnDelegate(
@@ -54,25 +56,6 @@ internal fun MutableMethod.applyManualIncognitoEntryDelegate(call: RuntimeCallId
         return
     }
     addInstructions(0, RuntimeCallEmitter.invoke(call, "p0 .. p1"))
-}
-
-internal fun MutableMethod.applyManualIncognitoVoidExitDelegate(call: RuntimeCallId) {
-    val abi = RuntimeAbiCatalog.abi(call)
-    val instructions = implementation?.instructions
-        ?: error("No instructions in $definingClass->$name")
-    val returns = returnInstructionIndices().filter { instructions[it].isOpcode("RETURN_VOID") }
-    check(returns.isNotEmpty()) { "No RETURN_VOID in $definingClass->$name" }
-    val existing = instructions.count { it.isMethodReference(abi.reference) }
-    if (existing > 0) {
-        check(existing == returns.size && returns.all { returnIndex ->
-            instructions.getOrNull(returnIndex - 1)
-                ?.isMethodReference(abi.reference) == true
-        }) { "Malformed manual incognito exit delegate in $definingClass->$name" }
-        return
-    }
-    returns.asReversed().forEach { returnIndex ->
-        addInstructions(returnIndex, RuntimeCallEmitter.invoke(call, "p0"))
-    }
 }
 
 internal fun MutableMethod.applyManualIncognitoBooleanReturnDelegate(call: RuntimeCallId) {

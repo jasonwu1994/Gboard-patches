@@ -15,6 +15,10 @@ import dev.jason.gboardpatches.patches.gboard.features.accesspointsmenu.gboardAc
 import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardAdvancedVoiceFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreManifestPatch
+import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.about.gboardAboutPageResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardCustomSymbolsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardFeatureMarkerPatch
@@ -48,6 +52,8 @@ import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardInline
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardKeyShapeSelectionFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardKeyShapeSelectionFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.flowmode.gboardFlowModeFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.lanftp.gboardLanFtpFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.lanftp.gboardLanFtpManifestPatch
 import dev.jason.gboardpatches.patches.gboard.features.latinglobe.gboardLatinGlobeKeyIgnoreIntervalBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.latinglobe.gboardLatinGlobeKeyIgnoreIntervalFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gboardLongPressQuickActionsFeatureMarkerPatch
@@ -203,6 +209,23 @@ val gboardFloatingWebSearchPatch = gboardPublicResourcePatch(
         gboardFloatingWebSearchFeatureMarkerPatch,
         gboardFloatingWebSearchManifestPatch,
         gboardAccessPointContributions1803Patch,
+    )
+}
+
+@Suppress("unused")
+val gboardSimpleCalculatorPatch = gboardPublicResourcePatch(
+    featureId = "simple_calculator",
+    name = "Simple Calculator",
+    description = "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\n" +
+        "Type an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardCalculatorFeatureMarkerPatch,
+        gboardCalculatorLifecyclePatch,
     )
 }
 
@@ -465,6 +488,23 @@ val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardBackupRestorePatch = gboardPublicResourcePatch(
+    featureId = "backup_restore",
+    name = "Backup & Restore",
+    description = "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\n" +
+        "Export or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardBackupRestoreFeatureMarkerPatch,
+        gboardBackupRestoreManifestPatch,
+    )
+}
+
+@Suppress("unused")
 val gboardSymbolsFooterOrderPatch = gboardPublicResourcePatch(
     featureId = "emojis_stickers_gifs_tab_order",
     name = "Emojis, stickers & GIFs Tab Order",
@@ -532,6 +572,23 @@ val gboardWebClipboardPatch = gboardPublicResourcePatch(
         gboardWebClipboardManifestPatch,
         gboardWebClipboardAssetsPatch,
         gboardWebClipboardCapturePatch
+    )
+}
+
+@Suppress("unused")
+val gboardLanFtpServerPatch = gboardPublicResourcePatch(
+    featureId = "lan_ftp_server",
+    name = "FTP Server",
+    description = "新增區域網路 FTP 伺服器，支援檔案瀏覽、傳輸與下載續傳\n" +
+        "Add a LAN FTP server with file browsing, transfers, and download resume.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardLanFtpFeatureMarkerPatch,
+        gboardLanFtpManifestPatch,
     )
 }
 
@@ -748,6 +805,7 @@ object GboardPublishedPatchCatalog {
         gboardSpacebarLogoPatch,
         gboardManualIncognitoModePatch,
         gboardFloatingWebSearchPatch,
+        gboardSimpleCalculatorPatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardEmojiSizePatch,
@@ -763,11 +821,13 @@ object GboardPublishedPatchCatalog {
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
+        gboardBackupRestorePatch,
         gboardDeveloperOptionsPatch,
         gboardSymbolsFooterOrderPatch,
         gboardClipboardEnhancementsPatch,
         gboardClipboardContentLimitPatch,
         gboardWebClipboardPatch,
+        gboardLanFtpServerPatch,
         gboardDeviceIntelligencePatch,
         gboardGrammarCheckerFlagPatch,
         gboardInlineSuggestionsFlagPatch,
