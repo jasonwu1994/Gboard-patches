@@ -97,6 +97,8 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     SPLIT_KEYBOARD_RUNTIME_AFTER_MODE_ENVIRONMENT_CHANGED("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboard1803Runtime;->afterModeEnvironmentChanged(Ljava/lang/Object;)V"),
     SPLIT_KEYBOARD_RUNTIME_INCLUDE_ACCESS_POINT_IN_ORDER("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboard1803Runtime;->includeAccessPointInOrder(Ljava/lang/Object;)Ljava/lang/Object;"),
     SPLIT_KEYBOARD_RUNTIME_INTERCEPT_SPLIT_ACTION("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboard1803Runtime;->interceptSplitAction(Ljava/lang/Object;)Z"),
+    SWIPE_DOWN_DISMISS_RUNTIME_ON_INPUT_VIEW_STARTED("Ldev/jason/gboardpatches/extension/swipedismiss/GboardSwipeDownDismissRuntime;->onInputViewStarted(Ljava/lang/Object;)V"),
+    SWIPE_DOWN_DISMISS_RUNTIME_ON_TOOLBAR_EDIT_MODE_CHANGED("Ldev/jason/gboardpatches/extension/swipedismiss/GboardSwipeDownDismissRuntime;->onToolbarEditModeChanged(Z)V"),
     SPACEBAR_LOGO_RUNTIME_AFTER_SOFT_KEY_BOUND("Ldev/jason/gboardpatches/extension/spacebarlogo/GboardSpacebarLogo1803Runtime;->afterSoftKeyBound(Ljava/lang/Object;Ljava/lang/Object;)V"),
     SPACEBAR_LOGO_RUNTIME_BEFORE_SOFT_KEY_BOUND("Ldev/jason/gboardpatches/extension/spacebarlogo/GboardSpacebarLogo1803Runtime;->beforeSoftKeyBound(Ljava/lang/Object;Ljava/lang/Object;)V"),
     SYMBOL_FOOTER_ORDER_RUNTIME_REORDER_EXPRESSION_CORPUS_LIST("Ldev/jason/gboardpatches/extension/symbolfooter/GboardSymbolFooterOrderRuntime;->reorderExpressionCorpusList(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),

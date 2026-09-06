@@ -630,6 +630,21 @@
       ]
     },
     {
+      "feature_id": "swipe_down_to_dismiss_keyboard",
+      "public_patch_name": "Swipe Down to Dismiss Keyboard",
+      "feature_marker": "dev.jason.gboardpatches.feature.swipe_down_dismiss_keyboard",
+      "target_family_ids": ["manualincognito"],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/swipedismiss/GboardSwipeDownDismissFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/swipedismiss/GboardSwipeDownDismissLifecyclePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        { "contribution_id": "swipe_down_to_dismiss_keyboard.lifecycle", "anchor_family_id": "dedicated_bytecode", "phase": "dedicated", "order": 1900, "required_bindings": [], "runtime_calls": ["SWIPE_DOWN_DISMISS_RUNTIME_ON_INPUT_VIEW_STARTED", "SWIPE_DOWN_DISMISS_RUNTIME_ON_TOOLBAR_EDIT_MODE_CHANGED"] }
+      ]
+    },
+    {
       "feature_id": "swipeable_custom_top_row",
       "public_patch_name": "Swipeable Custom Top Row",
       "feature_marker": "dev.jason.gboardpatches.feature.top_row_swipe",

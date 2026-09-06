@@ -414,6 +414,18 @@
       "options": []
     },
     {
+      "name": "Swipe Down to Dismiss Keyboard",
+      "description": "從鍵盤頂部的建議列或工具列向下滑動以關閉鍵盤\nSwipe down from the suggestions or toolbar area to dismiss the keyboard.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
       "name": "Swipeable Custom Top Row",
       "description": "滑動鍵盤第一排，在原生列與可自訂文字/JavaScript 列之間切換\nSwipe the keyboard top row to switch between the stock row and a customizable text/JavaScript row.",
       "use": true,

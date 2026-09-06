@@ -76,6 +76,8 @@ import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplit
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDownDismissFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDownDismissLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803AutoFixAcceptancePatch
@@ -488,6 +490,23 @@ val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardSwipeDownDismissKeyboardPatch = gboardPublicResourcePatch(
+    featureId = "swipe_down_to_dismiss_keyboard",
+    name = "Swipe Down to Dismiss Keyboard",
+    description = "從鍵盤頂部的建議列或工具列向下滑動以關閉鍵盤\n" +
+        "Swipe down from the suggestions or toolbar area to dismiss the keyboard.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardSwipeDownDismissFeatureMarkerPatch,
+        gboardSwipeDownDismissLifecyclePatch,
+    )
+}
+
+@Suppress("unused")
 val gboardBackupRestorePatch = gboardPublicResourcePatch(
     featureId = "backup_restore",
     name = "Backup & Restore",
@@ -821,6 +840,7 @@ object GboardPublishedPatchCatalog {
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
+        gboardSwipeDownDismissKeyboardPatch,
         gboardBackupRestorePatch,
         gboardDeveloperOptionsPatch,
         gboardSymbolsFooterOrderPatch,

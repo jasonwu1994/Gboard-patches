@@ -77,6 +77,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.access_point_count";
     public static final String FEATURE_FLOATING_WEB_SEARCH =
             "dev.jason.gboardpatches.feature.floating_web_search";
+    public static final String FEATURE_SWIPE_DOWN_DISMISS_KEYBOARD =
+            "dev.jason.gboardpatches.feature.swipe_down_dismiss_keyboard";
     public static final String FEATURE_SIMPLE_CALCULATOR =
             "dev.jason.gboardpatches.feature.simple_calculator";
 

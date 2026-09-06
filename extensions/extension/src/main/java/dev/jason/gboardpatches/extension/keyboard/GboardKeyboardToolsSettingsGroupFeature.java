@@ -15,6 +15,7 @@ import dev.jason.gboardpatches.extension.quickinsert.GboardQuickInsertSettingsFe
 import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
+import dev.jason.gboardpatches.extension.swipedismiss.GboardSwipeDownDismissSettingsFeature;
 import dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeSettingsFeature;
 import dev.jason.gboardpatches.extension.websearch.GboardFloatingWebSearchSettingsFeature;
 
@@ -37,6 +38,7 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         R.string.gboard_patches_group_keyboard_empty_summary),
                 Arrays.asList(
                         new GboardTopRowSwipeSettingsFeature(context),
+                        new GboardSwipeDownDismissSettingsFeature(context),
                         new GboardManualIncognitoSettingsFeature(context),
                         new GboardLongPressQuickActionsSettingsFeature(context),
                         new GboardCursorTrackpadSettingsFeature(context),
