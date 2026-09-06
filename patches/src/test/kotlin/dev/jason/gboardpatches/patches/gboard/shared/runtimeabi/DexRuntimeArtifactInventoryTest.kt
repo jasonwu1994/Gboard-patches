@@ -6,25 +6,29 @@ import org.junit.Test
 
 class DexRuntimeArtifactInventoryTest {
     @Test
-    fun `verifies the authoritative contract against the freshly built extension artifact`() {
-        val outputDirectory = File(
-            requireNotNull(System.getProperty("gboard.runtimeAbiOutputDirectory"))
-        )
-        require(outputDirectory.isDirectory) {
-            "Extension output directory not found: $outputDirectory"
+    fun `verifies the authoritative contract against freshly built extension artifacts`() {
+        val outputDirectories = requireNotNull(
+            System.getProperty("gboard.runtimeAbiOutputDirectories"),
+        ).split(File.pathSeparator).map(::File)
+        outputDirectories.forEach { outputDirectory ->
+            require(outputDirectory.isDirectory) {
+                "Extension output directory not found: $outputDirectory"
+            }
         }
-        val artifacts = outputDirectory.walkTopDown()
-            .filter { file -> file.isFile && file.extension == "rve" }
-            .toList()
-        require(artifacts.size == 1) {
-            "Expected exactly one .rve under $outputDirectory, found: " +
-                artifacts.joinToString { artifact -> artifact.relativeTo(outputDirectory).path }
+        val artifacts = outputDirectories.flatMap { outputDirectory ->
+            outputDirectory.walkTopDown()
+                .filter { file -> file.isFile && file.extension == "rve" }
+                .toList()
         }
-        val artifact = artifacts.single()
+        require(artifacts.isNotEmpty()) { "No .rve artifacts found under $outputDirectories" }
+        val inventories = artifacts.map(DexRuntimeArtifactInventory::read)
+        val compositeInventory = RuntimeArtifactInventory { owner, name ->
+            inventories.flatMap { inventory -> inventory.methods(owner, name) }
+        }
 
         val mismatches = RuntimeAbiVerifier.verify(
             calls = RuntimeCallId.entries,
-            inventory = DexRuntimeArtifactInventory.read(artifact),
+            inventory = compositeInventory,
         )
 
         assertEquals(emptyList<RuntimeAbiMismatch>(), mismatches)

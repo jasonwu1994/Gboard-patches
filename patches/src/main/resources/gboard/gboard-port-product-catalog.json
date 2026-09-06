@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.11.0",
+  "catalog_version": "1.12.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -130,6 +130,21 @@
       ],
       "contributions": [
         { "contribution_id": "ai_writing_tools.flag", "anchor_family_id": "flag_bool_getter", "phase": "after_stock_result", "order": 300, "required_bindings": ["flag_bool_getter", "flag_name_field"], "runtime_calls": ["AI_WRITING_TOOLS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_APPLY_GEN_AI_INIT_CLIENT_TYPE", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_APPLY_SMART_EDIT_INIT_CLIENT_TYPE", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_BEGIN_GEN_AI_REFRESH", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_FINISH_GEN_AI_REFRESH", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_OBSERVE_GEN_AI_REFRESH_CLIENT_TYPE", "AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_REMEMBER_GEN_AI_INIT_CALL"] }
+      ]
+    },
+    {
+      "feature_id": "backup_restore",
+      "public_patch_name": "Backup & Restore",
+      "feature_marker": "dev.jason.gboardpatches.feature.backup_restore",
+      "target_family_ids": [],
+      "migration_scope": "version-neutral-extension",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreManifestPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        { "contribution_id": "backup_restore.resources", "anchor_family_id": "resource_only", "phase": "resource", "order": 100, "required_bindings": [], "runtime_calls": [] }
       ]
     },
     {
@@ -595,6 +610,23 @@
       ],
       "contributions": [
         { "contribution_id": "settings_homepage_override.bytecode", "anchor_family_id": "dedicated_bytecode", "phase": "dedicated", "order": 1500, "required_bindings": [], "runtime_calls": ["SETTINGS_HOMEPAGE_RUNTIME_APPLY_SETTINGS_HOMEPAGE_POLICY"] }
+      ]
+    },
+    {
+      "feature_id": "simple_calculator",
+      "public_patch_name": "Simple Calculator",
+      "feature_marker": "dev.jason.gboardpatches.feature.simple_calculator",
+      "target_family_ids": ["calculator.lifecycle"],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculator1803Targets.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorExtensionPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorLifecyclePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        { "contribution_id": "simple_calculator.lifecycle", "anchor_family_id": "dedicated_bytecode", "phase": "dedicated", "order": 1900, "required_bindings": [], "runtime_calls": ["CALCULATOR_RUNTIME_ON_INPUT_VIEW_STARTED", "CALCULATOR_RUNTIME_ON_SELECTION_UPDATED", "CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN"] }
       ]
     },
     {

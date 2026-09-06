@@ -81,6 +81,12 @@ Features designed and built by this project rather than simply unlocking an exis
 </details>
 
 <details>
+  <summary><code>Simple Calculator</code></summary>
+
+  Adds an optional inline calculator for arithmetic expressions typed in any text field. The result appears in Gboard's suggestion row; tap it to replace the expression, or long-press it to copy the result.
+</details>
+
+<details>
   <summary><code>G Logo on Spacebar</code></summary>
 
   Show the G Logo on the spacebar and hide the language label.
@@ -103,6 +109,13 @@ Features designed and built by this project rather than simply unlocking an exis
 
 Customize the bottom tab order in Gboard's Emojis, stickers & GIFs panel with drag-and-drop reordering.
 </details>
+
+<details>
+  <summary><code>Backup &amp; Restore</code></summary>
+
+  Exports all Gboard Patches settings to a portable JSON backup and restores only the modules you select, with per-module and per-key results. It also exports, compares, and restores Gboard's raw PB/XML flag-store files.
+</details>
+
 
 ### Gboard Feature Unlocks
 

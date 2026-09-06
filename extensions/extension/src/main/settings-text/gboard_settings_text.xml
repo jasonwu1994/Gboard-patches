@@ -2630,6 +2630,354 @@
         <translation locale="en">FTP Server</translation>
         <translation locale="zh-Hant">FTP Server</translation>
     </string>
+    <string name="gboard_patches_backup_restore_title">
+        <translation locale="en">Backup &amp; Restore</translation>
+        <translation locale="zh-Hant">備份與還原</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_summary">
+        <translation locale="en">Export or restore all Patches settings</translation>
+        <translation locale="zh-Hant">匯出或還原全部 Patches 設定</translation>
+    </string>
+    <string name="gboard_patches_backup_section_patches">
+        <translation locale="en">Patches settings</translation>
+        <translation locale="zh-Hant">Patches 設定</translation>
+    </string>
+    <string name="gboard_patches_backup_export_title">
+        <translation locale="en">Export Patches settings</translation>
+        <translation locale="zh-Hant">匯出 Patches 設定</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_action_title">
+        <translation locale="en">Restore Patches settings</translation>
+        <translation locale="zh-Hant">還原 Patches 設定</translation>
+    </string>
+    <string name="gboard_patches_backup_export_done">
+        <translation locale="en">Patches backup exported.</translation>
+        <translation locale="zh-Hant">已匯出 Patches 備份。</translation>
+    </string>
+    <string name="gboard_patches_backup_export_failed">
+        <translation locale="en">Unable to export Patches settings.</translation>
+        <translation locale="zh-Hant">無法匯出 Patches 設定。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_done">
+        <translation locale="en">Patches settings restored. Restart Gboard to apply every change.</translation>
+        <translation locale="zh-Hant">已還原 Patches 設定。請重新啟動 Gboard 以套用全部變更。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_done_mirror_pending">
+        <translation locale="en">Patches settings restored locally. Restart Gboard to rebuild unavailable remote settings.</translation>
+        <translation locale="zh-Hant">已還原本機 Patches 設定。請重新啟動 Gboard，以重建目前無法使用的遠端設定。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_failed">
+        <translation locale="en">The selected backup is invalid or could not be processed.</translation>
+        <translation locale="zh-Hant">所選備份無效或無法處理。</translation>
+    </string>
+    <string name="gboard_patches_backup_section_flags">
+        <translation locale="en">Gboard flag storage</translation>
+        <translation locale="zh-Hant">Gboard Flag 儲存空間</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_title">
+        <translation locale="en">Current flag backend</translation>
+        <translation locale="zh-Hant">目前 Flag backend</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_loading">
+        <translation locale="en">Checking Gboard…</translation>
+        <translation locale="zh-Hant">正在檢查 Gboard…</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_proto">
+        <translation locale="en">Gboard currently uses the new PB flag-store format.</translation>
+        <translation locale="zh-Hant">目前 Gboard Flag 後端使用新版 PB 格式。</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_proto_with_legacy">
+        <translation locale="en">Both the new PB format and legacy XML format currently exist. It cannot be determined which format Gboard will ultimately read.</translation>
+        <translation locale="zh-Hant">目前同時存在新版 PB 與舊版 XML，無法確認 Gboard 最後會讀取哪一種格式。</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_legacy">
+        <translation locale="en">Gboard currently uses the legacy XML flag-store format.</translation>
+        <translation locale="zh-Hant">目前 Gboard Flag 後端使用舊版 XML 格式。</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_not_created">
+        <translation locale="en">No persisted flag store exists yet; the backend cannot be determined from disk</translation>
+        <translation locale="zh-Hant">目前尚未建立持久化 flag store，無法只從磁碟判定 backend</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_unavailable">
+        <translation locale="en">Gboard is not ready for a storage query</translation>
+        <translation locale="zh-Hant">Gboard 尚未準備好接受儲存空間查詢</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_proto_last_modified">
+        <translation locale="en">PB last modified: %1$s</translation>
+        <translation locale="zh-Hant">PB 最後修改時間：%1$s</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_override_last_modified">
+        <translation locale="en">flag_override.xml last modified: %1$s</translation>
+        <translation locale="zh-Hant">flag_override.xml 最後修改時間：%1$s</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_value_last_modified">
+        <translation locale="en">flag_value.xml last modified: %1$s</translation>
+        <translation locale="zh-Hant">flag_value.xml 最後修改時間：%1$s</translation>
+    </string>
+    <string name="gboard_patches_backup_flag_backend_time_unknown">
+        <translation locale="en">Unknown</translation>
+        <translation locale="zh-Hant">無法取得</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_modules_title">
+        <translation locale="en">Choose modules to restore</translation>
+        <translation locale="zh-Hant">選擇要還原的模組</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_modules_action">
+        <translation locale="en">Review differences</translation>
+        <translation locale="zh-Hant">查看覆蓋差異</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_title">
+        <translation locale="en">Restore differences</translation>
+        <translation locale="zh-Hant">還原差異</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_overall">
+        <translation locale="en">Selected changes</translation>
+        <translation locale="zh-Hant">已選變更</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_summary">
+        <translation locale="en">Added %1$d · Changed %2$d · Removed %3$d · Unchanged %4$d</translation>
+        <translation locale="zh-Hant">新增 %1$d · 變更 %2$d · 移除 %3$d · 不變 %4$d</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_module_summary">
+        <translation locale="en">%1$d changes</translation>
+        <translation locale="zh-Hant">%1$d 個變更</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_no_changes">
+        <translation locale="en">No changes</translation>
+        <translation locale="zh-Hant">沒有變更</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_action">
+        <translation locale="en">Restore selected modules</translation>
+        <translation locale="zh-Hant">還原已選模組</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_added">
+        <translation locale="en">Added</translation>
+        <translation locale="zh-Hant">新增</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_changed">
+        <translation locale="en">Changed</translation>
+        <translation locale="zh-Hant">變更</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_removed">
+        <translation locale="en">Removed</translation>
+        <translation locale="zh-Hant">移除</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_unchanged">
+        <translation locale="en">Unchanged</translation>
+        <translation locale="zh-Hant">不變</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_current">
+        <translation locale="en">Current: %1$s</translation>
+        <translation locale="zh-Hant">目前：%1$s</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_backup">
+        <translation locale="en">Backup: %1$s</translation>
+        <translation locale="zh-Hant">備份：%1$s</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_preview_absent">
+        <translation locale="en">Not present</translation>
+        <translation locale="zh-Hant">不存在</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_title">
+        <translation locale="en">Restore result</translation>
+        <translation locale="zh-Hant">還原結果</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_overall">
+        <translation locale="en">Overall result</translation>
+        <translation locale="zh-Hant">整體結果</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_success">
+        <translation locale="en">Restored %1$d modules and verified %2$d backup keys. Restart Gboard to apply every change.</translation>
+        <translation locale="zh-Hant">已還原 %1$d 個模組，並驗證 %2$d 個備份 key。請重新啟動 Gboard 以套用全部變更。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_mirror_pending">
+        <translation locale="en">Restored %1$d modules and verified %2$d backup keys. Some live mirrors are unavailable; restart Gboard to rebuild them.</translation>
+        <translation locale="zh-Hant">已還原 %1$d 個模組，並驗證 %2$d 個備份 key。部分即時鏡像目前不可用；請重新啟動 Gboard 重建。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_partial">
+        <translation locale="en">Restored %1$d modules and %2$d keys; %3$d modules failed. Successful modules were kept.</translation>
+        <translation locale="zh-Hant">已還原 %1$d 個模組與 %2$d 個 key；%3$d 個模組失敗。成功模組的變更已保留。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_failed">
+        <translation locale="en">No selected module was restored. Review each module below.</translation>
+        <translation locale="zh-Hant">沒有任何已選模組完成還原，請查看下方各模組結果。</translation>
+    </string>
+    <string name="gboard_patches_backup_restore_result_no_keys">
+        <translation locale="en">No stored keys in this module</translation>
+        <translation locale="zh-Hant">這個模組沒有已儲存的 key</translation>
+    </string>
+    <string name="gboard_patches_backup_status_success">
+        <translation locale="en">Module restored and verified</translation>
+        <translation locale="zh-Hant">模組已還原並通過驗證</translation>
+    </string>
+    <string name="gboard_patches_backup_status_partial">
+        <translation locale="en">Module was partially restored</translation>
+        <translation locale="zh-Hant">模組僅部分還原</translation>
+    </string>
+    <string name="gboard_patches_backup_status_failed">
+        <translation locale="en">Module restore failed</translation>
+        <translation locale="zh-Hant">模組還原失敗</translation>
+    </string>
+    <string name="gboard_patches_backup_status_previous_values_restored">
+        <translation locale="en">Restore failed; previous values were restored</translation>
+        <translation locale="zh-Hant">還原失敗；已恢復先前設定</translation>
+    </string>
+    <string name="gboard_patches_backup_key_restored">
+        <translation locale="en">Matched backup value after write</translation>
+        <translation locale="zh-Hant">寫入後與備份值相符</translation>
+    </string>
+    <string name="gboard_patches_backup_key_removed">
+        <translation locale="en">Removed because it was absent from the complete backup</translation>
+        <translation locale="zh-Hant">完整備份中不存在，因此已移除</translation>
+    </string>
+    <string name="gboard_patches_backup_key_failed">
+        <translation locale="en">Did not match the backup value</translation>
+        <translation locale="zh-Hant">寫入後未對應到備份值</translation>
+    </string>
+    <string name="gboard_patches_backup_key_previous_value_restored">
+        <translation locale="en">Previous value was restored</translation>
+        <translation locale="zh-Hant">已恢復先前值</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_title">
+        <translation locale="en">PB/XML Backup &amp; Restore</translation>
+        <translation locale="zh-Hant">PB/XML 備份還原</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_export_section">
+        <translation locale="en">Raw flag-store export</translation>
+        <translation locale="zh-Hant">原始 flag store 匯出</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_export_file">
+        <translation locale="en">Export %1$s</translation>
+        <translation locale="zh-Hant">匯出 %1$s</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_export_done">
+        <translation locale="en">Raw flag-store file exported.</translation>
+        <translation locale="zh-Hant">已匯出原始 flag store 檔案。</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_export_failed">
+        <translation locale="en">Unable to export this flag-store file.</translation>
+        <translation locale="zh-Hant">無法匯出這個 flag store 檔案。</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_import_section">
+        <translation locale="en">Choose restore file</translation>
+        <translation locale="zh-Hant">選擇還原檔</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_choose_title">
+        <translation locale="en">Choose PB or XML file</translation>
+        <translation locale="zh-Hant">選擇 PB 或 XML 檔案</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_invalid_name">
+        <translation locale="en">The selected file does not have a supported canonical Gboard flag-store name.</translation>
+        <translation locale="zh-Hant">所選檔案不是支援的 Gboard flag store 標準檔名。</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_stage_failed">
+        <translation locale="en">The replacement file was rejected or could not be prepared.</translation>
+        <translation locale="zh-Hant">覆蓋檔案遭拒絕或無法準備套用。</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_apply_title">
+        <translation locale="en">Apply and restart Gboard</translation>
+        <translation locale="zh-Hant">套用並重新啟動 Gboard</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_apply_confirm_title">
+        <translation locale="en">Restore the Gboard flag store?</translation>
+        <translation locale="zh-Hant">確定要還原 Gboard flag store 嗎？</translation>
+    </string>
+    <string name="gboard_flag_store_replacement_apply_confirm_message">
+        <translation locale="en">The original values will be overwritten.</translation>
+        <translation locale="zh-Hant">原始值將會直接被覆蓋</translation>
+    </string>
+    <string name="gboard_flag_store_diff_summary">
+        <translation locale="en">Current values: %1$d · Replacement values: %2$d · Changed: %3$d · Added: %4$d · Removed: %5$d</translation>
+        <translation locale="zh-Hant">目前值：%1$d · 覆蓋檔值：%2$d · 變更：%3$d · 新增：%4$d · 移除：%5$d</translation>
+    </string>
+    <string name="gboard_flag_store_diff_changed">
+        <translation locale="en">Changed values</translation>
+        <translation locale="zh-Hant">變更的值</translation>
+    </string>
+    <string name="gboard_flag_store_diff_added">
+        <translation locale="en">Added values</translation>
+        <translation locale="zh-Hant">新增的值</translation>
+    </string>
+    <string name="gboard_flag_store_diff_removed">
+        <translation locale="en">Removed values</translation>
+        <translation locale="zh-Hant">移除的值</translation>
+    </string>
+    <string name="gboard_flag_store_diff_no_changes">
+        <translation locale="en">No semantic changes</translation>
+        <translation locale="zh-Hant">沒有語意差異</translation>
+    </string>
+    <string name="gboard_flag_store_diff_identical">
+        <translation locale="en">The replacement contains the same typed values as the current file.</translation>
+        <translation locale="zh-Hant">覆蓋檔與目前檔案包含相同的 typed value。</translation>
+    </string>
+    <string name="gboard_flag_store_diff_value_changed">
+        <translation locale="en">%1$s → %2$s</translation>
+        <translation locale="zh-Hant">%1$s → %2$s</translation>
+    </string>
+    <string name="gboard_flag_store_diff_value_added">
+        <translation locale="en">Not present → %1$s</translation>
+        <translation locale="zh-Hant">不存在 → %1$s</translation>
+    </string>
+    <string name="gboard_flag_store_diff_value_removed">
+        <translation locale="en">%1$s → Not present</translation>
+        <translation locale="zh-Hant">%1$s → 不存在</translation>
+    </string>
+    <string name="gboard_flag_store_diff_current_failed">
+        <translation locale="en">Unable to read the current flag-store file for comparison.</translation>
+        <translation locale="zh-Hant">無法讀取目前的 flag store 進行比較。</translation>
+    </string>
+    <string name="gboard_flag_store_diff_decode_failed">
+        <translation locale="en">Unable to completely decode this flag store, so it cannot be used.</translation>
+        <translation locale="zh-Hant">無法完整解碼這份 flag store，因此無法使用。</translation>
+    </string>
+    <string name="gboard_patches_calculator_title">
+        <translation locale="en">Simple Calculator</translation>
+        <translation locale="zh-Hant">簡易計算機</translation>
+    </string>
+    <string name="gboard_patches_calculator_summary">
+        <translation locale="en">Type an arithmetic expression in any text field. Its result appears in Gboard’s suggestion row and can replace the expression with one tap.</translation>
+        <translation locale="zh-Hant">直接在任何文字欄輸入算式，答案會出現在 Gboard 推薦列；點一下即可用答案取代算式。</translation>
+    </string>
+    <string name="gboard_patches_calculator_enable_title">
+        <translation locale="en">Enable Simple Calculator</translation>
+        <translation locale="zh-Hant">啟用簡易計算機</translation>
+    </string>
+    <string name="gboard_patches_calculator_enable_summary">
+        <translation locale="en">Shows results for complete arithmetic expressions the next time the keyboard opens.</translation>
+        <translation locale="zh-Hant">下一次開啟鍵盤時，為完整四則算式顯示答案推薦。</translation>
+    </string>
+    <string name="gboard_patches_calculator_section_feature">
+        <translation locale="en">Feature</translation>
+        <translation locale="zh-Hant">功能</translation>
+    </string>
+    <string name="gboard_patches_calculator_section_usage">
+        <translation locale="en">Usage</translation>
+        <translation locale="zh-Hant">使用方式</translation>
+    </string>
+    <string name="gboard_patches_calculator_usage_title">
+        <translation locale="en">Inline result suggestion</translation>
+        <translation locale="zh-Hant">行內答案推薦</translation>
+    </string>
+    <string name="gboard_patches_calculator_usage_summary">
+        <translation locale="en">Type a complete expression such as 2+3×4 in the current app. Tap the result above the keyboard to replace the expression with 14, or long-press the result to copy it.</translation>
+        <translation locale="zh-Hant">在目前 App 輸入完整算式，例如 2+3×4。點選鍵盤上方的 14 會以答案取代算式；長按答案則可直接複製。</translation>
+    </string>
+    <string name="gboard_patches_calculator_limits_title">
+        <translation locale="en">Supported range and limits</translation>
+        <translation locale="zh-Hant">支援範圍與限制</translation>
+    </string>
+    <string name="gboard_patches_calculator_limits_summary">
+        <translation locale="en">Expression length: Up to 128 characters; rejected before normalization.\nBinary operations: Up to 63.\nParentheses depth: Up to 16 levels.\nInternal precision: 16 significant digits, HALF_EVEN.\nDisplay precision: Up to 3 decimal places, HALF_UP.\nLarge numbers: Scientific notation from 10¹².\nOperators: + - * / − × ÷\nParentheses: Supports () and full-width （） from Traditional Chinese Gboard.</translation>
+        <translation locale="zh-Hant">算式長度：最多 128 字元，正規化前即拒絕\n二元運算：最多 63 次\n括號深度：最多 16 層\n內部精度：16 位有效數字，HALF_EVEN\n顯示精度：最多小數 3 位，HALF_UP\n大數顯示：達 10¹² 改用科學記號\n運算符號：+ - * / − × ÷\n括號：支援 () 與繁中 Gboard 實際輸出的 （）</translation>
+    </string>
+    <string name="gboard_patches_calculator_error_title">
+        <translation locale="en">Calculator setting unavailable</translation>
+        <translation locale="zh-Hant">計算機設定無法使用</translation>
+    </string>
+    <string name="gboard_patches_calculator_error_summary">
+        <translation locale="en">The calculator settings screen failed to load. Reopen Gboard settings and try again.</translation>
+        <translation locale="zh-Hant">計算機設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
+    </string>
     <string name="gboard_patches_swipe_down_dismiss_title">
         <translation locale="en">Swipe Down to Dismiss Keyboard</translation>
         <translation locale="zh-Hant">下滑關閉鍵盤</translation>

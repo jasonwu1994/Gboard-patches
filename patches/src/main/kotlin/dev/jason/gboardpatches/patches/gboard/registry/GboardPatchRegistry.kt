@@ -15,6 +15,10 @@ import dev.jason.gboardpatches.patches.gboard.features.accesspointsmenu.gboardAc
 import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardAdvancedVoiceFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreManifestPatch
+import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.about.gboardAboutPageResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardCustomSymbolsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardFeatureMarkerPatch
@@ -207,6 +211,23 @@ val gboardFloatingWebSearchPatch = gboardPublicResourcePatch(
         gboardFloatingWebSearchFeatureMarkerPatch,
         gboardFloatingWebSearchManifestPatch,
         gboardAccessPointContributions1803Patch,
+    )
+}
+
+@Suppress("unused")
+val gboardSimpleCalculatorPatch = gboardPublicResourcePatch(
+    featureId = "simple_calculator",
+    name = "Simple Calculator",
+    description = "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\n" +
+        "Type an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardCalculatorFeatureMarkerPatch,
+        gboardCalculatorLifecyclePatch,
     )
 }
 
@@ -454,6 +475,21 @@ val gboardCustomTopRowSwipePatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
+    featureId = "developer_options",
+    name = "Developer options",
+    description = "啟用 開發人員選項 與 Flag 編輯器，你可以自己修改Flag的值\nEnable Developer options and the Flag Editor, allowing you to modify flag values.",
+    default = true
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardDeveloperOptionsFeatureMarkerPatch
+    )
+}
+
+@Suppress("unused")
 val gboardSwipeDownDismissKeyboardPatch = gboardPublicResourcePatch(
     featureId = "swipe_down_to_dismiss_keyboard",
     name = "Swipe Down to Dismiss Keyboard",
@@ -471,17 +507,19 @@ val gboardSwipeDownDismissKeyboardPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
-val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
-    featureId = "developer_options",
-    name = "Developer options",
-    description = "啟用 開發人員選項 與 Flag 編輯器，你可以自己修改Flag的值\nEnable Developer options and the Flag Editor, allowing you to modify flag values.",
-    default = true
+val gboardBackupRestorePatch = gboardPublicResourcePatch(
+    featureId = "backup_restore",
+    name = "Backup & Restore",
+    description = "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\n" +
+        "Export or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
+    default = true,
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
 
     dependsOn(
         gboardPatchesSettingsPatch,
-        gboardDeveloperOptionsFeatureMarkerPatch
+        gboardBackupRestoreFeatureMarkerPatch,
+        gboardBackupRestoreManifestPatch,
     )
 }
 
@@ -786,6 +824,7 @@ object GboardPublishedPatchCatalog {
         gboardSpacebarLogoPatch,
         gboardManualIncognitoModePatch,
         gboardFloatingWebSearchPatch,
+        gboardSimpleCalculatorPatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardEmojiSizePatch,
@@ -802,6 +841,7 @@ object GboardPublishedPatchCatalog {
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
         gboardSwipeDownDismissKeyboardPatch,
+        gboardBackupRestorePatch,
         gboardDeveloperOptionsPatch,
         gboardSymbolsFooterOrderPatch,
         gboardClipboardEnhancementsPatch,

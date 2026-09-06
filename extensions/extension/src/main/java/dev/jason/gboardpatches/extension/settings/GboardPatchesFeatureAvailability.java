@@ -41,6 +41,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.top_row_swipe";
     public static final String FEATURE_DEVELOPER_OPTIONS =
             "dev.jason.gboardpatches.feature.developer_options";
+    public static final String FEATURE_BACKUP_RESTORE =
+            "dev.jason.gboardpatches.feature.backup_restore";
     public static final String FEATURE_LONG_PRESS_QUICK_ACTIONS =
             "dev.jason.gboardpatches.feature.long_press_quick_actions";
     public static final String FEATURE_ADVANCED_VOICE_TYPING =
@@ -77,6 +79,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.floating_web_search";
     public static final String FEATURE_SWIPE_DOWN_DISMISS_KEYBOARD =
             "dev.jason.gboardpatches.feature.swipe_down_dismiss_keyboard";
+    public static final String FEATURE_SIMPLE_CALCULATOR =
+            "dev.jason.gboardpatches.feature.simple_calculator";
 
     private static final String TAG = "GboardPatches";
 

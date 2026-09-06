@@ -51,7 +51,7 @@ class GboardPortProductCatalogContractTest {
     @Test
     fun catalogIsDeterministicAndDeclaresSelectedOnlyZeroSelectionComposition() {
         assertEquals("gboard-port-product-catalog.v1", catalog["format"].asString)
-        assertEquals("1.11.0", catalog["catalog_version"].asString)
+        assertEquals("1.12.0", catalog["catalog_version"].asString)
         val composition = catalog.getAsJsonObject("composition")
         assertEquals(
             setOf("selected_only_call_chain", "runtime_feature_mask"),
@@ -658,6 +658,7 @@ class GboardPortProductCatalogContractTest {
             "add_gboard_signature_bypass" to "version-sensitive",
             "advanced_voice_typing" to "version-sensitive",
             "ai_writing_tools" to "version-sensitive",
+            "backup_restore" to "version-neutral-extension",
             "change_emoji_size" to "version-sensitive",
             "clipboard_custom_character_limit" to "version-sensitive",
             "clipboard_enhancements" to "version-sensitive",
@@ -685,6 +686,7 @@ class GboardPortProductCatalogContractTest {
             "quick_insert" to "version-sensitive",
             "rounded_keyboard_panel" to "version-sensitive",
             "settings_homepage_override" to "version-sensitive",
+            "simple_calculator" to "version-sensitive",
             "swipe_down_to_dismiss_keyboard" to "version-sensitive",
             "swipeable_custom_top_row" to "version-sensitive",
             "use_bluetooth_microphone" to "version-sensitive",
