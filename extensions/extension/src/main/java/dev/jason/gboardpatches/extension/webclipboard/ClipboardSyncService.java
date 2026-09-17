@@ -24,7 +24,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity;
+import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 
 public final class ClipboardSyncService extends Service {
     private static final String TAG = "GboardWebClipboard";
@@ -398,6 +400,42 @@ public final class ClipboardSyncService extends Service {
             return;
         }
         updateNotification("Clipboard applied from Web");
+
+        SharedPreferences preferences = WebClipboardPreferences.preferences(this);
+        if (WebClipboardPreferences.isToastEnabled(preferences)) {
+            showAppliedToast(text);
+        }
+    }
+
+    private void showAppliedToast(String text) {
+        String preview = smartClip(text, 30);
+        String message = GboardSettingsText.format(
+                this,
+                R.string.gboard_patches_web_clipboard_toast_applied,
+                preview);
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(
+                () -> Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show());
+    }
+
+    private static String smartClip(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+        int clipIndex = maxLength;
+        int searchLimit = Math.max(0, maxLength - 10);
+        for (int i = maxLength; i >= searchLimit; i--) {
+            char c = text.charAt(i);
+            if (Character.isWhitespace(c) || c == '-' || c == '_' || c == '/' || c == ':') {
+                clipIndex = i;
+                break;
+            }
+        }
+        String clipped = text.substring(0, clipIndex);
+        int last = clipped.length() - 1;
+        while (last >= 0 && Character.isWhitespace(clipped.charAt(last))) {
+            last--;
+        }
+        return clipped.substring(0, last + 1) + "\u2026";
     }
 
     private void publishClipboardToPortalIfNotWebEcho(String text) {

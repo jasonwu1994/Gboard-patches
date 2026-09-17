@@ -16,6 +16,7 @@ public final class WebClipboardPreferences {
     public static final String PREF_KEY_PAIRING_CODE = "pref_web_clipboard_pairing_code";
     public static final String PREF_KEY_LOOPBACK_INGRESS_TOKEN =
             "pref_web_clipboard_loopback_ingress_token";
+    public static final String PREF_KEY_TOAST_ENABLED = "pref_web_clipboard_toast_enabled";
 
     public static final boolean DEFAULT_ENABLED = false;
     public static final int DEFAULT_PORT = 8080;
@@ -23,6 +24,7 @@ public final class WebClipboardPreferences {
     public static final boolean DEFAULT_PAIRING_REQUIRED = true;
     public static final String DEFAULT_PAIRING_CODE = "0000";
     public static final String DEFAULT_LOOPBACK_INGRESS_TOKEN = "";
+    public static final boolean DEFAULT_TOAST_ENABLED = false;
 
     private static final int LOOPBACK_INGRESS_TOKEN_BYTES = 32;
     private static final int MIN_LOOPBACK_INGRESS_TOKEN_LENGTH = 32;
@@ -63,6 +65,10 @@ public final class WebClipboardPreferences {
         if (!preferences.contains(PREF_KEY_PAIRING_REQUIRED)) {
             editor = ensureEditor(editor, preferences);
             editor.putBoolean(PREF_KEY_PAIRING_REQUIRED, DEFAULT_PAIRING_REQUIRED);
+        }
+        if (!preferences.contains(PREF_KEY_TOAST_ENABLED)) {
+            editor = ensureEditor(editor, preferences);
+            editor.putBoolean(PREF_KEY_TOAST_ENABLED, DEFAULT_TOAST_ENABLED);
         }
 
         Object rawPairingCode = preferences.getAll().get(PREF_KEY_PAIRING_CODE);
@@ -185,6 +191,23 @@ public final class WebClipboardPreferences {
             return;
         }
         preferences.edit().putBoolean(PREF_KEY_PAIRING_REQUIRED, required).commit();
+    }
+
+    public static boolean isToastEnabled(SharedPreferences preferences) {
+        ensureDefaults(preferences);
+        if (preferences == null) {
+            return DEFAULT_TOAST_ENABLED;
+        }
+        Object rawValue = preferences.getAll().get(PREF_KEY_TOAST_ENABLED);
+        Boolean value = readBooleanObject(rawValue);
+        return value != null ? value.booleanValue() : DEFAULT_TOAST_ENABLED;
+    }
+
+    public static void setToastEnabled(SharedPreferences preferences, boolean enabled) {
+        if (preferences == null) {
+            return;
+        }
+        preferences.edit().putBoolean(PREF_KEY_TOAST_ENABLED, enabled).commit();
     }
 
     public static String getPairingCode(SharedPreferences preferences) {
