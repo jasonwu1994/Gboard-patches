@@ -9,6 +9,8 @@ import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -43,6 +45,7 @@ public final class ClipboardSyncWebPortal {
     private final ClipboardBridge bridge;
     private final WebAssets webAssets;
     private final SecurityConfig securityConfig;
+    private final Map<String, String> systemColors;
     private final String portalInstanceId =
             "portal-" + System.currentTimeMillis()
                     + "-" + NEXT_PORTAL_INSTANCE_SEQUENCE.getAndIncrement();
@@ -84,11 +87,23 @@ public final class ClipboardSyncWebPortal {
 
     ClipboardSyncWebPortal(int port, int httpsPort, ClipboardBridge bridge, WebAssets webAssets,
             SecurityConfig securityConfig) {
+        this(port, httpsPort, bridge, webAssets, securityConfig, Collections.emptyMap());
+    }
+
+    ClipboardSyncWebPortal(int port, ClipboardBridge bridge, WebAssets webAssets,
+            SecurityConfig securityConfig, Map<String, String> systemColors) {
+        this(port, ClipboardSyncHttpsSocketFactory.defaultHttpsPortFor(port), bridge, webAssets,
+                securityConfig, systemColors);
+    }
+
+    ClipboardSyncWebPortal(int port, int httpsPort, ClipboardBridge bridge, WebAssets webAssets,
+            SecurityConfig securityConfig, Map<String, String> systemColors) {
         requestedPort = port;
         requestedHttpsPort = httpsPort;
         this.bridge = bridge;
         this.webAssets = webAssets == null ? WebAssets.empty() : webAssets;
         this.securityConfig = securityConfig == null ? SecurityConfig.disabled() : securityConfig;
+        this.systemColors = systemColors == null ? Collections.emptyMap() : systemColors;
     }
 
     interface ClipboardBridge {
@@ -106,9 +121,18 @@ public final class ClipboardSyncWebPortal {
                 return empty();
             }
             AssetManager assetManager = appContext.getAssets();
+            File externalFilesDir = appContext.getExternalFilesDir("web-clipboard");
             return path -> {
                 if (path == null || path.isBlank()) {
                     return null;
+                }
+                if ("custom.css".equals(path) && externalFilesDir != null) {
+                    File customCssFile = new File(externalFilesDir, "custom.css");
+                    if (customCssFile.exists() && customCssFile.isFile()) {
+                        try (InputStream input = new FileInputStream(customCssFile)) {
+                            return readAllBytes(input);
+                        }
+                    }
                 }
                 String assetPath = "web-clipboard/" + path;
                 try (InputStream input = assetManager.open(assetPath)) {
@@ -538,8 +562,8 @@ public final class ClipboardSyncWebPortal {
                 return;
             }
             if ("GET".equals(request.method) && "/".equals(request.path)) {
-                writeAssetResponse(socket, "index.html", "text/html; charset=utf-8",
-                        INDEX_HTML.getBytes(StandardCharsets.UTF_8));
+                writeResponse(socket, 200, "OK", "text/html; charset=utf-8",
+                        buildIndexHtml());
                 return;
             }
             if ("GET".equals(request.method) && request.path.startsWith("/assets/")) {
@@ -1021,7 +1045,8 @@ public final class ClipboardSyncWebPortal {
     }
 
     private boolean isRootAssetRequest(String path) {
-        return "/favicon.svg".equals(path) || "/icons.svg".equals(path);
+        return "/favicon.svg".equals(path) || "/icons.svg".equals(path)
+                || "/custom.css".equals(path);
     }
 
     private void writeAssetResponse(Socket socket, String assetPath, String contentType,
@@ -1044,6 +1069,29 @@ public final class ClipboardSyncWebPortal {
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    private byte[] buildIndexHtml() {
+        byte[] raw = readAsset("index.html");
+        String html = (raw != null) ? new String(raw, StandardCharsets.UTF_8) : INDEX_HTML;
+
+        StringBuilder injection = new StringBuilder();
+        if (!systemColors.isEmpty()) {
+            injection.append("\n  <style>\n    :root {");
+            for (Map.Entry<String, String> entry : systemColors.entrySet()) {
+                injection.append("\n      --").append(entry.getKey()).append(": ").append(entry.getValue())
+                        .append(";");
+            }
+            injection.append("\n    }\n  </style>");
+        }
+        injection.append("\n  <link rel=\"stylesheet\" href=\"/custom.css\">");
+
+        if (html.contains("</head>")) {
+            html = html.replace("</head>", injection.toString() + "\n</head>");
+        } else {
+            html += injection.toString();
+        }
+        return html.getBytes(StandardCharsets.UTF_8);
     }
 
     private void attachEventClient(Socket socket, String userAgent, String requestedClientId)
@@ -1206,7 +1254,7 @@ public final class ClipboardSyncWebPortal {
         writer.write("HTTP/1.1 " + status + " " + reason + "\r\n");
         writer.write("Content-Type: " + contentType + "\r\n");
         writer.write("Content-Length: " + bytes.length + "\r\n");
-        writer.write("Cache-Control: no-store\r\n");
+        writer.write("Cache-Control: no-cache, no-store, must-revalidate\r\n");
         writer.write("Pragma: no-cache\r\n");
         writer.write("Expires: 0\r\n");
         writer.write("Connection: close\r\n");

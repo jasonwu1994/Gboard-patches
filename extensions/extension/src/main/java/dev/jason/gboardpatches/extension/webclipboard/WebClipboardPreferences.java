@@ -3,6 +3,14 @@ package dev.jason.gboardpatches.extension.webclipboard;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Locale;
 
@@ -16,11 +24,14 @@ public final class WebClipboardPreferences {
     public static final String PREF_KEY_PAIRING_CODE = "pref_web_clipboard_pairing_code";
     public static final String PREF_KEY_LOOPBACK_INGRESS_TOKEN =
             "pref_web_clipboard_loopback_ingress_token";
+    public static final String PREF_KEY_INJECT_SYSTEM_COLORS =
+            "pref_web_clipboard_inject_system_colors";
 
     public static final boolean DEFAULT_ENABLED = false;
     public static final int DEFAULT_PORT = 8080;
     public static final boolean DEFAULT_RUNTIME_ACTIVE = false;
     public static final boolean DEFAULT_PAIRING_REQUIRED = true;
+    public static final boolean DEFAULT_INJECT_SYSTEM_COLORS = true;
     public static final String DEFAULT_PAIRING_CODE = "0000";
     public static final String DEFAULT_LOOPBACK_INGRESS_TOKEN = "";
 
@@ -63,6 +74,10 @@ public final class WebClipboardPreferences {
         if (!preferences.contains(PREF_KEY_PAIRING_REQUIRED)) {
             editor = ensureEditor(editor, preferences);
             editor.putBoolean(PREF_KEY_PAIRING_REQUIRED, DEFAULT_PAIRING_REQUIRED);
+        }
+        if (!preferences.contains(PREF_KEY_INJECT_SYSTEM_COLORS)) {
+            editor = ensureEditor(editor, preferences);
+            editor.putBoolean(PREF_KEY_INJECT_SYSTEM_COLORS, DEFAULT_INJECT_SYSTEM_COLORS);
         }
 
         Object rawPairingCode = preferences.getAll().get(PREF_KEY_PAIRING_CODE);
@@ -187,6 +202,23 @@ public final class WebClipboardPreferences {
         preferences.edit().putBoolean(PREF_KEY_PAIRING_REQUIRED, required).commit();
     }
 
+    public static boolean isInjectSystemColors(SharedPreferences preferences) {
+        ensureDefaults(preferences);
+        if (preferences == null) {
+            return DEFAULT_INJECT_SYSTEM_COLORS;
+        }
+        Object rawValue = preferences.getAll().get(PREF_KEY_INJECT_SYSTEM_COLORS);
+        Boolean value = readBooleanObject(rawValue);
+        return value != null ? value.booleanValue() : DEFAULT_INJECT_SYSTEM_COLORS;
+    }
+
+    public static void setInjectSystemColors(SharedPreferences preferences, boolean inject) {
+        if (preferences == null) {
+            return;
+        }
+        preferences.edit().putBoolean(PREF_KEY_INJECT_SYSTEM_COLORS, inject).commit();
+    }
+
     public static String getPairingCode(SharedPreferences preferences) {
         if (preferences == null) {
             return DEFAULT_PAIRING_CODE;
@@ -218,6 +250,52 @@ public final class WebClipboardPreferences {
             return token;
         }
         return DEFAULT_LOOPBACK_INGRESS_TOKEN;
+    }
+
+    public static String readCustomCss(Context context) {
+        File dir = context.getExternalFilesDir("web-clipboard");
+        if (dir == null) {
+            return "";
+        }
+        File file = new File(dir, "custom.css");
+        if (!file.exists() || !file.isFile()) {
+            return "";
+        }
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (Throwable ignored) {
+            return "";
+        }
+        return content.toString().trim();
+    }
+
+    public static void writeCustomCss(Context context, String content) {
+        File dir = context.getExternalFilesDir("web-clipboard");
+        if (dir == null) {
+            return;
+        }
+        if (!dir.exists() && !dir.mkdirs()) {
+            return;
+        }
+        File file = new File(dir, "custom.css");
+        String text = content == null ? "" : content.trim();
+        if (text.isEmpty()) {
+            if (file.exists()) {
+                file.delete();
+            }
+            return;
+        }
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            writer.write(text);
+        } catch (Throwable ignored) {
+            // Best effort.
+        }
     }
 
     public static void setLoopbackIngressToken(SharedPreferences preferences, String token) {
