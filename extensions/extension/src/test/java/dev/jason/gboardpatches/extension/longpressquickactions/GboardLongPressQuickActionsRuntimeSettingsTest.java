@@ -19,6 +19,8 @@ public final class GboardLongPressQuickActionsRuntimeSettingsTest {
         Assert.assertEquals(123L, snapshot.loadedAtElapsedMs);
         Assert.assertFalse(snapshot.enabled);
         Assert.assertFalse(snapshot.globeDragEnabled);
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.DEFAULT_POSITION,
+                snapshot.position);
         Assert.assertEquals("local", snapshot.source);
     }
 
@@ -32,7 +34,24 @@ public final class GboardLongPressQuickActionsRuntimeSettingsTest {
         Assert.assertEquals(456L, snapshot.loadedAtElapsedMs);
         Assert.assertFalse(snapshot.enabled);
         Assert.assertFalse(snapshot.globeDragEnabled);
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.DEFAULT_POSITION,
+                snapshot.position);
         Assert.assertEquals("unavailable", snapshot.source);
+    }
+
+    @Test
+    public void localSnapshotIncludesGlobalPosition() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+        preferences.values.put(
+                GboardLongPressQuickActionsSettings.PREF_KEY_POSITION,
+                Integer.valueOf(GboardLongPressQuickActionsSettings.POSITION_LAST));
+
+        GboardLongPressQuickActionsRuntimeSettings.Snapshot snapshot =
+                GboardLongPressQuickActionsRuntimeSettings.snapshotFromPreferences(
+                        preferences, 789L);
+
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.POSITION_LAST,
+                snapshot.position);
     }
 
     @Test

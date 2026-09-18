@@ -1726,6 +1726,22 @@
         <translation locale="en">Mappings</translation>
         <translation locale="zh-Hant">說明</translation>
     </string>
+    <string name="gboard_patches_long_press_quick_actions_setting_position">
+        <translation locale="en">Editing actions position</translation>
+        <translation locale="zh-Hant">編輯操作位置</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_setting_position_summary">
+        <translation locale="en">Place every editing action first or last in its long-press popup.</translation>
+        <translation locale="zh-Hant">將所有編輯操作放在各自長按彈出選單的最前或最後。</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_position_first">
+        <translation locale="en">First</translation>
+        <translation locale="zh-Hant">第一個</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_position_last">
+        <translation locale="en">Last</translation>
+        <translation locale="zh-Hant">最後一個</translation>
+    </string>
     <string name="gboard_patches_long_press_quick_actions_action_select_all">
         <translation locale="en">Select all</translation>
         <translation locale="zh-Hant">全選</translation>
