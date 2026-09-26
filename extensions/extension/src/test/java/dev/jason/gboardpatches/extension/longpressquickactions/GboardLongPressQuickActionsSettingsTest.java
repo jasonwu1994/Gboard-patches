@@ -82,6 +82,33 @@ public final class GboardLongPressQuickActionsSettingsTest {
         Assert.assertFalse(GboardLongPressQuickActionsSettings
                 .readGlobeDragEnabled(preferences));
     }
+
+    @Test
+    public void positionsSupportOnlyFirstAndLast() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.POSITION_LAST,
+                GboardLongPressQuickActionsSettings.readPosition(preferences));
+        Assert.assertEquals(0,
+                GboardLongPressQuickActionsSettings.insertionIndex(0, 3));
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.POSITION_FIRST,
+                GboardLongPressQuickActionsSettings.insertionIndex(20, 3));
+        Assert.assertEquals(3, GboardLongPressQuickActionsSettings.insertionIndex(
+                GboardLongPressQuickActionsSettings.POSITION_LAST, 3));
+    }
+
+    @Test
+    public void positionWriteUsesOnlyTheGlobalPreferenceKey() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+
+        Assert.assertTrue(GboardLongPressQuickActionsSettings.writePosition(
+                preferences, GboardLongPressQuickActionsSettings.POSITION_FIRST));
+
+        Assert.assertEquals(Collections.singleton(
+                        GboardLongPressQuickActionsSettings.PREF_KEY_POSITION),
+                preferences.values.keySet());
+        Assert.assertEquals(GboardLongPressQuickActionsSettings.POSITION_FIRST,
+                GboardLongPressQuickActionsSettings.readPosition(preferences));
+    }
 }
 
 final class TestSharedPreferences implements SharedPreferences {
@@ -256,4 +283,3 @@ final class TestSharedPreferences implements SharedPreferences {
         }
     }
 }
-

@@ -10,8 +10,13 @@ public final class GboardLongPressQuickActionsSettings {
             "pref_long_press_quick_actions_enabled";
     public static final String PREF_KEY_GLOBE_DRAG_ENABLED =
             "pref_long_press_quick_actions_globe_drag_enabled";
+    public static final String PREF_KEY_POSITION =
+            "pref_long_press_quick_actions_position";
     public static final boolean DEFAULT_ENABLED = true;
     public static final boolean DEFAULT_GLOBE_DRAG_ENABLED = false;
+    public static final int POSITION_LAST = -1;
+    public static final int POSITION_FIRST = 0;
+    public static final int DEFAULT_POSITION = POSITION_LAST;
 
     private GboardLongPressQuickActionsSettings() {
     }
@@ -35,6 +40,31 @@ public final class GboardLongPressQuickActionsSettings {
     public static boolean readGlobeDragEnabled(SharedPreferences preferences) {
         return readBoolean(preferences, PREF_KEY_GLOBE_DRAG_ENABLED,
                 DEFAULT_GLOBE_DRAG_ENABLED);
+    }
+
+    public static int readPosition(Context context) {
+        if (context == null) {
+            return DEFAULT_POSITION;
+        }
+        return readPosition(GboardPatchesSettings.preferences(context));
+    }
+
+    public static int readPosition(SharedPreferences preferences) {
+        if (preferences == null) {
+            return DEFAULT_POSITION;
+        }
+        Object raw = preferences.getAll().get(PREF_KEY_POSITION);
+        if (raw instanceof Integer value) {
+            return normalizePosition(value.intValue());
+        }
+        if (raw instanceof String value) {
+            try {
+                return normalizePosition(Integer.parseInt(value));
+            } catch (NumberFormatException ignored) {
+                return DEFAULT_POSITION;
+            }
+        }
+        return DEFAULT_POSITION;
     }
 
     private static boolean readBoolean(SharedPreferences preferences, String key,
@@ -69,6 +99,10 @@ public final class GboardLongPressQuickActionsSettings {
         }
         if (!preferences.contains(PREF_KEY_GLOBE_DRAG_ENABLED)) {
             editor.putBoolean(PREF_KEY_GLOBE_DRAG_ENABLED, DEFAULT_GLOBE_DRAG_ENABLED);
+            changed = true;
+        }
+        if (!preferences.contains(PREF_KEY_POSITION)) {
+            editor.putInt(PREF_KEY_POSITION, DEFAULT_POSITION);
             changed = true;
         }
         if (changed) {
@@ -109,5 +143,23 @@ public final class GboardLongPressQuickActionsSettings {
                 .putBoolean(PREF_KEY_GLOBE_DRAG_ENABLED, enabled)
                 .commit();
     }
-}
 
+    public static boolean writePosition(SharedPreferences preferences, int position) {
+        if (preferences == null) {
+            return false;
+        }
+        return preferences.edit()
+                .putInt(PREF_KEY_POSITION, normalizePosition(position))
+                .commit();
+    }
+
+    static int insertionIndex(int configuredPosition, int existingCount) {
+        int safeCount = Math.max(0, existingCount);
+        return configuredPosition == POSITION_LAST
+                ? safeCount : 0;
+    }
+
+    private static int normalizePosition(int position) {
+        return position == POSITION_FIRST ? POSITION_FIRST : POSITION_LAST;
+    }
+}

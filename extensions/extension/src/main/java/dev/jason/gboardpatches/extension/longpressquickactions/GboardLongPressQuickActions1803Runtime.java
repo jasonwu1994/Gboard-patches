@@ -27,6 +27,8 @@ public final class GboardLongPressQuickActions1803Runtime {
             Collections.synchronizedMap(new WeakHashMap<>());
     private static final Map<Object, Boolean> PATCHED_METADATA_MARKERS =
             Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Object, Integer> PATCHED_POSITION_BY_METADATA =
+            Collections.synchronizedMap(new WeakHashMap<>());
 
     private static final AtomicInteger PATCH_LOG_COUNT = new AtomicInteger();
     private static final AtomicInteger SCHEDULE_LOG_COUNT = new AtomicInteger();
@@ -62,19 +64,24 @@ public final class GboardLongPressQuickActions1803Runtime {
         try {
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
             metadata = metadataForBind(enabled, metadata);
-            if (!enabled || metadata == null || isPatchedMetadata(metadata)
+            if (!enabled || metadata == null) {
+                return metadata;
+            }
+            Context context = softKeyView == null ? null : softKeyView.getContext();
+            int position = GboardLongPressQuickActionsRuntimeSettings.position();
+            metadata = metadataForPosition(metadata, position);
+            if (isPatchedMetadata(metadata)
                     || Boolean.TRUE.equals(UNPATCHED_METADATA_MARKERS.get(metadata))) {
                 return metadata;
             }
             synchronized (PATCHED_METADATA_BY_ORIGINAL) {
-                Object cached = PATCHED_METADATA_BY_ORIGINAL.get(metadata);
+                Object cached = cachedMetadataForPosition(metadata, position);
                 if (cached != null) {
                     return cached;
                 }
                 ClassLoader classLoader = metadata.getClass().getClassLoader();
                 GboardLongPressQuickActions1803ReflectionHandles handles =
                         reflectionHandles(classLoader);
-                Context context = softKeyView == null ? null : softKeyView.getContext();
                 GboardLongPressQuickActions1803Policy.QuickAction action =
                         GboardLongPressQuickActions1803Policy.plan(
                                 handles.extractKeyId(metadata),
@@ -84,16 +91,18 @@ public final class GboardLongPressQuickActions1803Runtime {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
                     return metadata;
                 }
-                Object patched = handles.appendLongPressAction(context, metadata, action);
+                Object patched = handles.insertLongPressAction(
+                        context, metadata, action, position);
                 if (patched == null) {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
                     return metadata;
                 }
-                rememberPatchedMetadata(metadata, patched);
+                rememberPatchedMetadata(metadata, patched, position);
                 logInfo(PATCH_LOG_COUNT, 30,
-                        "appended keycode=" + action.actionCode
+                        "inserted keycode=" + action.actionCode
                                 + ", name=" + action.debugName
-                                + ", icon=0x" + Integer.toHexString(action.iconResId));
+                                + ", icon=0x" + Integer.toHexString(action.iconResId)
+                                + ", position=" + position);
                 return patched;
             }
         } catch (Throwable throwable) {
@@ -217,13 +226,37 @@ public final class GboardLongPressQuickActions1803Runtime {
         InputConnection get() throws Throwable;
     }
 
-    static void rememberPatchedMetadata(Object original, Object patched) {
+    static void rememberPatchedMetadata(Object original, Object patched, int position) {
         if (original == null || patched == null) {
             return;
         }
         PATCHED_METADATA_BY_ORIGINAL.put(original, patched);
         ORIGINAL_METADATA_BY_PATCHED.put(patched, new WeakReference<>(original));
         PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);
+        PATCHED_POSITION_BY_METADATA.put(patched, Integer.valueOf(position));
+    }
+
+    static Object metadataForPosition(Object metadata, int position) {
+        if (metadata == null || !isPatchedMetadata(metadata)) {
+            return metadata;
+        }
+        Integer patchedPosition = PATCHED_POSITION_BY_METADATA.get(metadata);
+        if (patchedPosition != null && patchedPosition.intValue() == position) {
+            return metadata;
+        }
+        WeakReference<Object> originalReference = ORIGINAL_METADATA_BY_PATCHED.get(metadata);
+        Object original = originalReference == null ? null : originalReference.get();
+        return original == null ? metadata : original;
+    }
+
+    static Object cachedMetadataForPosition(Object original, int position) {
+        Object cached = PATCHED_METADATA_BY_ORIGINAL.get(original);
+        if (cached == null) {
+            return null;
+        }
+        Integer cachedPosition = PATCHED_POSITION_BY_METADATA.get(cached);
+        return cachedPosition != null && cachedPosition.intValue() == position
+                ? cached : null;
     }
 
     static Object metadataForBind(boolean enabled, Object metadata) {
