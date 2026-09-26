@@ -848,6 +848,34 @@
         <translation locale="en">Behavior</translation>
         <translation locale="zh-Hant">行為</translation>
     </string>
+    <string name="gboard_patches_hide_accent_popups_title">
+        <translation locale="en">Hide Accented Key Popups</translation>
+        <translation locale="zh-Hant">隱藏重音字母長按選單</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_summary">
+        <translation locale="en">Controls whether accented letters appear when long-pressing Latin letter keys.</translation>
+        <translation locale="zh-Hant">控制長按拉丁字母鍵時是否顯示重音字母。</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_error_title">
+        <translation locale="en">Hide accented key popups unavailable</translation>
+        <translation locale="zh-Hant">隱藏重音字母長按選單無法使用</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_error_summary">
+        <translation locale="en">The hide accented key popups settings screen failed to load. Reopen Gboard settings and try again.</translation>
+        <translation locale="zh-Hant">隱藏重音字母長按選單設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_enabled_title">
+        <translation locale="en">Hide accented letters</translation>
+        <translation locale="zh-Hant">隱藏重音字母</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_enabled_summary">
+        <translation locale="en">Removes accented and alternate letters such as é, à, ñ and ü from the long-press popups of letter keys. Digits, symbols and editing shortcuts stay. Reopen the keyboard to apply.</translation>
+        <translation locale="zh-Hant">移除字母鍵長按選單中的 é、à、ñ、ü 等重音與替代字母，保留數字、符號與編輯快捷鍵。重新開啟鍵盤後生效。</translation>
+    </string>
+    <string name="gboard_patches_hide_accent_popups_section_behavior">
+        <translation locale="en">Behavior</translation>
+        <translation locale="zh-Hant">行為</translation>
+    </string>
     <string name="gboard_patches_zhuyin_bottom_row_title">
         <translation locale="en">Zhuyin Bottom Row Key Sizes</translation>
         <translation locale="zh-Hant">注音底排按鍵大小</translation>

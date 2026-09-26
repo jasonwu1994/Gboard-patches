@@ -21,6 +21,7 @@ import dev.jason.gboardpatches.extension.BuildConfig;
 import dev.jason.gboardpatches.extension.clipboard.GboardClipboardSettings;
 import dev.jason.gboardpatches.extension.clipboardcontentlimit.GboardClipboardContentLimitSettings;
 import dev.jason.gboardpatches.extension.lanftp.config.LanFtpPreferences;
+import dev.jason.gboardpatches.extension.hideaccentpopups.GboardHideAccentPopupsSettings;
 import dev.jason.gboardpatches.extension.keyboard.GboardEnglishUppercaseToggleSettings;
 import dev.jason.gboardpatches.extension.keyboard.GboardLatinGlobeKeyIgnoreIntervalSettings;
 import dev.jason.gboardpatches.extension.manualincognito.GboardManualIncognitoSettings;
@@ -82,6 +83,8 @@ public final class GboardPatchesBackupManager {
                     GboardSymbolFooterOrderSettings.PREF_FILE, null),
             new BackupModuleDescriptor("gboard-patches.english-uppercase", "English uppercase",
                     GboardEnglishUppercaseToggleSettings.PREF_FILE, null),
+            new BackupModuleDescriptor("gboard-patches.hide-accent-popups", "Hide accent popups",
+                    GboardHideAccentPopupsSettings.PREF_FILE, null),
             new BackupModuleDescriptor("gboard-patches.ai-writing-tools", "AI Writing Tools",
                     GboardAiWritingToolsSettings.PREF_FILE, null),
             new BackupModuleDescriptor("gboard-patches.clipboard-content-limit",

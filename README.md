@@ -69,6 +69,12 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 </details>
 
 <details>
+  <summary><code>Hide Accented Key Popups</code></summary>
+
+  Adds a setting that removes accented and alternate letters such as é, à, ñ and ü from the long-press popups of Latin letter keys, while keeping digits, symbols, and editing shortcuts.
+</details>
+
+<details>
   <summary><code>Toolbar Editing Buttons</code></summary>
 
   Add Select All, Copy, Cut and Paste to the menu. Drag them to the top toolbar and

@@ -487,6 +487,22 @@
       ]
     },
     {
+      "feature_id": "hide_accented_key_popups",
+      "public_patch_name": "Hide Accented Key Popups",
+      "feature_marker": "dev.jason.gboardpatches.feature.hide_accent_popups",
+      "target_family_ids": ["hideaccentpopups", "softkey.bind"],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/hideaccentpopups/GboardHideAccentPopupsFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/hideaccentpopups/GboardHideAccentPopupsSoftKeyPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardSoftKeyFamilyComposer.kt"
+      ],
+      "contributions": [
+        { "contribution_id": "hide_accented_key_popups.before_bind", "anchor_family_id": "soft_key_bind", "phase": "before_stock", "order": 250, "required_bindings": ["soft_key_bind", "soft_key_metadata_type"], "runtime_calls": ["HIDE_ACCENT_POPUPS_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA"] }
+      ]
+    },
+    {
       "feature_id": "incognito_mode_toggle",
       "public_patch_name": "Incognito Mode Toggle",
       "feature_marker": "dev.jason.gboardpatches.feature.manual_incognito",

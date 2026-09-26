@@ -143,7 +143,7 @@ public final class GboardPatchesBackupManagerTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.isPartialSuccess());
-        assertEquals(14, result.getRestoredStoreCount());
+        assertEquals(15, result.getRestoredStoreCount());
         assertEquals(1, result.getFailedModuleCount());
         for (Map.Entry<String, SharedPreferences> entry : stores.entrySet()) {
             assertEquals(entry.getKey().equals(failingName)
@@ -263,7 +263,7 @@ public final class GboardPatchesBackupManagerTest {
                         GboardPatchesBackupManager.exportBackup(stores()));
         Set<String> ids = new HashSet<>();
 
-        assertEquals(15, plan.getModules().size());
+        assertEquals(16, plan.getModules().size());
         for (GboardPatchesBackupManager.ModulePlan module : plan.getModules()) {
             assertTrue(ids.add(module.getModuleId()));
             assertTrue(module.getModuleName().chars().allMatch(character -> character < 128));

@@ -35,6 +35,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.latin_globe_key_ignore_interval";
     public static final String FEATURE_ENGLISH_UPPERCASE_TOGGLE =
             "dev.jason.gboardpatches.feature.english_uppercase_toggle";
+    public static final String FEATURE_HIDE_ACCENT_POPUPS =
+            "dev.jason.gboardpatches.feature.hide_accent_popups";
     public static final String FEATURE_ZHUYIN_BOTTOM_ROW_WEIGHT =
             "dev.jason.gboardpatches.feature.zhuyin_bottom_row_weight";
     public static final String FEATURE_AI_WRITING_TOOLS =

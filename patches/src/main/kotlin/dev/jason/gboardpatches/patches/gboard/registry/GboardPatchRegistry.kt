@@ -80,6 +80,8 @@ import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplit
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardAccessPointPatch
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardModePatch
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.hideaccentpopups.gboardHideAccentPopupsFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.hideaccentpopups.gboardHideAccentPopupsSoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeFeatureMarkerPatch
@@ -178,6 +180,23 @@ val gboardSpacebarLogoPatch = gboardPublicResourcePatch(
     dependsOn(
         gboardPatchesSettingsPatch,
         gboardSpacebarLogoFeatureMarkerPatch,
+    )
+}
+
+@Suppress("unused")
+val gboardHideAccentPopupsPatch = gboardPublicResourcePatch(
+    featureId = "hide_accented_key_popups",
+    name = "Hide Accented Key Popups",
+    description = "新增設定以隱藏字母鍵長按選單中的重音字母（如 é、à、ñ、ü）\n" +
+        "Add a setting to hide accented letters such as é, à, ñ and ü from letter-key long-press popups.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardHideAccentPopupsFeatureMarkerPatch,
+        gboardHideAccentPopupsSoftKeyPatch,
     )
 }
 
@@ -844,6 +863,7 @@ object GboardPublishedPatchCatalog {
         gboardEnglishQwertySlideUppercaseTogglePatch,
         gboardLongPressQuickActionsPatch,
         gboardSpacebarLogoPatch,
+        gboardHideAccentPopupsPatch,
         gboardManualIncognitoModePatch,
         gboardFloatingWebSearchPatch,
         gboardEditingAccessPointsPatch,

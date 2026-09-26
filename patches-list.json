@@ -278,6 +278,18 @@
       "options": []
     },
     {
+      "name": "Hide Accented Key Popups",
+      "description": "新增設定以隱藏字母鍵長按選單中的重音字母（如 é、à、ñ、ü）\nAdd a setting to hide accented letters such as é, à, ñ and ü from letter-key long-press popups.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
       "name": "Hyperspeed Typing Animation",
       "description": "持續快速輸入時顯示動畫，並支援所有鍵盤\nShow the animation during sustained fast typing with support for all keyboards.",
       "use": true,
