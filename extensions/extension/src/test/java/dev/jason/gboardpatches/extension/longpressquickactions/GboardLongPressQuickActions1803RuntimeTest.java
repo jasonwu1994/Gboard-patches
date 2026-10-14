@@ -99,7 +99,7 @@ public final class GboardLongPressQuickActions1803RuntimeTest {
         Object patched = new Object();
         Object unrelated = new Object();
 
-        GboardLongPressQuickActions1803Runtime.rememberPatchedMetadata(original, patched);
+        GboardLongPressQuickActions1803Runtime.rememberPatchedMetadata(original, patched, 0);
 
         Assert.assertSame(original,
                 GboardLongPressQuickActions1803Runtime.metadataForBind(false, patched));
@@ -115,7 +115,7 @@ public final class GboardLongPressQuickActions1803RuntimeTest {
     public void disabledModeConsumesOnlyMatchingEventsFromInjectedMetadata() {
         Object original = new Object();
         Object patched = new Object();
-        GboardLongPressQuickActions1803Runtime.rememberPatchedMetadata(original, patched);
+        GboardLongPressQuickActions1803Runtime.rememberPatchedMetadata(original, patched, 0);
 
         Assert.assertTrue(GboardLongPressQuickActions1803Runtime
                 .shouldConsumeDisabledInjectedEvent(false, patched, true));
@@ -145,6 +145,26 @@ public final class GboardLongPressQuickActions1803RuntimeTest {
         } finally {
             GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
         }
+    }
+
+    @Test
+    public void changingPositionRestoresOriginalAndRejectsStaleCachedMetadata() {
+        Object original = new Object();
+        Object patchedFirst = new Object();
+        GboardLongPressQuickActions1803Runtime.rememberPatchedMetadata(
+                original, patchedFirst, GboardLongPressQuickActionsSettings.POSITION_FIRST);
+
+        Assert.assertSame(patchedFirst,
+                GboardLongPressQuickActions1803Runtime.metadataForPosition(
+                        patchedFirst, GboardLongPressQuickActionsSettings.POSITION_FIRST));
+        Assert.assertSame(patchedFirst,
+                GboardLongPressQuickActions1803Runtime.cachedMetadataForPosition(
+                        original, GboardLongPressQuickActionsSettings.POSITION_FIRST));
+        Assert.assertSame(original,
+                GboardLongPressQuickActions1803Runtime.metadataForPosition(
+                        patchedFirst, GboardLongPressQuickActionsSettings.POSITION_LAST));
+        Assert.assertNull(GboardLongPressQuickActions1803Runtime.cachedMetadataForPosition(
+                original, GboardLongPressQuickActionsSettings.POSITION_LAST));
     }
 
     private static boolean attemptContextMenuAction(InputConnection connection, int actionId)

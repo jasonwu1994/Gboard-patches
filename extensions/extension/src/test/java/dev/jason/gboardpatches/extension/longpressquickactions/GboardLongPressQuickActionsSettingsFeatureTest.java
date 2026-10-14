@@ -11,7 +11,7 @@ import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 
 public final class GboardLongPressQuickActionsSettingsFeatureTest {
     @Test
-    public void screenContainsParentToggleGlobeSwitchAndSixExactMappingRows() {
+    public void screenContainsGlobalPositionAndSixExactMappingRows() {
         GboardLongPressQuickActionsSettingsFeature feature = testFeature();
 
         GboardPatchesSettingsContract.Screen screen = feature.buildScreenForState(
@@ -23,7 +23,7 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         Assert.assertEquals("Long-Press Editing Shortcuts", screen.getToolbarTitle());
         Assert.assertEquals(2, screen.getSections().size());
         Assert.assertEquals("Feature", screen.getSections().get(0).getTitle());
-        Assert.assertEquals(2, screen.getSections().get(0).getItems().size());
+        Assert.assertEquals(3, screen.getSections().get(0).getItems().size());
         Assert.assertTrue(screen.getSections().get(0).getItems().get(0)
                 instanceof GboardPatchesSettingsContract.ToggleRow);
         GboardPatchesSettingsContract.ToggleRow toggle =
@@ -54,6 +54,13 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         Assert.assertEquals("Hold and drag from globe key", globeDrag.getTitle());
         Assert.assertFalse(globeDrag.isEnabled());
         Assert.assertTrue(globeDrag.isChecked());
+        Assert.assertTrue(screen.getSections().get(0).getItems().get(2)
+                instanceof GboardPatchesSettingsContract.SelectorRow);
+        GboardPatchesSettingsContract.SelectorRow position =
+                (GboardPatchesSettingsContract.SelectorRow)
+                        screen.getSections().get(0).getItems().get(2);
+        Assert.assertEquals("Editing actions position", position.getTitle());
+        Assert.assertEquals("Last", position.getCurrentValue());
 
         Assert.assertEquals("Mappings", screen.getSections().get(1).getTitle());
         Assert.assertEquals(6, screen.getSections().get(1).getItems().size());
@@ -120,6 +127,10 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 "Swipe from the globe key to A/Z/X/C/V/Y for editing actions.",
                 "Feature",
                 "Mappings",
+                "Editing actions position",
+                "Place every editing action first or last in its long-press popup.",
+                "First",
+                "Last",
                 new String[] {"Select all", "Undo", "Copy", "Cut", "Paste", "Redo"});
     }
 
