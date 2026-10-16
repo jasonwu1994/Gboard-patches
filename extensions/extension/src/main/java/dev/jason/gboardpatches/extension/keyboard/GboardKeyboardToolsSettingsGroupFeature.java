@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.extension.keyboard;
 
 import android.content.Context;
+import dev.jason.gboardpatches.extension.duckemail.DuckEmailSettingsFeature;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +43,7 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         new GboardManualIncognitoSettingsFeature(context),
                         new GboardLongPressQuickActionsSettingsFeature(context),
                         new GboardEditingAccessPointsSettingsFeature(context),
+                        new DuckEmailSettingsFeature(context),
                         new GboardCursorTrackpadSettingsFeature(context),
                         new GboardOcrSettingsFeature(context),
                         new GboardQuickInsertSettingsFeature(context),

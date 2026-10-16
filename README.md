@@ -26,6 +26,21 @@ Gboard Patches is a public Morphe source for a curated set of Gboard enhancement
 Features designed and built by this project rather than simply unlocking an existing Gboard flag.
 
 <details>
+  <summary><code>DuckDuckGo Email Protection</code></summary>
+
+  Adds a **Duck email** action to Gboard's draggable toolbar menu. Tap it to generate a private `@duck.com` address and insert it into the focused field.
+
+  Sign in with an existing Duck account under **Patches > Keyboard Tools & Shortcuts > DuckDuckGo Email Protection**. Enter your Duck address, send a code, then enter the emailed code or four-word passphrase. Account creation remains at [duckduckgo.com/email](https://duckduckgo.com/email/).
+
+  **Copy generated email to clipboard** optionally copies each address as well as filling it. The option defaults to off and takes effect immediately. If focus changes while a request is loading, the address remains available under **Copy last generated address** and is copied if automatic copying is enabled.
+
+  The account token is encrypted with Android Keystore and excluded from patch settings exports. Sign out removes the saved account and last address. Requests go directly to DuckDuckGo using its unofficial API. An internet connection is required; root is not required.
+
+  <img alt="Duck email in the toolbar menu" src="docs/assets/features/duck-email/toolbar.png" width="360">
+  <img alt="Duck email settings and optional clipboard copying" src="docs/assets/features/duck-email/settings.png" width="360">
+</details>
+
+<details>
   <summary><code>Clipboard Enhancements</code></summary>
 
   Lets you enhance clipboard retention time, item count limits, preview lines, countdown and creation-time labels, order index, grid columns, and optionally render only the first 1,000 characters on each clipboard card.

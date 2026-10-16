@@ -100,6 +100,8 @@ import dev.jason.gboardpatches.patches.gboard.shared.accesspoint.gboardAccessPoi
 import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmission
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.duckemail.gboardDuckEmailLifecyclePatch
+import dev.jason.gboardpatches.patches.gboard.features.duckemail.gboardDuckEmailResourcePatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
 private fun gboardPublicResourcePatch(
@@ -217,6 +219,23 @@ val gboardEditingAccessPointsPatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardEditingAccessPointsFeatureMarkerPatch,
         gboardEditingAccessPointsLifecyclePatch,
+        gboardAccessPointContributions1803Patch,
+    )
+}
+
+@Suppress("unused")
+val gboardDuckEmailPatch = gboardPublicResourcePatch(
+    featureId = "duck_email",
+    name = "DuckDuckGo Email Protection",
+    description = "Generate a private @duck.com address and fill it from the toolbar. " +
+        "Sign in with your Duck address and emailed passphrase in Patches settings.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardDuckEmailResourcePatch,
+        gboardDuckEmailLifecyclePatch,
         gboardAccessPointContributions1803Patch,
     )
 }
@@ -885,6 +904,7 @@ object GboardPublishedPatchCatalog {
         gboardManualIncognitoModePatch,
         gboardFloatingWebSearchPatch,
         gboardEditingAccessPointsPatch,
+        gboardDuckEmailPatch,
         gboardSimpleCalculatorPatch,
         gboardSwipeDismissPatch,
         gboardAdvancedVoiceTypingPatch,

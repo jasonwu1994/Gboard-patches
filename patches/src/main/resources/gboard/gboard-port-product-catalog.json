@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.15.0",
+  "catalog_version": "1.16.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -520,6 +520,39 @@
           "order": 100,
           "required_bindings": [],
           "runtime_calls": []
+        }
+      ]
+    },
+    {
+      "feature_id": "duck_email",
+      "public_patch_name": "DuckDuckGo Email Protection",
+      "feature_marker": "dev.jason.gboardpatches.feature.duck_email",
+      "target_family_ids": [
+        "accesspoint.1803",
+        "editingaccesspoints"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/duckemail/GboardDuckEmailLifecyclePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/duckemail/GboardDuckEmailResourcePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/editingaccesspoints/GboardEditingAccessPoints1803Targets.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/accesspoint/GboardAccessPointContributions1803Patch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/accesspoint/GboardAccessPointContributions1803Targets.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "duck_email.runtime",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 1270,
+          "required_bindings": [],
+          "runtime_calls": [
+            "ACCESS_POINT_CONTRIBUTIONS_1803_AFTER_CONTROLLER_CREATED",
+            "ACCESS_POINT_CONTRIBUTIONS_1803_INCLUDE_ORDER_CATALOG",
+            "DUCK_EMAIL_START",
+            "DUCK_EMAIL_END"
+          ]
         }
       ]
     },

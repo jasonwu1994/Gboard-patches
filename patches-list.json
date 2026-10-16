@@ -146,6 +146,18 @@
       "options": []
     },
     {
+      "name": "DuckDuckGo Email Protection",
+      "description": "Generate a private @duck.com address and fill it from the toolbar. Sign in with your Duck address and emailed passphrase in Patches settings.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
       "name": "Emojis, stickers & GIFs Tab Order",
       "description": "自訂 Gboard「Emojis, stickers & GIFs」底部 tabs 的排序，支援拖曳調整\nCustomize the bottom tab order in Gboard's Emojis, stickers & GIFs panel with drag-and-drop reordering.",
       "use": true,
