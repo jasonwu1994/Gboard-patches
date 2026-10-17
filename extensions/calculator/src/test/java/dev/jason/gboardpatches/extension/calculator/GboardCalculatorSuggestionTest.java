@@ -69,6 +69,12 @@ public final class GboardCalculatorSuggestionTest {
                 "1+".repeat(70) + "1"));
     }
 
+    @Test
+    public void suggestsPercentagesInsideText() {
+        Assert.assertEquals("74.99-5%=71.241", candidate("Cashback: 74.99-5%").getEquation());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("50%"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);

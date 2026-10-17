@@ -49,7 +49,8 @@ public final class GboardCalculatorEngine {
                 .replace('\u00d7', '*')
                 .replace('\u00f7', '/')
                 .replace('\uff08', '(')
-                .replace('\uff09', ')');
+                .replace('\uff09', ')')
+                .replace('\uff05', '%');
     }
 
     private static String format(BigDecimal value) {
@@ -117,34 +118,54 @@ public final class GboardCalculatorEngine {
         private int index;
         private int depth;
         private int binaryOperations;
+        // Set when the most recent factor or term was a bare percentage such as "5%",
+        // so "+" and "-" can take it as a percentage of the term before them.
+        private boolean lastFactorWasPercent;
+        private boolean lastTermWasPercent;
 
         private Parser(String expression) {
             this.expression = expression;
         }
 
+        /**
+         * After "+" or "-", a bare percentage is taken of the term just before it, sign included,
+         * matching Google: 10+5-10% = 10+5-0.5 = 14.5 and 20-5+10% = 20-5-0.5 = 14.5. When that
+         * term was itself a percentage, percentages stack on the running total instead, the way
+         * discounts do: 100-10%-10% = 81.
+         */
         private BigDecimal parseExpression() throws ParseFailure {
             BigDecimal value = parseTerm();
+            BigDecimal previousTerm = value;
+            boolean previousWasPercent = false;
             while (true) {
                 skipSpaces();
-                if (consume('+')) {
-                    recordBinaryOperation();
-                    value = value.add(parseTerm(), MATH_CONTEXT);
-                } else if (consume('-')) {
-                    recordBinaryOperation();
-                    value = value.subtract(parseTerm(), MATH_CONTEXT);
-                } else {
+                boolean add = consume('+');
+                if (!add && !consume('-')) {
                     return value;
                 }
+                recordBinaryOperation();
+                BigDecimal term = parseTerm();
+                boolean percent = lastTermWasPercent;
+                if (percent) {
+                    BigDecimal base = previousWasPercent ? value : previousTerm;
+                    term = base.multiply(term, MATH_CONTEXT);
+                }
+                BigDecimal signedTerm = add ? term : term.negate();
+                value = value.add(signedTerm, MATH_CONTEXT);
+                previousTerm = signedTerm;
+                previousWasPercent = percent;
             }
         }
 
         private BigDecimal parseTerm() throws ParseFailure {
             BigDecimal value = parseUnary();
+            boolean percent = lastFactorWasPercent;
             while (true) {
                 skipSpaces();
                 if (consume('*')) {
                     recordBinaryOperation();
                     value = value.multiply(parseUnary(), MATH_CONTEXT);
+                    percent = false;
                 } else if (consume('/')) {
                     recordBinaryOperation();
                     BigDecimal divisor = parseUnary();
@@ -152,7 +173,9 @@ public final class GboardCalculatorEngine {
                         throw new ArithmeticException("division by zero");
                     }
                     value = value.divide(divisor, MATH_CONTEXT);
+                    percent = false;
                 } else {
+                    lastTermWasPercent = percent;
                     return value;
                 }
             }
@@ -171,8 +194,15 @@ public final class GboardCalculatorEngine {
                     break;
                 }
             }
-            BigDecimal value = parsePrimary();
+            BigDecimal value = parsePercent();
             return negative ? value.negate(MATH_CONTEXT) : value;
+        }
+
+        private BigDecimal parsePercent() throws ParseFailure {
+            BigDecimal value = parsePrimary();
+            boolean percent = consume('%');
+            lastFactorWasPercent = percent;
+            return percent ? value.movePointLeft(2) : value;
         }
 
         private BigDecimal parsePrimary() throws ParseFailure {

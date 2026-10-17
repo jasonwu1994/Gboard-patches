@@ -131,6 +131,8 @@ public final class GboardCalculatorSuggestion {
 
     private static boolean isExpressionCharacter(char value) {
         return Character.isDigit(value)
+                || value == '%'
+                || value == '\uff05'
                 || (Character.isWhitespace(value) && !isLineBreak(value))
                 || value == '.'
                 || value == '+'
