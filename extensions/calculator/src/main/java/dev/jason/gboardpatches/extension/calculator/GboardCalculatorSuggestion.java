@@ -117,10 +117,15 @@ public final class GboardCalculatorSuggestion {
         if (!evaluation.isValid()) {
             return null;
         }
+        String currency = currencyOf(expression);
+        if (currency == null) {
+            return null;
+        }
         // The engine only accepts commas as thousands separators, so any comma means the
         // sum was written with them and the result should match.
+        boolean grouped = expression.indexOf(',') >= 0;
         String result = formatSuggestionResult(
-                evaluation.getResult(), expression.indexOf(',') >= 0);
+                evaluation.getResult(), grouped, currency, expression.indexOf('.') >= 0);
         return result.isEmpty()
                 ? null
                 : new Candidate(expression, result, originalEnd - start);
@@ -195,6 +200,7 @@ public final class GboardCalculatorSuggestion {
         return Character.isDigit(value)
                 || isLetterX(value)
                 || value == '%'
+                || GboardCalculatorEngine.CURRENCIES.indexOf(value) >= 0
                 || value == '\uff05'
                 || value == '^'
                 || value == GboardCalculatorEngine.SQUARE_ROOT
@@ -240,7 +246,28 @@ public final class GboardCalculatorSuggestion {
         return false;
     }
 
-    private static String formatSuggestionResult(String rawResult, boolean groupThousands) {
+    /** The currency sign the sum uses, "" if none, or null if it mixes currencies. */
+    private static String currencyOf(String expression) {
+        String currency = "";
+        for (int index = 0; index < expression.length(); index++) {
+            char value = expression.charAt(index);
+            if (GboardCalculatorEngine.CURRENCIES.indexOf(value) < 0) {
+                continue;
+            }
+            if (!currency.isEmpty() && currency.charAt(0) != value) {
+                return null; // Mixed currencies would need exchange rates.
+            }
+            currency = String.valueOf(value);
+        }
+        return currency;
+    }
+
+    /**
+     * Rounds to 3 decimal places, or to cents for money. Money is shown as a whole amount when
+     * the sum had no decimals and the result is whole: $100-15% = $85, £74.99-5% = £71.24.
+     */
+    private static String formatSuggestionResult(String rawResult, boolean groupThousands,
+            String currency, boolean decimalsTyped) {
         try {
             BigDecimal value = new BigDecimal(rawResult);
             BigDecimal normalized = value.stripTrailingZeros();
@@ -248,11 +275,16 @@ public final class GboardCalculatorSuggestion {
             if (exponent >= SCIENTIFIC_EXPONENT_THRESHOLD) {
                 return formatScientific(normalized, exponent);
             }
-            DecimalFormat format =
-                    new DecimalFormat("#,##0", DecimalFormatSymbols.getInstance(Locale.ROOT));
+            boolean money = !currency.isEmpty();
+            BigDecimal rounded =
+                    value.setScale(money ? 2 : MAX_FRACTION_DIGITS, RoundingMode.HALF_UP);
+            boolean cents = money && (decimalsTyped || rounded.stripTrailingZeros().scale() > 0);
+            DecimalFormat format = new DecimalFormat(
+                    currency + "#,##0", DecimalFormatSymbols.getInstance(Locale.ROOT));
             format.setGroupingUsed(groupThousands);
-            format.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
-            return format.format(value.setScale(MAX_FRACTION_DIGITS, RoundingMode.HALF_UP));
+            format.setMinimumFractionDigits(cents ? 2 : 0);
+            format.setMaximumFractionDigits(rounded.scale());
+            return format.format(rounded);
         } catch (NumberFormatException ignored) {
             return "";
         }

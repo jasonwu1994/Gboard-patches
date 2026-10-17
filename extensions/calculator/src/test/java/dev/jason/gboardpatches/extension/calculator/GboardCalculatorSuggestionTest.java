@@ -135,6 +135,20 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("\u03c0"));
     }
 
+    @Test
+    public void keepsCurrencyAndRoundsMoneyToCents() {
+        Assert.assertEquals("\u00a374.99-5%=\u00a371.24",
+                candidate("Cashback \u00a374.99-5%").getEquation());
+        Assert.assertEquals("\u00a311.50", candidate("\u00a310.50+\u00a31").getResult());
+        Assert.assertEquals("$85", candidate("NT$100-15%").getResult());
+        Assert.assertEquals("$12.50", candidate("$100/8").getResult());
+        Assert.assertEquals("-\u20ac5", candidate("\u20ac5-\u20ac10").getResult());
+        Assert.assertEquals("\u00a30", candidate("\u00a310-\u00a310").getResult());
+        Assert.assertEquals("\u00a51000", candidate("\u00a5800+\u00a5200").getResult());
+        Assert.assertEquals("\u00a31,234.99", candidate("\u00a31,299.99-5%").getResult());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("\u00a35+$3"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);
