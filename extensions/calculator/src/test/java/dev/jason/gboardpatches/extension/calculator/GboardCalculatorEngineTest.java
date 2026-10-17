@@ -52,6 +52,35 @@ public final class GboardCalculatorEngineTest {
         assertResult("-".repeat(120) + "1+1", "2");
     }
 
+    @Test
+    public void appliesPercentagesToTheTermBeforeAdditionOrSubtraction() {
+        assertResult("382-2%", "374.36");
+        assertResult("74.99-5%", "71.2405");
+        assertResult("50+20%", "60");
+        assertResult("10+5-10%", "14.5");
+        assertResult("20-5+10%", "14.5");
+        assertResult("1+2*5+10%", "12");
+        assertResult("100-10%-10%", "81");
+        assertResult("50+10%+10%", "60.5");
+        assertResult("200-(10+5)%", "170");
+        assertResult("100 - -5%", "105");
+        assertResult("50+20\uff05", "60");
+    }
+
+    @Test
+    public void treatsOtherPercentagesAsHundredths() {
+        assertResult("5%", "0.05");
+        assertResult("80*15%", "12");
+        assertResult("100/50%", "200");
+        assertResult("5%+10", "10.05");
+        assertError("5%3");
+    }
+
+    private static void assertError(String expression) {
+        Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
+                GboardCalculatorEngine.evaluate(expression).getStatus());
+    }
+
     private static void assertResult(String expression, String expected) {
         GboardCalculatorEngine.Evaluation evaluation =
                 GboardCalculatorEngine.evaluate(expression);
