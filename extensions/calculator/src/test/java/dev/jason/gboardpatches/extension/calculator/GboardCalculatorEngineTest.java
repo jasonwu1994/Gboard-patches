@@ -124,6 +124,24 @@ public final class GboardCalculatorEngineTest {
         assertError("1.5,000");
     }
 
+    @Test
+    public void evaluatesSquareRootsAndPi() {
+        assertResult("\u221a2", "1.414213562373095");
+        assertResult("\u221a16", "4");
+        assertResult("\u221a(9+16)", "5");
+        assertResult("\u221a\u221a16", "2");
+        assertResult("\u221a9^2", "9");
+        assertResult("2\u221a9", "6");
+        assertResult("\u221a0.0004", "0.02");
+        assertResult("\u221a1" + "0".repeat(100), "1" + "0".repeat(50));
+        assertResult("\u03c0", "3.141592653589793");
+        assertResult("2\u03c0", "6.283185307179586");
+        assertResult("\u03c0*3^2", "28.27433388230814");
+        assertError("\u221a-4");
+        assertError("\u221a1" + "0".repeat(400));
+        assertError("\u03c02");
+    }
+
     private static void assertError(String expression) {
         Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
                 GboardCalculatorEngine.evaluate(expression).getStatus());
