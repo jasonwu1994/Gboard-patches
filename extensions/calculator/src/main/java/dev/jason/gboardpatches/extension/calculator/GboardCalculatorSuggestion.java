@@ -62,6 +62,48 @@ public final class GboardCalculatorSuggestion {
                 || hasInvalidWhitespace(textBeforeCursor, start, originalEnd)) {
             return null;
         }
+        // The text before a sum can look like part of it ("stop. 3+4", "Room 12 3+4"), so if the
+        // longest stretch does not work out, try again from each following word.
+        for (int from = start; from < end; from = nextWordStart(textBeforeCursor, from, end)) {
+            Candidate candidate = evaluate(textBeforeCursor, from, end, originalEnd);
+            if (candidate != null) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The next place a sum could start after a space, or {@code end} if there is none. A space
+     * straight after an operator is part of the sum ("2 + 3"), so it is not a new start.
+     */
+    private static int nextWordStart(CharSequence text, int from, int end) {
+        for (int index = from + 1; index < end; index++) {
+            if (text.charAt(index - 1) == ' '
+                    && index - 2 >= from
+                    && !isOperator(text.charAt(index - 2))
+                    && canStartSum(text.charAt(index))) {
+                return index;
+            }
+        }
+        return end;
+    }
+
+    private static boolean isOperator(char value) {
+        return value == '+' || value == '-' || value == '*' || value == '/' || value == '^'
+                || value == '\u2212' || value == '\u00d7' || value == '\u00f7'
+                || value == '(' || value == '\uff08' || isLetterX(value);
+    }
+
+    private static boolean canStartSum(char value) {
+        return Character.isDigit(value)
+                || value == '(' || value == '\uff08'
+                || value == GboardCalculatorEngine.SQUARE_ROOT
+                || value == GboardCalculatorEngine.PI_SYMBOL;
+    }
+
+    private static Candidate evaluate(CharSequence textBeforeCursor, int start, int end,
+            int originalEnd) {
         String expression = textBeforeCursor.subSequence(start, end).toString();
         if (!hasAtLeastTwoNumbers(expression)
                 && expression.indexOf(GboardCalculatorEngine.SQUARE_ROOT) < 0) {
