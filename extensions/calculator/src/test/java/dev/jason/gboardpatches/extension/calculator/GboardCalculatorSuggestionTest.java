@@ -61,6 +61,18 @@ public final class GboardCalculatorSuggestionTest {
     }
 
     @Test
+    public void findsSumsAfterAFullStopOrAStrayNumber() {
+        GboardCalculatorSuggestion.Candidate afterStop = candidate("It also fails. 3,000+40");
+        Assert.assertEquals("3,000+40=3,040", afterStop.getEquation());
+        Assert.assertEquals(8, afterStop.getDeleteBeforeCursorCount());
+        Assert.assertEquals("3+4=7", candidate("I have 5. 3+4").getEquation());
+        Assert.assertEquals("3+4=7", candidate("Room 12 3+4").getEquation());
+        Assert.assertEquals("10 - 5 + 2=7", candidate("Total. 10 - 5 + 2").getEquation());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("(2 + 3+4"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("2+3. 4"));
+    }
+
+    @Test
     public void rejectsIncompleteInvalidAndTruncatedExpressions() {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("42"));
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("2+"));
