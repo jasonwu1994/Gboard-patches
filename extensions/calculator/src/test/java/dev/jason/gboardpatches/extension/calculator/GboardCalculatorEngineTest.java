@@ -114,6 +114,16 @@ public final class GboardCalculatorEngineTest {
         assertError("(020) 7946 0958");
     }
 
+    @Test
+    public void readsCommaThousandsSeparators() {
+        assertResult("1,299.99-5%", "1234.9905");
+        assertResult("1,000,000/4", "250000");
+        assertError("1,23");
+        assertError("1,2345");
+        assertError("1234,567");
+        assertError("1.5,000");
+    }
+
     private static void assertError(String expression) {
         Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
                 GboardCalculatorEngine.evaluate(expression).getStatus());

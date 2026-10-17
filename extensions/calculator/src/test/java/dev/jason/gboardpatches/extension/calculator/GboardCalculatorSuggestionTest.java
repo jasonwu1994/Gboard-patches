@@ -96,6 +96,15 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("(020) 7946 0958"));
     }
 
+    @Test
+    public void readsThousandsSeparatorsWithoutSwallowingProseCommas() {
+        Assert.assertEquals("1,299.99-5%=1234.991",
+                candidate("Paid 1,299.99-5%").getEquation());
+        Assert.assertEquals("4+5=9", candidate("I counted 3, 4+5").getEquation());
+        Assert.assertEquals("2+3=5", candidate("1,2+3").getEquation());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("1,299"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);

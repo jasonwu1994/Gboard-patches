@@ -56,6 +56,24 @@ public final class GboardCalculatorEngine {
                 .replace("**", "^");
     }
 
+    /**
+     * True when the comma at {@code index} groups thousands, as in 1,299: a digit before it and
+     * exactly three digits after it. This keeps prose such as "3, 4" or "1,5" out of numbers.
+     */
+    static boolean isThousandsSeparator(CharSequence text, int index) {
+        if (index <= 0 || index + 3 >= text.length()
+                || text.charAt(index) != ','
+                || !Character.isDigit(text.charAt(index - 1))) {
+            return false;
+        }
+        for (int offset = 1; offset <= 3; offset++) {
+            if (!Character.isDigit(text.charAt(index + offset))) {
+                return false;
+            }
+        }
+        return index + 4 >= text.length() || !Character.isDigit(text.charAt(index + 4));
+    }
+
     private static void checkMagnitude(BigDecimal value) throws ParseFailure {
         if (value.signum() == 0) {
             return;
@@ -279,6 +297,7 @@ public final class GboardCalculatorEngine {
             int start = index;
             boolean decimalSeen = false;
             boolean digitSeen = false;
+            boolean groupingSeen = false;
             while (!isAtEnd()) {
                 char value = expression.charAt(index);
                 if (Character.isDigit(value)) {
@@ -286,6 +305,11 @@ public final class GboardCalculatorEngine {
                     index++;
                 } else if (value == '.' && !decimalSeen) {
                     decimalSeen = true;
+                    index++;
+                } else if (value == ',' && !decimalSeen
+                        && isThousandsSeparator(expression, index)
+                        && (groupingSeen || index - start <= 3)) {
+                    groupingSeen = true;
                     index++;
                 } else {
                     break;
@@ -295,7 +319,8 @@ public final class GboardCalculatorEngine {
                 throw ParseFailure.invalid("Number expected");
             }
             try {
-                return new BigDecimal(expression.substring(start, index), MATH_CONTEXT);
+                return new BigDecimal(
+                        expression.substring(start, index).replace(",", ""), MATH_CONTEXT);
             } catch (NumberFormatException failure) {
                 throw ParseFailure.invalid("Invalid number");
             }
