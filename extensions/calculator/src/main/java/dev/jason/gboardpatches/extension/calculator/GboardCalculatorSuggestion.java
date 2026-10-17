@@ -2,11 +2,19 @@ package dev.jason.gboardpatches.extension.calculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Finds a complete arithmetic expression immediately before the editor cursor. */
 public final class GboardCalculatorSuggestion {
     private static final int MAX_FRACTION_DIGITS = 3;
     private static final int SCIENTIFIC_EXPONENT_THRESHOLD = 12;
+    private static final Pattern ISO_DATE =
+            Pattern.compile("[0-9]{4}-([0-9]{1,2})-([0-9]{1,2})");
+    private static final Pattern SLASH_DATE =
+            Pattern.compile("([0-9]{1,2})/([0-9]{1,2})/(?:[0-9]{2}|[0-9]{4})");
+    private static final Pattern DASH_DATE =
+            Pattern.compile("([0-9]{1,2})-([0-9]{1,2})-[0-9]{4}");
 
     private GboardCalculatorSuggestion() {
     }
@@ -53,6 +61,9 @@ public final class GboardCalculatorSuggestion {
         if (!hasAtLeastTwoNumbers(expression)) {
             return null;
         }
+        if (isDate(expression)) {
+            return null;
+        }
         GboardCalculatorEngine.Evaluation evaluation =
                 GboardCalculatorEngine.evaluate(expression);
         if (!evaluation.isValid()) {
@@ -62,6 +73,32 @@ public final class GboardCalculatorSuggestion {
         return result.isEmpty()
                 ? null
                 : new Candidate(expression, result, originalEnd - start);
+    }
+
+    /**
+     * Full dates would otherwise read as sums (2026-10-17 = 1999). Dashed dates need a four-digit
+     * year so short sums like 10-5-20 still work; slashed dates also allow a two-digit year.
+     */
+    private static boolean isDate(String expression) {
+        Matcher iso = ISO_DATE.matcher(expression);
+        if (iso.matches()) {
+            return isMonthAndDay(iso.group(1), iso.group(2));
+        }
+        return isDayMonthOrMonthDay(SLASH_DATE.matcher(expression))
+                || isDayMonthOrMonthDay(DASH_DATE.matcher(expression));
+    }
+
+    /** Accepts both UK (17/10/2026) and US (10/17/2026) order. */
+    private static boolean isDayMonthOrMonthDay(Matcher date) {
+        return date.matches()
+                && (isMonthAndDay(date.group(1), date.group(2))
+                        || isMonthAndDay(date.group(2), date.group(1)));
+    }
+
+    private static boolean isMonthAndDay(String month, String day) {
+        int monthValue = Integer.parseInt(month);
+        int dayValue = Integer.parseInt(day);
+        return monthValue >= 1 && monthValue <= 12 && dayValue >= 1 && dayValue <= 31;
     }
 
     private static boolean hasInvalidWhitespace(CharSequence value, int start, int end) {

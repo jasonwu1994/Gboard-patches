@@ -49,6 +49,18 @@ public final class GboardCalculatorSuggestionTest {
     }
 
     @Test
+    public void ignoresFullDatesButKeepsSimilarSums() {
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("2026-10-17"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("Due 17/10/2026"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("10/17/26"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("17-10-2026"));
+        Assert.assertEquals("-15", candidate("10-5-20").getResult());
+        Assert.assertEquals("2010", candidate("2026-16").getResult());
+        Assert.assertEquals("1993", candidate("2026-13-20").getResult());
+        Assert.assertEquals("0.067", candidate("20/15/20").getResult());
+    }
+
+    @Test
     public void rejectsIncompleteInvalidAndTruncatedExpressions() {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("42"));
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("2+"));
