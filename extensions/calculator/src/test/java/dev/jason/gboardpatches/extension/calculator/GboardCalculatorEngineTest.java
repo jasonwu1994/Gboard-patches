@@ -76,6 +76,26 @@ public final class GboardCalculatorEngineTest {
         assertError("5%3");
     }
 
+    @Test
+    public void evaluatesWholeNumberPowersRightToLeft() {
+        assertResult("2^10", "1024");
+        assertResult("2 ^ 3", "8");
+        assertResult("2**3", "8");
+        assertResult("2 ** 3 ** 2", "512");
+        assertResult("2^3^2", "512");
+        assertResult("-2^2", "-4");
+        assertResult("(-2)^2", "4");
+        assertResult("2^-1", "0.5");
+        assertResult("0^0", "1");
+        assertResult("10^999", "1" + "0".repeat(999));
+        assertError("2^0.5");
+        assertError("10^1000");
+        assertError("2^9999999999");
+        assertError("0^-1");
+        assertError("(10^999)^2");
+        assertError("10^999*10");
+    }
+
     private static void assertError(String expression) {
         Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
                 GboardCalculatorEngine.evaluate(expression).getStatus());
