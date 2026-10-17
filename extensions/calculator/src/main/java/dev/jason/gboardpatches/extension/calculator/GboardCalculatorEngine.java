@@ -15,6 +15,7 @@ public final class GboardCalculatorEngine {
     private static final BigDecimal PI = new BigDecimal("3.14159265358979323846");
     static final char SQUARE_ROOT = '\u221a';
     static final char PI_SYMBOL = '\u03c0';
+    static final String CURRENCIES = "\u00a3$\u20ac\u00a5";
 
     private GboardCalculatorEngine() {
     }
@@ -318,6 +319,9 @@ public final class GboardCalculatorEngine {
                 }
                 depth--;
                 return value;
+            }
+            if (CURRENCIES.indexOf(expression.charAt(index)) >= 0) {
+                index++; // A currency sign before a number, as in £5, is only a label.
             }
             return parseNumber();
         }
