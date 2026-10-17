@@ -174,6 +174,13 @@ public final class GboardCalculatorEngine {
             BigDecimal value = parseUnary();
             boolean percent = lastFactorWasPercent;
             while (true) {
+                if (peek('(')) {
+                    // Implicit multiplication, only when directly adjacent: 2(3+4), (1+2)(3+4).
+                    recordBinaryOperation();
+                    value = value.multiply(parseUnary(), MATH_CONTEXT);
+                    percent = false;
+                    continue;
+                }
                 skipSpaces();
                 if (consume('*') || consume('x') || consume('X')) {
                     recordBinaryOperation();
@@ -299,6 +306,10 @@ public final class GboardCalculatorEngine {
             if (binaryOperations > MAX_BINARY_OPERATIONS) {
                 throw ParseFailure.invalid("Too many operations");
             }
+        }
+
+        private boolean peek(char expected) {
+            return !isAtEnd() && expression.charAt(index) == expected;
         }
 
         private boolean consume(char expected) {

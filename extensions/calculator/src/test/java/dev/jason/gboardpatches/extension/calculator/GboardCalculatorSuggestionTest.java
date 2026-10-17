@@ -89,6 +89,13 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("Linux 6.18"));
     }
 
+    @Test
+    public void suggestsImplicitMultiplicationButNotPhoneNumbers() {
+        Assert.assertEquals("2(3+4)=14", candidate("2(3+4)").getEquation());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("(020)7946"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("(020) 7946 0958"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);

@@ -104,6 +104,16 @@ public final class GboardCalculatorEngineTest {
         assertError("x2");
     }
 
+    @Test
+    public void multipliesImplicitlyOnlyWhenParenthesisDirectlyFollows() {
+        assertResult("2(3+4)", "14");
+        assertResult("(1+2)(3+4)", "21");
+        assertResult("2(3)^2", "18");
+        assertError("2 (3)");
+        assertError("(020)7946");
+        assertError("(020) 7946 0958");
+    }
+
     private static void assertError(String expression) {
         Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
                 GboardCalculatorEngine.evaluate(expression).getStatus());
