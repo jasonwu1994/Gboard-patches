@@ -98,11 +98,21 @@ public final class GboardCalculatorSuggestionTest {
 
     @Test
     public void readsThousandsSeparatorsWithoutSwallowingProseCommas() {
-        Assert.assertEquals("1,299.99-5%=1234.991",
+        Assert.assertEquals("1,299.99-5%=1,234.991",
                 candidate("Paid 1,299.99-5%").getEquation());
         Assert.assertEquals("4+5=9", candidate("I counted 3, 4+5").getEquation());
         Assert.assertEquals("2+3=5", candidate("1,2+3").getEquation());
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("1,299"));
+    }
+
+    @Test
+    public void groupsTheResultOnlyWhenTheSumUsesThousandsSeparators() {
+        Assert.assertEquals("3,040", candidate("3,000+40").getResult());
+        Assert.assertEquals("-1,999,000", candidate("1,000-2,000,000").getResult());
+        Assert.assertEquals("1,000.5", candidate("1,000+0.5").getResult());
+        Assert.assertEquals("3040", candidate("3000+40").getResult());
+        Assert.assertEquals("1.54\u00d710\u00b2\u00b9",
+                candidate("1,540,000,000,000*1000000000").getResult());
     }
 
     @Test
