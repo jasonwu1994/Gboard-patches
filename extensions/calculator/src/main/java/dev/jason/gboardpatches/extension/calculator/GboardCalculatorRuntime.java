@@ -41,7 +41,7 @@ public final class GboardCalculatorRuntime {
         selectionCollapsed = false;
     }
 
-    /** The calculation before the cursor in the active editor, or null if there is none. */
+    /** The calculation at the cursor in the active editor, or null if there is none. */
     static GboardCalculatorSuggestion.Candidate currentCandidate() {
         if (!enabledForInputView || !selectionCollapsed) {
             return null;
@@ -49,7 +49,7 @@ public final class GboardCalculatorRuntime {
         return candidateAt(connection());
     }
 
-    /** Replaces the calculation before the cursor with its result or full equation. */
+    /** Replaces the calculation at the cursor with its result or full equation. */
     static void acceptCurrent(boolean insertEquation) {
         InputConnection connection = connection();
         GboardCalculatorSuggestion.Candidate current = candidateAt(connection);
@@ -58,7 +58,8 @@ public final class GboardCalculatorRuntime {
         }
         connection.beginBatchEdit();
         try {
-            if (connection.deleteSurroundingText(current.getDeleteBeforeCursorCount(), 0)) {
+            if (connection.deleteSurroundingText(current.getDeleteBeforeCursorCount(),
+                    current.getDeleteAfterCursorCount())) {
                 connection.commitText(
                         insertEquation ? current.getEquation() : current.getResult(), 1);
             }
@@ -77,8 +78,10 @@ public final class GboardCalculatorRuntime {
             return null;
         }
         try {
-            return GboardCalculatorSuggestion.fromTextBeforeCursor(
-                    connection.getTextBeforeCursor(TEXT_LOOKBACK, 0));
+            return GboardCalculatorSuggestion.fromTextAroundCursor(
+                    connection.getTextBeforeCursor(TEXT_LOOKBACK, 0),
+                    () -> connection.getTextAfterCursor(
+                            GboardCalculatorEngine.MAX_EXPRESSION_LENGTH, 0));
         } catch (RuntimeException ignored) {
             // The editor went away; never let the calculator break Gboard.
             return null;
