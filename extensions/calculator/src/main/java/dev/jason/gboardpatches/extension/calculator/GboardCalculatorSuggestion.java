@@ -42,11 +42,11 @@ public final class GboardCalculatorSuggestion {
         int start = end;
         int lowerBound = Math.max(
                 0, end - GboardCalculatorEngine.MAX_EXPRESSION_LENGTH);
-        while (start > lowerBound && isExpressionCharacter(textBeforeCursor.charAt(start - 1))) {
+        while (start > lowerBound && isExpressionCharacterAt(textBeforeCursor, start - 1)) {
             start--;
         }
         if (start == lowerBound && lowerBound > 0
-                && isExpressionCharacter(textBeforeCursor.charAt(lowerBound - 1))) {
+                && isExpressionCharacterAt(textBeforeCursor, lowerBound - 1)) {
             return null;
         }
         // Skip leading spaces, and a leading "x" that belongs to a word, e.g. "box2+3" -> "2+3".
@@ -131,6 +131,13 @@ public final class GboardCalculatorSuggestion {
                 || value == '\u2029';
     }
 
+    private static boolean isExpressionCharacterAt(CharSequence text, int index) {
+        char value = text.charAt(index);
+        return value == ','
+                ? GboardCalculatorEngine.isThousandsSeparator(text, index)
+                : isExpressionCharacter(value);
+    }
+
     private static boolean isLetterX(char value) {
         return value == 'x' || value == 'X';
     }
@@ -169,7 +176,7 @@ public final class GboardCalculatorSuggestion {
                     }
                 }
                 inNumber = true;
-            } else if (value != '.') {
+            } else if (value != '.' && value != ',') {
                 inNumber = false;
             }
         }
