@@ -9,6 +9,7 @@ public final class GboardCalculatorEngine {
     static final int MAX_EXPRESSION_LENGTH = 128;
     static final int MAX_BINARY_OPERATIONS = 63;
     private static final int MAX_PARENTHESES_DEPTH = 16;
+    private static final int MAX_DECIMAL_EXPONENT = 999;
     private static final MathContext MATH_CONTEXT =
             new MathContext(16, RoundingMode.HALF_EVEN);
 
@@ -30,6 +31,7 @@ public final class GboardCalculatorEngine {
             if (!parser.isAtEnd()) {
                 return Evaluation.error("Unexpected character");
             }
+            checkMagnitude(value);
             return Evaluation.valid(format(value));
         } catch (ParseFailure failure) {
             return failure.incomplete
@@ -50,7 +52,18 @@ public final class GboardCalculatorEngine {
                 .replace('\u00f7', '/')
                 .replace('\uff08', '(')
                 .replace('\uff09', ')')
-                .replace('\uff05', '%');
+                .replace('\uff05', '%')
+                .replace("**", "^");
+    }
+
+    private static void checkMagnitude(BigDecimal value) throws ParseFailure {
+        if (value.signum() == 0) {
+            return;
+        }
+        long decimalExponent = (long) value.precision() - value.scale() - 1;
+        if (Math.abs(decimalExponent) > MAX_DECIMAL_EXPONENT) {
+            throw ParseFailure.invalid("Result is too large");
+        }
     }
 
     private static String format(BigDecimal value) {
@@ -194,8 +207,25 @@ public final class GboardCalculatorEngine {
                     break;
                 }
             }
-            BigDecimal value = parsePercent();
+            BigDecimal value = parsePower();
             return negative ? value.negate(MATH_CONTEXT) : value;
+        }
+
+        /** "^" binds tighter than a leading minus (-2^2 = -4) and groups right to left (2^3^2 = 512). */
+        private BigDecimal parsePower() throws ParseFailure {
+            BigDecimal base = parsePercent();
+            boolean percent = lastFactorWasPercent;
+            int beforeSpaces = index;
+            skipSpaces();
+            if (consume('^')) {
+                recordBinaryOperation();
+                base = power(base, parseUnary());
+                percent = false;
+            } else {
+                index = beforeSpaces;
+            }
+            lastFactorWasPercent = percent;
+            return base;
         }
 
         private BigDecimal parsePercent() throws ParseFailure {
@@ -203,6 +233,16 @@ public final class GboardCalculatorEngine {
             boolean percent = consume('%');
             lastFactorWasPercent = percent;
             return percent ? value.movePointLeft(2) : value;
+        }
+
+        private BigDecimal power(BigDecimal base, BigDecimal exponent) throws ParseFailure {
+            BigDecimal whole = exponent.stripTrailingZeros();
+            if (whole.scale() > 0) {
+                throw ParseFailure.invalid("Exponent must be a whole number");
+            }
+            BigDecimal result = base.pow(whole.intValueExact(), MATH_CONTEXT);
+            checkMagnitude(result);
+            return result;
         }
 
         private BigDecimal parsePrimary() throws ParseFailure {

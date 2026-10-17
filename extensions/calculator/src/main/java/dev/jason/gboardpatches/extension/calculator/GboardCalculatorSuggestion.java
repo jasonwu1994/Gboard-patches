@@ -133,6 +133,7 @@ public final class GboardCalculatorSuggestion {
         return Character.isDigit(value)
                 || value == '%'
                 || value == '\uff05'
+                || value == '^'
                 || (Character.isWhitespace(value) && !isLineBreak(value))
                 || value == '.'
                 || value == '+'

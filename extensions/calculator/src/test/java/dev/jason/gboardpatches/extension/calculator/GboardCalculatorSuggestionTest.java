@@ -75,6 +75,11 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("50%"));
     }
 
+    @Test
+    public void suggestsPowers() {
+        Assert.assertEquals("2^10=1024", candidate("2^10").getEquation());
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);
