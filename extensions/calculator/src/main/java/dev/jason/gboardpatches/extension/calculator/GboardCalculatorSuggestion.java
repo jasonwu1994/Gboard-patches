@@ -2,6 +2,9 @@ package dev.jason.gboardpatches.extension.calculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,7 +75,10 @@ public final class GboardCalculatorSuggestion {
         if (!evaluation.isValid()) {
             return null;
         }
-        String result = formatSuggestionResult(evaluation.getResult());
+        // The engine only accepts commas as thousands separators, so any comma means the
+        // sum was written with them and the result should match.
+        String result = formatSuggestionResult(
+                evaluation.getResult(), expression.indexOf(',') >= 0);
         return result.isEmpty()
                 ? null
                 : new Candidate(expression, result, originalEnd - start);
@@ -192,21 +198,19 @@ public final class GboardCalculatorSuggestion {
         return false;
     }
 
-    private static String formatSuggestionResult(String rawResult) {
+    private static String formatSuggestionResult(String rawResult, boolean groupThousands) {
         try {
             BigDecimal value = new BigDecimal(rawResult);
-            if (value.compareTo(BigDecimal.ZERO) == 0) {
-                return "0";
-            }
             BigDecimal normalized = value.stripTrailingZeros();
             int exponent = normalized.precision() - normalized.scale() - 1;
             if (exponent >= SCIENTIFIC_EXPONENT_THRESHOLD) {
                 return formatScientific(normalized, exponent);
             }
-            BigDecimal rounded = value.scale() > MAX_FRACTION_DIGITS
-                    ? value.setScale(MAX_FRACTION_DIGITS, RoundingMode.HALF_UP)
-                    : value;
-            return rounded.stripTrailingZeros().toPlainString();
+            DecimalFormat format =
+                    new DecimalFormat("#,##0", DecimalFormatSymbols.getInstance(Locale.ROOT));
+            format.setGroupingUsed(groupThousands);
+            format.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
+            return format.format(value.setScale(MAX_FRACTION_DIGITS, RoundingMode.HALF_UP));
         } catch (NumberFormatException ignored) {
             return "";
         }
