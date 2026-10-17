@@ -49,7 +49,9 @@ public final class GboardCalculatorSuggestion {
                 && isExpressionCharacter(textBeforeCursor.charAt(lowerBound - 1))) {
             return null;
         }
-        while (start < end && Character.isWhitespace(textBeforeCursor.charAt(start))) {
+        // Skip leading spaces, and a leading "x" that belongs to a word, e.g. "box2+3" -> "2+3".
+        while (start < end && (Character.isWhitespace(textBeforeCursor.charAt(start))
+                || isLetterX(textBeforeCursor.charAt(start)))) {
             start++;
         }
         if (start >= end
@@ -129,8 +131,13 @@ public final class GboardCalculatorSuggestion {
                 || value == '\u2029';
     }
 
+    private static boolean isLetterX(char value) {
+        return value == 'x' || value == 'X';
+    }
+
     private static boolean isExpressionCharacter(char value) {
         return Character.isDigit(value)
+                || isLetterX(value)
                 || value == '%'
                 || value == '\uff05'
                 || value == '^'

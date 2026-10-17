@@ -96,6 +96,14 @@ public final class GboardCalculatorEngineTest {
         assertError("10^999*10");
     }
 
+    @Test
+    public void acceptsLetterXAsMultiplicationBetweenNumbers() {
+        assertResult("2x3", "6");
+        assertResult("2 X 3", "6");
+        assertResult("1920x1080", "2073600");
+        assertError("x2");
+    }
+
     private static void assertError(String expression) {
         Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
                 GboardCalculatorEngine.evaluate(expression).getStatus());

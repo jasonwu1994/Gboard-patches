@@ -80,6 +80,15 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertEquals("2^10=1024", candidate("2^10").getEquation());
     }
 
+    @Test
+    public void suggestsLetterXMultiplicationWithoutCatchingWords() {
+        Assert.assertEquals("2073600", candidate("1920x1080").getResult());
+        Assert.assertEquals("2+3=5", candidate("box2+3").getEquation());
+        Assert.assertEquals(3, candidate("box2+3").getDeleteBeforeCursorCount());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("3x"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("Linux 6.18"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);

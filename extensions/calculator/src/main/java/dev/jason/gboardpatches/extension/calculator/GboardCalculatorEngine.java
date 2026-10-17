@@ -175,7 +175,7 @@ public final class GboardCalculatorEngine {
             boolean percent = lastFactorWasPercent;
             while (true) {
                 skipSpaces();
-                if (consume('*')) {
+                if (consume('*') || consume('x') || consume('X')) {
                     recordBinaryOperation();
                     value = value.multiply(parseUnary(), MATH_CONTEXT);
                     percent = false;
