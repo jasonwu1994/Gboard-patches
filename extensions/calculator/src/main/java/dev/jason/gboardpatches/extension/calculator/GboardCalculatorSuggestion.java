@@ -60,7 +60,8 @@ public final class GboardCalculatorSuggestion {
             return null;
         }
         String expression = textBeforeCursor.subSequence(start, end).toString();
-        if (!hasAtLeastTwoNumbers(expression)) {
+        if (!hasAtLeastTwoNumbers(expression)
+                && expression.indexOf(GboardCalculatorEngine.SQUARE_ROOT) < 0) {
             return null;
         }
         if (isDate(expression)) {
@@ -148,6 +149,8 @@ public final class GboardCalculatorSuggestion {
                 || value == '%'
                 || value == '\uff05'
                 || value == '^'
+                || value == GboardCalculatorEngine.SQUARE_ROOT
+                || value == GboardCalculatorEngine.PI_SYMBOL
                 || (Character.isWhitespace(value) && !isLineBreak(value))
                 || value == '.'
                 || value == '+'
@@ -168,7 +171,13 @@ public final class GboardCalculatorSuggestion {
         boolean inNumber = false;
         for (int index = 0; index < expression.length(); index++) {
             char value = expression.charAt(index);
-            if (Character.isDigit(value)) {
+            if (value == GboardCalculatorEngine.PI_SYMBOL) {
+                numberCount++;
+                if (numberCount >= 2) {
+                    return true;
+                }
+                inNumber = false;
+            } else if (Character.isDigit(value)) {
                 if (!inNumber) {
                     numberCount++;
                     if (numberCount >= 2) {

@@ -12,6 +12,9 @@ public final class GboardCalculatorEngine {
     private static final int MAX_DECIMAL_EXPONENT = 999;
     private static final MathContext MATH_CONTEXT =
             new MathContext(16, RoundingMode.HALF_EVEN);
+    private static final BigDecimal PI = new BigDecimal("3.14159265358979323846");
+    static final char SQUARE_ROOT = '\u221a';
+    static final char PI_SYMBOL = '\u03c0';
 
     private GboardCalculatorEngine() {
     }
@@ -72,6 +75,18 @@ public final class GboardCalculatorEngine {
             }
         }
         return index + 4 >= text.length() || !Character.isDigit(text.charAt(index + 4));
+    }
+
+    /** Square root to double precision, about 16 digits, which is plenty for the display. */
+    private static BigDecimal squareRoot(BigDecimal value) throws ParseFailure {
+        if (value.signum() < 0) {
+            throw ParseFailure.invalid("Cannot take the square root of a negative number");
+        }
+        double root = Math.sqrt(value.doubleValue());
+        if (Double.isInfinite(root)) {
+            throw ParseFailure.invalid("Number is too large");
+        }
+        return BigDecimal.valueOf(root).round(MATH_CONTEXT);
     }
 
     private static void checkMagnitude(BigDecimal value) throws ParseFailure {
@@ -192,8 +207,8 @@ public final class GboardCalculatorEngine {
             BigDecimal value = parseUnary();
             boolean percent = lastFactorWasPercent;
             while (true) {
-                if (peek('(')) {
-                    // Implicit multiplication, only when directly adjacent: 2(3+4), (1+2)(3+4).
+                if (peek('(') || peek(PI_SYMBOL) || peek(SQUARE_ROOT)) {
+                    // Implicit multiplication, only when directly adjacent: 2(3+4), 2π, 2√9.
                     recordBinaryOperation();
                     value = value.multiply(parseUnary(), MATH_CONTEXT);
                     percent = false;
@@ -270,7 +285,21 @@ public final class GboardCalculatorEngine {
             return result;
         }
 
+        /** "√" applies to the operand right after it, so √9^2 = (√9)^2 and √√16 = 2. */
         private BigDecimal parsePrimary() throws ParseFailure {
+            skipSpaces();
+            int roots = 0;
+            while (consume(SQUARE_ROOT)) {
+                roots++;
+            }
+            BigDecimal value = consume(PI_SYMBOL) ? PI : parseOperand();
+            for (int root = 0; root < roots; root++) {
+                value = squareRoot(value);
+            }
+            return value;
+        }
+
+        private BigDecimal parseOperand() throws ParseFailure {
             skipSpaces();
             if (isAtEnd()) {
                 throw ParseFailure.incomplete();

@@ -105,6 +105,14 @@ public final class GboardCalculatorSuggestionTest {
         Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("1,299"));
     }
 
+    @Test
+    public void suggestsSquareRootsAloneButPiOnlyInsideASum() {
+        Assert.assertEquals("1.414", candidate("\u221a2").getResult());
+        Assert.assertEquals("6.283", candidate("2\u03c0").getResult());
+        Assert.assertEquals("28.274", candidate("\u03c0*3^2").getResult());
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextBeforeCursor("\u03c0"));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);
