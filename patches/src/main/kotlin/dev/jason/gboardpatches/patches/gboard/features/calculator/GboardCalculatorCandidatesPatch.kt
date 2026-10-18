@@ -6,9 +6,13 @@ import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import dev.jason.gboardpatches.patches.gboard.shared.addHelperMethodIfMissing
 import dev.jason.gboardpatches.patches.gboard.shared.applyVoidExitLifecycleDelegate
 import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
+import dev.jason.gboardpatches.patches.gboard.shared.invokeRegisters
+import dev.jason.gboardpatches.patches.gboard.shared.isFieldReference
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalog
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
@@ -29,7 +33,10 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
  *   calculation, the calculator pair is kept instead of the strip being cleared.
  * - GoogleInputMethodService event dispatch: a CANDIDATE_SELECT event for one of those
  *   candidates is handed to the calculator, which replaces the calculation, instead of Gboard
- *   committing the candidate text.
+ *   committing the candidate text. A DELETE_CANDIDATE event, from the long-press bubble,
+ *   copies the result instead of removing the suggestion.
+ * - CandidateSoftKeyDefBuilder.addActions: the long-press bubble of those candidates reads
+ *   "Copy" with a copy icon instead of "Remove suggestion" with a bin.
  *
  * The extension recognises its candidates by identity, so it needs no obfuscated names.
  */
@@ -87,6 +94,8 @@ internal fun BytecodePatchContext.applyCalculatorCandidateHooks() {
         registerCount = TAP_HELPER_REGISTER_COUNT,
         body = tapHelperBody(),
     )
+    findMutableMethodOrThrow(targets.candidateKeyActions).applyCopyBubble()
+
     val tapHelper = "${targets.consumeEvent.ownerDescriptor}->$TAP_HELPER_NAME(${targets.EVENT_TYPE})Z"
     findMutableMethodOrThrow(targets.consumeEvent).addEarlyReturn(
         call = "invoke-direct/range {p0 .. p1}, $tapHelper",
@@ -106,6 +115,69 @@ private fun MutableMethod.applyCandidatesEntryDelegate() {
         """
             invoke-direct/range {p0 .. p1}, $helper
             move-result-object p1
+        """.trimIndent(),
+    )
+}
+
+/**
+ * For calculator candidates, swaps the long-press bubble's "Remove suggestion" label and bin icon
+ * for "Copy" and a copy icon. In the bubble's action setup, the candidate is passed to
+ * setEvent(DELETE_CANDIDATE, null, candidate), whose event code register is free afterwards, so
+ * it holds whether the candidate is a calculator one until the label and icon are loaded.
+ */
+private fun MutableMethod.applyCopyBubble() {
+    val t = GboardCalculator1803Targets
+    val isCalculator = RuntimeAbiCatalog.abi(RuntimeCallId.CALCULATOR_CANDIDATES_IS_CALCULATOR)
+    if (alreadyDelegates(isCalculator.reference)) {
+        return
+    }
+    val instructions = implementation!!.instructions
+    val setEventMethod = "${t.KEY_ACTION_TYPE}->${t.KEY_ACTION_SET_EVENT_METHOD}"
+    val setEvent = instructions.indices.single { index ->
+        instructions[index].isMethodReference(setEventMethod) &&
+            (instructions[index - 1] as? NarrowLiteralInstruction)?.narrowLiteral ==
+            DELETE_CANDIDATE_CODE
+    }
+    val label = (setEvent + 1 until instructions.size).first { index ->
+        instructions[index].isFieldReference(t.REMOVE_SUGGESTION_LABEL_FIELD)
+    }
+    val icon = (label + 1 until instructions.size).first { index ->
+        (instructions[index] as? NarrowLiteralInstruction)?.narrowLiteral ==
+            t.REMOVE_SUGGESTION_ICON
+    }
+    // setEvent(action, code, null, candidate)
+    val (_, flag, _, candidate) = instructions[setEvent].invokeRegisters(setEventMethod)!!
+    val labelRegister = (instructions[label] as OneRegisterInstruction).registerA
+    val iconRegister = (instructions[icon] as OneRegisterInstruction).registerA
+    check(listOf(candidate, flag, labelRegister, iconRegister).all { it < 16 }) {
+        "Unexpected registers in $definingClass->$name"
+    }
+
+    // Inserted from the last position back, so the earlier indices stay valid.
+    addInstructionsWithLabels(
+        icon + 1,
+        """
+            if-eqz v$flag, :gboard_patches_calculator_icon
+            const v$iconRegister, ${t.COPY_ICON}
+            :gboard_patches_calculator_icon
+            nop
+        """.trimIndent(),
+    )
+    addInstructionsWithLabels(
+        label + 1,
+        """
+            if-eqz v$flag, :gboard_patches_calculator_label
+            ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_COPY_LABEL, "")}
+            move-result-object v$labelRegister
+            :gboard_patches_calculator_label
+            nop
+        """.trimIndent(),
+    )
+    addInstructions(
+        setEvent + 1,
+        """
+            ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_IS_CALCULATOR, "v$candidate")}
+            move-result v$flag
         """.trimIndent(),
     )
 }
@@ -163,7 +235,7 @@ private fun candidatesHelperBody(): String {
         ${buildCandidate(text = "v1", into = "v2")}
         const/4 v1, 0x1
         aget-object v1, v0, v1
-        ${buildCandidate(text = "v1", into = "v3")}
+        ${buildCandidate(text = "v1", into = "v3", copyable = true)}
 
         # Clear the strip first, so the pair replaces earlier batches instead of being appended,
         # and let it replace the toolbar like after a backspace, also on the symbols page.
@@ -177,14 +249,21 @@ private fun candidatesHelperBody(): String {
     """.trimIndent()
 }
 
-// Builds a Gboard text candidate with Gboard's own builder.
-private fun buildCandidate(text: String, into: String): String {
+// Builds a Gboard text candidate with Gboard's own builder. A [copyable] one is marked removable
+// so Gboard offers its long-press bubble, which the calculator turns into "Copy"; this reuses
+// [text] once it is set.
+private fun buildCandidate(text: String, into: String, copyable: Boolean = false): String {
     val t = GboardCalculator1803Targets
     val builder = t.CANDIDATE_BUILDER_TYPE
+    val removable = if (!copyable) "" else """
+        const/4 $text, 0x1
+        iput-boolean $text, $into, $builder->${t.CANDIDATE_BUILDER_REMOVABLE_FIELD}
+    """.trimIndent()
     return """
         new-instance $into, $builder
         invoke-direct {$into}, $builder-><init>()V
         iput-object $text, $into, $builder->${t.CANDIDATE_BUILDER_TEXT_FIELD}
+        $removable
         invoke-virtual {$into}, $builder->${t.CANDIDATE_BUILDER_BUILD_METHOD}
         move-result-object $into
     """.trimIndent()
@@ -210,6 +289,8 @@ private fun tapHelperBody(): String {
         move-result-object v0
         if-eqz v0, :not_calculator
         iget v1, v0, ${t.KEY_DATA_TYPE}->${t.KEY_DATA_CODE_FIELD}
+        const/16 v2, $DELETE_CANDIDATE_CODE
+        if-eq v1, v2, :long_press
         const/16 v2, $CANDIDATE_SELECT_CODE
         if-ne v1, v2, :not_calculator
         iget-object v0, v0, ${t.KEY_DATA_TYPE}->${t.KEY_DATA_PAYLOAD_FIELD}
@@ -219,6 +300,13 @@ private fun tapHelperBody(): String {
         iget-object v0, v0, ${t.CANDIDATE_DATA_TYPE}->${t.CANDIDATE_DATA_CANDIDATE_FIELD}
 
         ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_ON_SELECTED, "v0")}
+        move-result v0
+        return v0
+
+        # DELETE_CANDIDATE carries the candidate itself.
+        :long_press
+        iget-object v0, v0, ${t.KEY_DATA_TYPE}->${t.KEY_DATA_PAYLOAD_FIELD}
+        ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_ON_LONG_PRESSED, "v0")}
         move-result v0
         return v0
 
@@ -241,3 +329,5 @@ private const val CANDIDATES_HELPER_REGISTER_COUNT = 6
 private const val TAP_HELPER_REGISTER_COUNT = 5
 // CANDIDATE_SELECT key code, sent when a suggestion is tapped.
 private const val CANDIDATE_SELECT_CODE = -10002
+// DELETE_CANDIDATE key code, sent by the long-press "Remove suggestion" bubble.
+private const val DELETE_CANDIDATE_CODE = -10031

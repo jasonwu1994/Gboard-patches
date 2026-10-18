@@ -58,6 +58,16 @@ internal object GboardCalculator1803Targets {
         returnType = "V",
     )
 
+    // CandidateSoftKeyDefBuilder.addActions(builder, action, index, candidate, ...): adds a
+    // candidate key's tap action and, for removable candidates, the long-press "Remove
+    // suggestion" bubble.
+    val candidateKeyActions = GboardMethodTarget(
+        classType = "Lssw;",
+        name = "c",
+        parameterTypes = listOf("Lppo;", "Lpmz;", "I", "Lojt;", "Z", "I"),
+        returnType = "V",
+    )
+
     // GoogleInputMethodService event dispatch (InputBundle.consumeEvent inlined), which
     // handles CANDIDATE_SELECT (-10002) for suggestion taps.
     val consumeEvent = GboardMethodTarget(
@@ -74,6 +84,14 @@ internal object GboardCalculator1803Targets {
     const val CANDIDATE_BUILDER_TYPE = "Lojq;"
     const val CANDIDATE_BUILDER_TEXT_FIELD = "a:Ljava/lang/CharSequence;"
     const val CANDIDATE_BUILDER_BUILD_METHOD = "a()Lojt;"
+    // Gboard only offers the long-press bubble for candidates with this "removable" flag.
+    const val CANDIDATE_BUILDER_REMOVABLE_FIELD = "f:Z"
+    const val KEY_ACTION_TYPE = "Lpmz;"
+    const val KEY_ACTION_SET_EVENT_METHOD = "q(ILpnt;Ljava/lang/Object;)V"
+    const val REMOVE_SUGGESTION_LABEL_FIELD = "Lssw;->q:Ljava/lang/String;"
+    const val REMOVE_SUGGESTION_ICON = 0x7f080707
+    // Material "content_copy", tinted with the theme like the remove icon.
+    const val COPY_ICON = 0x7f08044f
     const val EVENT_TYPE = "Lnur;"
     const val EVENT_KEY_DATA_METHOD = "g()Lpnu;"
     const val KEY_DATA_TYPE = "Lpnu;"
