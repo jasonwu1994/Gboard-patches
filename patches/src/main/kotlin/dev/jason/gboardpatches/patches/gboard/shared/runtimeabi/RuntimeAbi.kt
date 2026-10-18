@@ -129,6 +129,11 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     ZHUYIN_SLIDE_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA("Ldev/jason/gboardpatches/extension/zhuyinslide/GboardZhuyinSlideRuntime;->patchIncomingSoftKeyMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_AFTER_SOFT_KEY_BOUND("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->afterSoftKeyBound(Ljava/lang/Object;)V"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_MAYBE_TOGGLE("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->maybeToggle(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_CANDIDATE_CONVERSION_READY("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinCandidateConversionRuntime;->onDecoderReady(Ljava/lang/Object;)V"),
+    ZHUYIN_CANDIDATE_CONVERSION_FINISHED("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinCandidateConversionRuntime;->onDecoderFinished(Ljava/lang/Object;)V"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_MAYBE_TOGGLE("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->maybeToggleCandidateButton(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_PATCH_METADATA("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchCandidateButtonMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_AFTER_BOUND("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->afterCandidateButtonBound(Ljava/lang/Object;)V"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchIncomingSoftKeyMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_PATCH_POPUP_ACTION("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchPopupAction(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 }

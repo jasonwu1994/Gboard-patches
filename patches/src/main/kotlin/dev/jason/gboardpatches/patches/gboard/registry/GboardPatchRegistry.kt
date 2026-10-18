@@ -81,6 +81,8 @@ import dev.jason.gboardpatches.patches.gboard.features.signaturebypass.gboardSig
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardAccessPointPatch
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardModePatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinCandidateConversionPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinSimplifiedCandidateButtonFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
@@ -522,6 +524,23 @@ val gboardZhuyinQuickTraditionalSimplifiedTogglePatch = gboardPublicResourcePatc
 }
 
 @Suppress("unused")
+val gboardZhuyinSimplifiedCandidateButtonPatch = gboardPublicResourcePatch(
+    featureId = "zhuyin_simplified_candidate_button",
+    name = "Zhuyin Simplified Candidate Button",
+    description = "Replace the Single character candidates button in the expanded Zhuyin candidate list with an independent Traditional/Simplified Chinese toggle, configurable in Patches settings.",
+    default = true
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesExtensionCarrierPatch,
+        gboardPatchesSettingsPatch,
+        gboardZhuyinSimplifiedCandidateButtonFeatureMarkerPatch,
+        gboardZhuyinCandidateConversionPatch,
+    )
+}
+
+@Suppress("unused")
 val gboardCustomSymbolsPatch = gboardPublicResourcePatch(
     featureId = "custom_symbols",
     name = "Custom Symbols",
@@ -902,6 +921,7 @@ object GboardPublishedPatchCatalog {
         gboardCustomThemePatch,
         gboardQuickInsertPatch,
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
+        gboardZhuyinSimplifiedCandidateButtonPatch,
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
         gboardBackupRestorePatch,

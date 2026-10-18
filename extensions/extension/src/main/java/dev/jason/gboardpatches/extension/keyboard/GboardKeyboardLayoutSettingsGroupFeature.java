@@ -22,6 +22,7 @@ import dev.jason.gboardpatches.extension.spacebarlogo.GboardSpacebarLogoSettings
 import dev.jason.gboardpatches.extension.symbolfooter.GboardSymbolFooterOrderSettingsFeature;
 import dev.jason.gboardpatches.extension.splitkeyboard.GboardSplitKeyboardSettingsFeature;
 import dev.jason.gboardpatches.extension.zhuyinbottomrow.GboardZhuyinBottomRowWeightSettingsFeature;
+import dev.jason.gboardpatches.extension.zhuyintoggle.GboardZhuyinSimplifiedCandidateButtonSettingsFeature;
 
 public final class GboardKeyboardLayoutSettingsGroupFeature
         implements GboardPatchesSettingsContract.Feature {
@@ -47,6 +48,7 @@ public final class GboardKeyboardLayoutSettingsGroupFeature
                         new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature(context),
                         new GboardEnglishUppercaseToggleSettingsFeature(context),
                         new GboardZhuyinBottomRowWeightSettingsFeature(context),
+                        new GboardZhuyinSimplifiedCandidateButtonSettingsFeature(context),
                         new GboardSymbolFooterOrderSettingsFeature(context),
                         new GboardEmojiSizeSettingsFeature(context),
                         new GboardAccessPointsMenuSettingsFeature(context),

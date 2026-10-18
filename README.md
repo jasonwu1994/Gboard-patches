@@ -295,6 +295,12 @@ Features tailored to Traditional Chinese and Zhuyin input workflows.
 </details>
 
 <details>
+  <summary><code>Zhuyin Simplified Candidate Button</code></summary>
+
+  Replaces the <code>Single character candidates</code> button at the bottom left of the expanded Zhuyin candidate list with a Simplified Chinese toggle. Switches existing candidates and subsequent input between Traditional and Simplified Chinese while preserving the composing text and expanded candidate view. The native button indicator reflects the selected mode. Includes an independent switch in Patches settings.
+</details>
+
+<details>
   <summary><code>Zhuyin Bottom Row Key Sizes</code></summary>
 
   Adjusts the seven bottom-row slot sizes on the Zhuyin keyboard, including <code>?123</code>, <code>，</code>, the globe key, space, <code>ㄦ</code>, backspace, and the IME action key.

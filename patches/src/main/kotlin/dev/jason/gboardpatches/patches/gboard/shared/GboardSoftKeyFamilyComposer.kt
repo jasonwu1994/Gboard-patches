@@ -36,6 +36,16 @@ internal enum class GboardSoftKeyFamilyFeature(
             RuntimeCallId.ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_AFTER_SOFT_KEY_BOUND,
         ),
     ),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON(
+        beforeOrder = 150,
+        afterOrder = 500,
+        beforeRuntimeCalls = listOf(
+            RuntimeCallId.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_PATCH_METADATA,
+        ),
+        afterRuntimeCalls = listOf(
+            RuntimeCallId.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_AFTER_BOUND,
+        ),
+    ),
     TOP_ROW_SWIPE(
         beforeOrder = 200,
         afterOrder = 200,
@@ -330,6 +340,7 @@ internal fun MutableMethod.applySelectedSoftKeyFamily(
 
 internal fun GboardSoftKeyFamilyFeature.beforeDelegate(): String = when (this) {
     GboardSoftKeyFamilyFeature.ZHUYIN_TOGGLE,
+    GboardSoftKeyFamilyFeature.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON,
     GboardSoftKeyFamilyFeature.TOP_ROW_SWIPE,
     GboardSoftKeyFamilyFeature.ZHUYIN_SLIDE,
     GboardSoftKeyFamilyFeature.CUSTOM_SYMBOLS,
@@ -354,6 +365,7 @@ internal fun GboardSoftKeyFamilyFeature.afterDelegate(): String = when (this) {
     GboardSoftKeyFamilyFeature.TOP_ROW_SWIPE,
     GboardSoftKeyFamilyFeature.ZHUYIN_BOTTOM_ROW,
     GboardSoftKeyFamilyFeature.ZHUYIN_TOGGLE,
+    GboardSoftKeyFamilyFeature.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON,
     -> emitSoftKeyRuntimeCall(afterRuntimeCalls.single(), "p0")
     else -> error("$this has no after-stock contribution")
 }

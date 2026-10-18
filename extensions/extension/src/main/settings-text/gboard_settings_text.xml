@@ -284,6 +284,34 @@
         <translation locale="en">Shows the animation during sustained fast typing. Force-stop and restart Gboard for the change to take effect.</translation>
         <translation locale="zh-Hant">持續快速輸入時顯示動畫。需要強制停止並重新啟動 Gboard 才會生效。</translation>
     </string>
+    <string name="gboard_patches_zhuyin_simplified_button_title">
+        <translation locale="en">Simplified Candidate Button</translation>
+        <translation locale="zh-Hant">簡體候選按鈕</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_summary">
+        <translation locale="en">Add a button to the expanded Zhuyin candidate list to toggle Simplified Chinese conversion.</translation>
+        <translation locale="zh-Hant">在注音候選字展開頁加入簡體切換按鈕。</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_error_title">
+        <translation locale="en">Simplified candidate button settings unavailable</translation>
+        <translation locale="zh-Hant">簡體候選按鈕設定無法使用</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_error_summary">
+        <translation locale="en">The setting screen failed to load. Reopen Gboard settings and try again.</translation>
+        <translation locale="zh-Hant">設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_section">
+        <translation locale="en">Behavior</translation>
+        <translation locale="zh-Hant">行為</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_enabled_title">
+        <translation locale="en">Enable</translation>
+        <translation locale="zh-Hant">啟用</translation>
+    </string>
+    <string name="gboard_patches_zhuyin_simplified_button_enabled_summary">
+        <translation locale="en">Replace Single character candidates with a Simplified Chinese toggle for Gboard\'s Traditional/Simplified conversion.</translation>
+        <translation locale="zh-Hant">將「單字」改為「簡體」按鈕，按下後切換 Gboard 繁簡轉換。</translation>
+    </string>
     <string name="gboard_patches_quick_insert_title">
         <translation locale="en">Quick Insert</translation>
         <translation locale="zh-Hant">快速插入</translation>

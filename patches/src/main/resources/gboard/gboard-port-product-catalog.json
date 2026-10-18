@@ -1673,6 +1673,69 @@
       ]
     },
     {
+      "feature_id": "zhuyin_simplified_candidate_button",
+      "public_patch_name": "Zhuyin Simplified Candidate Button",
+      "feature_marker": "dev.jason.gboardpatches.feature.zhuyin_simplified_candidate_button",
+      "target_family_ids": [
+        "gesture.dispatch",
+        "softkey.bind",
+        "zhuyintraditionalsimplifiedtoggle"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyintraditionalsimplifiedtoggle/GboardZhuyinSimplifiedCandidateButtonGesturePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyintraditionalsimplifiedtoggle/GboardZhuyinTraditionalSimplifiedToggleRuntimePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyintraditionalsimplifiedtoggle/GboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardContributionWiring.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardGestureFamilyComposer.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardSoftKeyFamilyComposer.kt"
+      ],
+      "depends_on_feature_ids": [],
+      "contributions": [
+        {
+          "contribution_id": "zhuyin_simplified_candidate_button.gesture",
+          "anchor_family_id": "gesture_dispatch",
+          "phase": "before_stock",
+          "order": 350,
+          "required_bindings": [
+            "gesture_dispatch",
+            "gesture_dispatcher_type",
+            "gesture_stock_delegate_field",
+            "gesture_stock_dispatch"
+          ],
+          "runtime_calls": [
+            "ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_MAYBE_TOGGLE"
+          ]
+        },
+        {
+          "contribution_id": "zhuyin_simplified_candidate_button.soft_key",
+          "anchor_family_id": "soft_key_bind",
+          "phase": "before_stock",
+          "order": 150,
+          "required_bindings": [
+            "soft_key_bind",
+            "soft_key_metadata_type"
+          ],
+          "runtime_calls": [
+            "ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_PATCH_METADATA"
+          ]
+        },
+        {
+          "contribution_id": "zhuyin_simplified_candidate_button.soft_key_after",
+          "anchor_family_id": "soft_key_bind",
+          "phase": "after_stock",
+          "order": 500,
+          "required_bindings": [
+            "soft_key_bind"
+          ],
+          "runtime_calls": [
+            "ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_AFTER_BOUND"
+          ]
+        }
+      ]
+    },
+    {
       "feature_id": "zhuyin_slide_input",
       "public_patch_name": "Zhuyin Slide Input",
       "feature_marker": null,
