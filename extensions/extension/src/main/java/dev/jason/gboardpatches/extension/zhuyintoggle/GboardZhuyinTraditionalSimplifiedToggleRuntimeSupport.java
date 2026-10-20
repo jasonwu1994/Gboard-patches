@@ -227,6 +227,28 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         return value instanceof Boolean ? (Boolean) value : null;
     }
 
+    Boolean readCandidateSimplifiedEnabled(Context context) throws ReflectiveOperationException {
+        if (context == null) return null;
+        return readCandidateSimplifiedEnabled(preferenceFactoryMethod.invoke(null, context));
+    }
+
+    Boolean readCandidateSimplifiedEnabled(Object preferences) throws ReflectiveOperationException {
+        if (preferences == null) return null;
+        int resource = GboardZhuyinCandidateConversionRuntime.isCantoneseActive()
+                ? 0x7f140a1a : PREFERENCE_KEY_RES_ID;
+        Object value = preferenceReadMethod.invoke(preferences, resource, Boolean.FALSE);
+        return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    boolean writeCandidateSimplifiedEnabled(Object preferences, boolean enabled)
+            throws ReflectiveOperationException {
+        if (preferences == null) return false;
+        String key = GboardZhuyinCandidateConversionRuntime.isCantoneseActive()
+                ? "enable_sc_tc_conversion_zh_hk" : PREFERENCE_KEY;
+        preferenceWriteMethod.invoke(preferences, key, enabled);
+        return true;
+    }
+
     boolean writeSimplifiedEnabled(Object preferences, boolean enabled)
             throws ReflectiveOperationException {
         if (preferences == null) {

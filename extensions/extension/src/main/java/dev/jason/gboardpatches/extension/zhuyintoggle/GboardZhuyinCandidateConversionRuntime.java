@@ -15,6 +15,8 @@ public final class GboardZhuyinCandidateConversionRuntime {
     private static final String TAG = "ZhuyinConversion";
     private static final String TAIWAN_DECODER =
             "com.google.android.apps.inputmethod.latin.hmm.LatinTaiwanZhuyinDecodeProcessor";
+    private static final String CANTONESE_DECODER_PREFIX =
+            "com.google.android.apps.inputmethod.latin.hmm.LatinCantonese";
     private static final String CHINESE_DECODER =
             "com.google.android.apps.inputmethod.libs.chinese.ime.hmm.AbstractHmmChineseDecodeProcessor";
     private static volatile Session active;
@@ -23,7 +25,9 @@ public final class GboardZhuyinCandidateConversionRuntime {
 
     // Called on the decoder's own thread, at session start and before candidate publication.
     public static void onDecoderReady(Object decoder) {
-        if (decoder == null || !TAIWAN_DECODER.equals(decoder.getClass().getName())) return;
+        if (decoder == null) return;
+        String name = decoder.getClass().getName();
+        if (!TAIWAN_DECODER.equals(name) && !isCantoneseDecoder(name)) return;
         try {
             Context context = (Context) decoder.getClass().getField("u").get(decoder);
             if (context == null) return;
@@ -36,7 +40,8 @@ public final class GboardZhuyinCandidateConversionRuntime {
                 }
                 session = new Session(decoder, new Handler(looper));
                 active = session;
-                Log.i(TAG, "Decoder attached on " + Thread.currentThread().getName());
+                Log.i(TAG, "Decoder attached: " + name + " on " + Thread.currentThread().getName());
+                GboardZhuyinTraditionalSimplifiedToggleRuntime.onCandidateButtonSettingChanged();
             }
             if (GboardZhuyinSimplifiedCandidateButtonSettings.readEnabled(context)) {
                 session.updateConverter(decoder, context);
@@ -44,6 +49,18 @@ public final class GboardZhuyinCandidateConversionRuntime {
         } catch (Throwable error) {
             Log.e(TAG, "Cannot attach/update Zhuyin decoder", error);
         }
+    }
+
+    private static boolean isCantoneseDecoder(String name) {
+        return (CANTONESE_DECODER_PREFIX + "DecodeProcessor").equals(name)
+                || (CANTONESE_DECODER_PREFIX + "CangjieDecodeProcessor").equals(name)
+                || (CANTONESE_DECODER_PREFIX + "StrokeDecodeProcessor").equals(name);
+    }
+
+    static boolean isCantoneseActive() {
+        Session session = active;
+        Object decoder = session == null ? null : session.decoder.get();
+        return decoder != null && isCantoneseDecoder(decoder.getClass().getName());
     }
 
     public static void onDecoderFinished(Object decoder) {
@@ -95,7 +112,8 @@ public final class GboardZhuyinCandidateConversionRuntime {
         final Method publishPredictions;
         final Method isComposing;
         final Field displayLocale;
-        final GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport preferences;
+        final Method dictionaryLocale;
+        final Method outputLocale;
 
         Session(Object receiver, Handler handler) throws ReflectiveOperationException {
             this.decoder = new WeakReference<Object>(receiver);
@@ -112,23 +130,25 @@ public final class GboardZhuyinCandidateConversionRuntime {
             publish = hmm.getDeclaredMethod("ax", Iterator.class);
             publishPredictions = chinese.getDeclaredMethod("E");
             isComposing = receiver.getClass().getMethod("ay");
+            dictionaryLocale = chinese.getDeclaredMethod("w");
+            outputLocale = chinese.getDeclaredMethod("v");
             for (java.lang.reflect.AccessibleObject member : new java.lang.reflect.AccessibleObject[] {
                     converter, singleCharacter, configure, displayLocale, candidates, publish,
-                    publishPredictions, isComposing}) member.setAccessible(true);
-            preferences = new GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport(loader);
+                    publishPredictions, isComposing, dictionaryLocale, outputLocale}) member.setAccessible(true);
         }
 
         void updateConverter(Object receiver, Context context) throws ReflectiveOperationException {
             Object instance = converter.get(receiver);
-            Boolean simplified = preferences.readSimplifiedEnabled(context);
-            if (instance == null || simplified == null) {
-                throw new IllegalStateException("Zhuyin converter/preferences unavailable");
+            if (instance == null) {
+                throw new IllegalStateException("Chinese candidate converter unavailable");
             }
-            int target = simplified ? 1 : 2;
+            // Virtual dispatch preserves each decoder's native preference and script:
+            // Zhuyin/stroke use w=2, v=1/2; Cantonese phonetic/Cangjie use w=3, v=1/3.
+            int dictionary = (Integer) dictionaryLocale.invoke(receiver);
+            int target = (Integer) outputLocale.invoke(receiver);
             if (displayLocale.getInt(instance) != target) {
-                // Native w()=2 is the dictionary locale; v()=1/2 is output/display.
-                // fhk.a and decoder.z both read this converter for candidates/commit.
-                configure.invoke(instance, context, 2, target);
+                // fhk.a and decoder.z share this converter for candidates and commit.
+                configure.invoke(instance, context, dictionary, target);
                 Log.i(TAG, "Display/output locale=" + target);
             }
         }

@@ -527,7 +527,7 @@ val gboardZhuyinQuickTraditionalSimplifiedTogglePatch = gboardPublicResourcePatc
 val gboardZhuyinSimplifiedCandidateButtonPatch = gboardPublicResourcePatch(
     featureId = "zhuyin_simplified_candidate_button",
     name = "Zhuyin Simplified Candidate Button",
-    description = "Replace the Single character candidates button in the expanded Zhuyin candidate list with an independent Traditional/Simplified Chinese toggle, configurable in Patches settings.",
+    description = "Replace the Single character candidates button in the expanded Zhuyin or Cantonese candidate list with an independent Traditional/Simplified Chinese toggle, configurable in Patches settings.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)

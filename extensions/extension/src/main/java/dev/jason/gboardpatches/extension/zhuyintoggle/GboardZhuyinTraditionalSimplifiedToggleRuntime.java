@@ -85,7 +85,7 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             if (Boolean.TRUE.equals(PATCHED_METADATA_MARKERS.get(metadata))) {
                 return metadata;
             }
-            Boolean simplified = handles.readSimplifiedEnabled(context);
+            Boolean simplified = handles.readCandidateSimplifiedEnabled(context);
             if (simplified == null) return metadata;
             Object patched = handles.buildCandidateMetadata(baseMetadata, simplified);
             if (patched == null || patched == baseMetadata) {
@@ -139,7 +139,7 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             if (!GboardZhuyinSimplifiedCandidateButtonSettings.readEnabled(context)) {
                 return;
             }
-            Boolean simplifiedEnabled = handles.readSimplifiedEnabled(context);
+            Boolean simplifiedEnabled = handles.readCandidateSimplifiedEnabled(context);
             if (simplifiedEnabled == null) {
                 return;
             }
@@ -248,12 +248,12 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             if (preferences == null) {
                 return true;
             }
-            Boolean simplifiedEnabled = handles.readSimplifiedEnabled(preferences);
+            Boolean simplifiedEnabled = handles.readCandidateSimplifiedEnabled(preferences);
             if (simplifiedEnabled == null) {
                 return true;
             }
             boolean nextEnabled = !simplifiedEnabled.booleanValue();
-            if (!handles.writeSimplifiedEnabled(preferences, nextEnabled)) {
+            if (!handles.writeCandidateSimplifiedEnabled(preferences, nextEnabled)) {
                 return true;
             }
             try {

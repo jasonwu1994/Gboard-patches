@@ -289,8 +289,8 @@
         <translation locale="zh-Hant">簡體候選按鈕</translation>
     </string>
     <string name="gboard_patches_zhuyin_simplified_button_summary">
-        <translation locale="en">Add a button to the expanded Zhuyin candidate list to toggle Simplified Chinese conversion.</translation>
-        <translation locale="zh-Hant">在注音候選字展開頁加入簡體切換按鈕。</translation>
+        <translation locale="en">Add a button to the expanded Zhuyin or Cantonese candidate list to toggle Simplified Chinese conversion.</translation>
+        <translation locale="zh-Hant">在注音或粵語候選字展開頁加入簡體切換按鈕。</translation>
     </string>
     <string name="gboard_patches_zhuyin_simplified_button_error_title">
         <translation locale="en">Simplified candidate button settings unavailable</translation>

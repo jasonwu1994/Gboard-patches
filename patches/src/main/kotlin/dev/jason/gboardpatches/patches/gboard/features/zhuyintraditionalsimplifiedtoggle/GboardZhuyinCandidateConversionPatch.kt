@@ -16,7 +16,7 @@ private const val CHINESE_DECODER =
     "Lcom/google/android/apps/inputmethod/libs/chinese/ime/hmm/AbstractHmmChineseDecodeProcessor;"
 
 internal val gboardZhuyinCandidateConversionPatch = bytecodePatch(
-    description = "Update the active Zhuyin converter while preserving composition and the candidate view.",
+    description = "Update the active Zhuyin or Cantonese converter while preserving composition and the candidate view.",
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
     dependsOn(gboardPatchesExtensionCarrierPatch)

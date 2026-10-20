@@ -297,7 +297,7 @@ Features tailored to Traditional Chinese and Zhuyin input workflows.
 <details>
   <summary><code>Zhuyin Simplified Candidate Button</code></summary>
 
-  Replaces the <code>Single character candidates</code> button at the bottom left of the expanded Zhuyin candidate list with a Simplified Chinese toggle. Switches existing candidates and subsequent input between Traditional and Simplified Chinese while preserving the composing text and expanded candidate view. The native button indicator reflects the selected mode. Includes an independent switch in Patches settings.
+  Replaces the <code>Single character candidates</code> button at the bottom left of the expanded Zhuyin or Cantonese candidate list with a Simplified Chinese toggle. Switches existing candidates and subsequent input between Traditional and Simplified Chinese while preserving the composing text and expanded candidate view. The native button indicator reflects the selected mode. Uses each input method's native conversion setting and output script. Includes an independent switch in Patches settings.
 </details>
 
 <details>
