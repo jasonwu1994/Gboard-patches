@@ -1673,6 +1673,40 @@
       ]
     },
     {
+      "feature_id": "zhuyin_shortcut_dictionary",
+      "public_patch_name": "Zhuyin Personal Dictionary Shortcuts",
+      "feature_marker": null,
+      "target_family_ids": [
+        "zhuyindictionary"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyindictionary/GboardZhuyinDictionaryFlagPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyindictionary/GboardZhuyinShortcutCandidatePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyindictionary/GboardZhuyinShortcutDictionaryPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/zhuyindictionary/GboardZhuyinShortcutImportPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "zhuyin_shortcut_dictionary.bytecode",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 2000,
+          "required_bindings": [],
+          "runtime_calls": [
+            "ZHUYIN_DICTIONARY_RUNTIME_TOKENIZE_SHORTCUT",
+            "ZHUYIN_SHORTCUTS_BEGIN_IMPORT",
+            "ZHUYIN_SHORTCUTS_FINISH_IMPORT",
+            "ZHUYIN_SHORTCUTS_RECORD_ENTRY",
+            "ZHUYIN_SHORTCUTS_RECORD_ROW",
+            "ZHUYIN_SHORTCUTS_CANDIDATES",
+            "ZHUYIN_SHORTCUTS_COMMIT"
+          ]
+        }
+      ]
+    },
+    {
       "feature_id": "zhuyin_simplified_candidate_button",
       "public_patch_name": "Zhuyin Simplified Candidate Button",
       "feature_marker": "dev.jason.gboardpatches.feature.zhuyin_simplified_candidate_button",

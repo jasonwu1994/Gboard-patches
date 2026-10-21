@@ -289,6 +289,12 @@ Features tailored to Traditional Chinese and Zhuyin input workflows.
 </details>
 
 <details>
+  <summary><code>Zhuyin Personal Dictionary Shortcuts</code></summary>
+
+  Use shortcut entries from Gboard's personal dictionary while typing Zhuyin, such as `ㄉ` suggesting `訂飲料`.
+</details>
+
+<details>
   <summary><code>Zhuyin Quick Traditional/Simplified Toggle</code></summary>
 
   Swipe up on the Zhuyin <code>ㄥ</code> key to quickly toggle between Traditional and Simplified Chinese.

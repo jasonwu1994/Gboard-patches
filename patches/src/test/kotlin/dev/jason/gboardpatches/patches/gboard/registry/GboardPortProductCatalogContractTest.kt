@@ -697,6 +697,7 @@ class GboardPortProductCatalogContractTest {
             "web_clipboard" to "version-sensitive",
             "zhuyin_bottom_row_key_sizes" to "version-sensitive",
             "zhuyin_quick_traditional_simplified_toggle" to "version-sensitive",
+            "zhuyin_shortcut_dictionary" to "version-sensitive",
             "zhuyin_simplified_candidate_button" to "version-sensitive",
             "zhuyin_slide_input" to "version-sensitive",
         )

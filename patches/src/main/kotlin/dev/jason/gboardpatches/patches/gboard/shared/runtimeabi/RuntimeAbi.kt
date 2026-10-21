@@ -1,6 +1,13 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    ZHUYIN_SHORTCUTS_BEGIN_IMPORT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->beginImport(Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_FINISH_IMPORT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->finishImport(Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_RECORD_ENTRY("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->recordEntry(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"),
+    ZHUYIN_SHORTCUTS_RECORD_ROW("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->recordRow(Ljava/lang/Object;[Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_CANDIDATES("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->candidates(Ljava/lang/Object;)Ljava/util/Iterator;"),
+    ZHUYIN_SHORTCUTS_COMMIT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->commit(Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_DICTIONARY_RUNTIME_TOKENIZE_SHORTCUT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinDictionaryRuntime;->tokenizeShortcut(Ljava/lang/String;)[Ljava/lang/String;"),
     EDITING_ACCESS_POINTS_START("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->start(Ljava/lang/Object;)V"),
     EDITING_ACCESS_POINTS_END("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->end()V"),
     ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/accesspointcount/GboardAccessPointCountRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),

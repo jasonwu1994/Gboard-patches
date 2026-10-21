@@ -102,6 +102,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.accesspoint.gboardAccessPoi
 import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmission
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyindictionary.gboardZhuyinShortcutDictionaryBytecodePatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
 private fun gboardPublicResourcePatch(
@@ -541,6 +542,21 @@ val gboardZhuyinSimplifiedCandidateButtonPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardZhuyinShortcutDictionaryPatch = gboardPublicResourcePatch(
+    featureId = "zhuyin_shortcut_dictionary",
+    name = "Zhuyin Personal Dictionary Shortcuts",
+    description = "注音輸入時使用個人字典捷徑，例如 ㄉ 顯示訂飲料\n" +
+        "Use personal dictionary shortcuts with Zhuyin input, such as ㄉ suggesting 訂飲料.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardZhuyinShortcutDictionaryBytecodePatch,
+    )
+}
+
+@Suppress("unused")
 val gboardCustomSymbolsPatch = gboardPublicResourcePatch(
     featureId = "custom_symbols",
     name = "Custom Symbols",
@@ -922,6 +938,7 @@ object GboardPublishedPatchCatalog {
         gboardQuickInsertPatch,
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
         gboardZhuyinSimplifiedCandidateButtonPatch,
+        gboardZhuyinShortcutDictionaryPatch,
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
         gboardBackupRestorePatch,

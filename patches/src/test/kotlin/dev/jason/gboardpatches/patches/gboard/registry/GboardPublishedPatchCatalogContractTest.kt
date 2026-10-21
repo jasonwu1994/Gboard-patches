@@ -23,6 +23,12 @@ class GboardPublishedPatchCatalogContractTest {
             registrations.single { patch -> patch.name == "Add Gboard Signature Bypass" },
         )
         assertSame(
+            gboardZhuyinShortcutDictionaryPatch,
+            registrations.single { patch ->
+                patch.name == "Zhuyin Personal Dictionary Shortcuts"
+            },
+        )
+        assertSame(
             gboardOcrScanTextPatch,
             registrations.single { patch -> patch.name == "Enable OCR / Scan Text" },
         )

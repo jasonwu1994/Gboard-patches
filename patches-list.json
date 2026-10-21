@@ -522,6 +522,18 @@
       "options": []
     },
     {
+      "name": "Zhuyin Personal Dictionary Shortcuts",
+      "description": "注音輸入時使用個人字典捷徑，例如 ㄉ 顯示訂飲料\nUse personal dictionary shortcuts with Zhuyin input, such as ㄉ suggesting 訂飲料.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.0.3.954559732-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
       "name": "Zhuyin Quick Traditional/Simplified Toggle",
       "description": "注音 ㄥ 上滑快速切換繁簡\nSwipe up on Zhuyin ㄥ to quickly toggle Traditional and Simplified Chinese.",
       "use": true,
