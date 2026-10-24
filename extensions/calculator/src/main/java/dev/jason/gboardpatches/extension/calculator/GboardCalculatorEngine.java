@@ -9,8 +9,13 @@ public final class GboardCalculatorEngine {
     static final int MAX_EXPRESSION_LENGTH = 128;
     static final int MAX_BINARY_OPERATIONS = 63;
     private static final int MAX_PARENTHESES_DEPTH = 16;
+    private static final int MAX_DECIMAL_EXPONENT = 999;
     private static final MathContext MATH_CONTEXT =
             new MathContext(16, RoundingMode.HALF_EVEN);
+    private static final BigDecimal PI = new BigDecimal("3.14159265358979323846");
+    static final char SQUARE_ROOT = '\u221a';
+    static final char PI_SYMBOL = '\u03c0';
+    static final String CURRENCIES = "\u00a3$\u20ac\u00a5";
 
     private GboardCalculatorEngine() {
     }
@@ -30,6 +35,7 @@ public final class GboardCalculatorEngine {
             if (!parser.isAtEnd()) {
                 return Evaluation.error("Unexpected character");
             }
+            checkMagnitude(value);
             return Evaluation.valid(format(value));
         } catch (ParseFailure failure) {
             return failure.incomplete
@@ -49,7 +55,49 @@ public final class GboardCalculatorEngine {
                 .replace('\u00d7', '*')
                 .replace('\u00f7', '/')
                 .replace('\uff08', '(')
-                .replace('\uff09', ')');
+                .replace('\uff09', ')')
+                .replace('\uff05', '%')
+                .replace("**", "^");
+    }
+
+    /**
+     * True when the comma at {@code index} groups thousands, as in 1,299: a digit before it and
+     * exactly three digits after it. This keeps prose such as "3, 4" or "1,5" out of numbers.
+     */
+    static boolean isThousandsSeparator(CharSequence text, int index) {
+        if (index <= 0 || index + 3 >= text.length()
+                || text.charAt(index) != ','
+                || !Character.isDigit(text.charAt(index - 1))) {
+            return false;
+        }
+        for (int offset = 1; offset <= 3; offset++) {
+            if (!Character.isDigit(text.charAt(index + offset))) {
+                return false;
+            }
+        }
+        return index + 4 >= text.length() || !Character.isDigit(text.charAt(index + 4));
+    }
+
+    /** Square root to double precision, about 16 digits, which is plenty for the display. */
+    private static BigDecimal squareRoot(BigDecimal value) throws ParseFailure {
+        if (value.signum() < 0) {
+            throw ParseFailure.invalid("Cannot take the square root of a negative number");
+        }
+        double root = Math.sqrt(value.doubleValue());
+        if (Double.isInfinite(root)) {
+            throw ParseFailure.invalid("Number is too large");
+        }
+        return BigDecimal.valueOf(root).round(MATH_CONTEXT);
+    }
+
+    private static void checkMagnitude(BigDecimal value) throws ParseFailure {
+        if (value.signum() == 0) {
+            return;
+        }
+        long decimalExponent = (long) value.precision() - value.scale() - 1;
+        if (Math.abs(decimalExponent) > MAX_DECIMAL_EXPONENT) {
+            throw ParseFailure.invalid("Result is too large");
+        }
     }
 
     private static String format(BigDecimal value) {
@@ -117,34 +165,61 @@ public final class GboardCalculatorEngine {
         private int index;
         private int depth;
         private int binaryOperations;
+        // Set when the most recent factor or term was a bare percentage such as "5%",
+        // so "+" and "-" can take it as a percentage of the term before them.
+        private boolean lastFactorWasPercent;
+        private boolean lastTermWasPercent;
 
         private Parser(String expression) {
             this.expression = expression;
         }
 
+        /**
+         * After "+" or "-", a bare percentage is taken of the term just before it, sign included,
+         * matching Google: 10+5-10% = 10+5-0.5 = 14.5 and 20-5+10% = 20-5-0.5 = 14.5. When that
+         * term was itself a percentage, percentages stack on the running total instead, the way
+         * discounts do: 100-10%-10% = 81.
+         */
         private BigDecimal parseExpression() throws ParseFailure {
             BigDecimal value = parseTerm();
+            BigDecimal previousTerm = value;
+            boolean previousWasPercent = false;
             while (true) {
                 skipSpaces();
-                if (consume('+')) {
-                    recordBinaryOperation();
-                    value = value.add(parseTerm(), MATH_CONTEXT);
-                } else if (consume('-')) {
-                    recordBinaryOperation();
-                    value = value.subtract(parseTerm(), MATH_CONTEXT);
-                } else {
+                boolean add = consume('+');
+                if (!add && !consume('-')) {
                     return value;
                 }
+                recordBinaryOperation();
+                BigDecimal term = parseTerm();
+                boolean percent = lastTermWasPercent;
+                if (percent) {
+                    BigDecimal base = previousWasPercent ? value : previousTerm;
+                    term = base.multiply(term, MATH_CONTEXT);
+                }
+                BigDecimal signedTerm = add ? term : term.negate();
+                value = value.add(signedTerm, MATH_CONTEXT);
+                previousTerm = signedTerm;
+                previousWasPercent = percent;
             }
         }
 
         private BigDecimal parseTerm() throws ParseFailure {
             BigDecimal value = parseUnary();
+            boolean percent = lastFactorWasPercent;
             while (true) {
-                skipSpaces();
-                if (consume('*')) {
+                if (peek('(') || peek(PI_SYMBOL) || peek(SQUARE_ROOT)) {
+                    // Implicit multiplication, only when directly adjacent: 2(3+4), 2π, 2√9.
                     recordBinaryOperation();
                     value = value.multiply(parseUnary(), MATH_CONTEXT);
+                    percent = false;
+                    continue;
+                }
+                skipSpaces();
+                if (consume('*') || consume('x') || consume('X')) {
+                    recordBinaryOperation();
+                    value = value.multiply(parseUnary(), MATH_CONTEXT);
+                    percent = false;
                 } else if (consume('/')) {
                     recordBinaryOperation();
                     BigDecimal divisor = parseUnary();
@@ -152,7 +227,9 @@ public final class GboardCalculatorEngine {
                         throw new ArithmeticException("division by zero");
                     }
                     value = value.divide(divisor, MATH_CONTEXT);
+                    percent = false;
                 } else {
+                    lastTermWasPercent = percent;
                     return value;
                 }
             }
@@ -171,11 +248,59 @@ public final class GboardCalculatorEngine {
                     break;
                 }
             }
-            BigDecimal value = parsePrimary();
+            BigDecimal value = parsePower();
             return negative ? value.negate(MATH_CONTEXT) : value;
         }
 
+        /** "^" binds tighter than a leading minus (-2^2 = -4) and groups right to left (2^3^2 = 512). */
+        private BigDecimal parsePower() throws ParseFailure {
+            BigDecimal base = parsePercent();
+            boolean percent = lastFactorWasPercent;
+            int beforeSpaces = index;
+            skipSpaces();
+            if (consume('^')) {
+                recordBinaryOperation();
+                base = power(base, parseUnary());
+                percent = false;
+            } else {
+                index = beforeSpaces;
+            }
+            lastFactorWasPercent = percent;
+            return base;
+        }
+
+        private BigDecimal parsePercent() throws ParseFailure {
+            BigDecimal value = parsePrimary();
+            boolean percent = consume('%');
+            lastFactorWasPercent = percent;
+            return percent ? value.movePointLeft(2) : value;
+        }
+
+        private BigDecimal power(BigDecimal base, BigDecimal exponent) throws ParseFailure {
+            BigDecimal whole = exponent.stripTrailingZeros();
+            if (whole.scale() > 0) {
+                throw ParseFailure.invalid("Exponent must be a whole number");
+            }
+            BigDecimal result = base.pow(whole.intValueExact(), MATH_CONTEXT);
+            checkMagnitude(result);
+            return result;
+        }
+
+        /** "√" applies to the operand right after it, so √9^2 = (√9)^2 and √√16 = 2. */
         private BigDecimal parsePrimary() throws ParseFailure {
+            skipSpaces();
+            int roots = 0;
+            while (consume(SQUARE_ROOT)) {
+                roots++;
+            }
+            BigDecimal value = consume(PI_SYMBOL) ? PI : parseOperand();
+            for (int root = 0; root < roots; root++) {
+                value = squareRoot(value);
+            }
+            return value;
+        }
+
+        private BigDecimal parseOperand() throws ParseFailure {
             skipSpaces();
             if (isAtEnd()) {
                 throw ParseFailure.incomplete();
@@ -195,6 +320,9 @@ public final class GboardCalculatorEngine {
                 depth--;
                 return value;
             }
+            if (CURRENCIES.indexOf(expression.charAt(index)) >= 0) {
+                index++; // A currency sign before a number, as in £5, is only a label.
+            }
             return parseNumber();
         }
 
@@ -202,6 +330,7 @@ public final class GboardCalculatorEngine {
             int start = index;
             boolean decimalSeen = false;
             boolean digitSeen = false;
+            boolean groupingSeen = false;
             while (!isAtEnd()) {
                 char value = expression.charAt(index);
                 if (Character.isDigit(value)) {
@@ -209,6 +338,11 @@ public final class GboardCalculatorEngine {
                     index++;
                 } else if (value == '.' && !decimalSeen) {
                     decimalSeen = true;
+                    index++;
+                } else if (value == ',' && !decimalSeen
+                        && isThousandsSeparator(expression, index)
+                        && (groupingSeen || index - start <= 3)) {
+                    groupingSeen = true;
                     index++;
                 } else {
                     break;
@@ -218,7 +352,8 @@ public final class GboardCalculatorEngine {
                 throw ParseFailure.invalid("Number expected");
             }
             try {
-                return new BigDecimal(expression.substring(start, index), MATH_CONTEXT);
+                return new BigDecimal(
+                        expression.substring(start, index).replace(",", ""), MATH_CONTEXT);
             } catch (NumberFormatException failure) {
                 throw ParseFailure.invalid("Invalid number");
             }
@@ -229,6 +364,10 @@ public final class GboardCalculatorEngine {
             if (binaryOperations > MAX_BINARY_OPERATIONS) {
                 throw ParseFailure.invalid("Too many operations");
             }
+        }
+
+        private boolean peek(char expected) {
+            return !isAtEnd() && expression.charAt(index) == expected;
         }
 
         private boolean consume(char expected) {
