@@ -81,6 +81,8 @@ import dev.jason.gboardpatches.patches.gboard.features.signaturebypass.gboardSig
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardAccessPointPatch
 import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplitKeyboardModePatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinCandidateConversionPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinSimplifiedCandidateButtonFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
@@ -100,6 +102,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.accesspoint.gboardAccessPoi
 import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmission
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyindictionary.gboardZhuyinShortcutDictionaryBytecodePatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
 private fun gboardPublicResourcePatch(
@@ -522,6 +525,38 @@ val gboardZhuyinQuickTraditionalSimplifiedTogglePatch = gboardPublicResourcePatc
 }
 
 @Suppress("unused")
+val gboardZhuyinSimplifiedCandidateButtonPatch = gboardPublicResourcePatch(
+    featureId = "zhuyin_simplified_candidate_button",
+    name = "Zhuyin Simplified Candidate Button",
+    description = "在注音或粵語候選字展開頁，將「單字候選字」按鈕替換為繁簡切換按鈕。\nReplace the Single character candidates button in the expanded Zhuyin or Cantonese candidate list with an independent Traditional/Simplified Chinese toggle, configurable in Patches settings.",
+    default = true
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesExtensionCarrierPatch,
+        gboardPatchesSettingsPatch,
+        gboardZhuyinSimplifiedCandidateButtonFeatureMarkerPatch,
+        gboardZhuyinCandidateConversionPatch,
+    )
+}
+
+@Suppress("unused")
+val gboardZhuyinShortcutDictionaryPatch = gboardPublicResourcePatch(
+    featureId = "zhuyin_shortcut_dictionary",
+    name = "Zhuyin Personal Dictionary Shortcuts",
+    description = "注音輸入時使用個人字典捷徑，例如 ㄉ 顯示訂飲料\n" +
+        "Use personal dictionary shortcuts with Zhuyin input, such as ㄉ suggesting 訂飲料.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardZhuyinShortcutDictionaryBytecodePatch,
+    )
+}
+
+@Suppress("unused")
 val gboardCustomSymbolsPatch = gboardPublicResourcePatch(
     featureId = "custom_symbols",
     name = "Custom Symbols",
@@ -902,6 +937,8 @@ object GboardPublishedPatchCatalog {
         gboardCustomThemePatch,
         gboardQuickInsertPatch,
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
+        gboardZhuyinSimplifiedCandidateButtonPatch,
+        gboardZhuyinShortcutDictionaryPatch,
         gboardCustomSymbolsPatch,
         gboardCustomTopRowSwipePatch,
         gboardBackupRestorePatch,

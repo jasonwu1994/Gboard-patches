@@ -2,6 +2,7 @@ package dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplif
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -17,6 +18,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.isRegisterOperation
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalog
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
+import dev.jason.gboardpatches.patches.gboard.features.featureflags.applyFeatureMarker
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
 private val POPUP_RUNTIME_CALL =
@@ -26,6 +28,19 @@ private val POPUP_RUNTIME_REFERENCE = POPUP_RUNTIME_ABI.reference
 private const val GBOARD_18_0_3_POPUP_STOCK_FINGERPRINT =
     "03ef5a453ac6c4657b72f805b603ca29708c4307cf69bc029d2a299692f49942"
 private val POPUP_TARGET_ACCESS_FLAGS = AccessFlags.PUBLIC.value
+
+internal val gboardZhuyinSimplifiedCandidateButtonFeatureMarkerPatch = resourcePatch(
+    description = "Expose the independent Zhuyin simplified candidate button setting.",
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    finalize {
+        applyFeatureMarker(ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_FEATURE_MARKER)
+    }
+}
+
+internal const val ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_FEATURE_MARKER =
+    "dev.jason.gboardpatches.feature.zhuyin_simplified_candidate_button"
 
 internal val gboardZhuyinTraditionalSimplifiedTogglePopupPatch = bytecodePatch(
     description = "修改 18.0.3 注音繁簡切換 popup action。",

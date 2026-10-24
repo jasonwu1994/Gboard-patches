@@ -17,3 +17,9 @@ internal val gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch =
         description = "修正注音 ㄥ 上滑繁簡切換鍵的 SoftKeyView bind-time metadata。",
         feature = GboardSoftKeyFamilyFeature.ZHUYIN_TOGGLE,
     )
+
+internal val gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch =
+    gboardSoftKeyFamilyFeaturePatch(
+        description = "Replace the Zhuyin candidate button according to its independent Patches setting.",
+        feature = GboardSoftKeyFamilyFeature.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON,
+    )

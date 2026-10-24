@@ -4,6 +4,7 @@ import java.util.Objects;
 
 public final class owd {
     public final int d;
+    public int e;
     public final otk[] f;
     public final CharSequence[] g;
     public final int[] h;

@@ -37,6 +37,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.english_uppercase_toggle";
     public static final String FEATURE_ZHUYIN_BOTTOM_ROW_WEIGHT =
             "dev.jason.gboardpatches.feature.zhuyin_bottom_row_weight";
+    public static final String FEATURE_ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON =
+            "dev.jason.gboardpatches.feature.zhuyin_simplified_candidate_button";
     public static final String FEATURE_AI_WRITING_TOOLS =
             "dev.jason.gboardpatches.feature.ai_writing_tools";
     public static final String FEATURE_TOP_ROW_SWIPE =

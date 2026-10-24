@@ -1,6 +1,13 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    ZHUYIN_SHORTCUTS_BEGIN_IMPORT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->beginImport(Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_FINISH_IMPORT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->finishImport(Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_RECORD_ENTRY("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->recordEntry(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"),
+    ZHUYIN_SHORTCUTS_RECORD_ROW("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->recordRow(Ljava/lang/Object;[Ljava/lang/Object;)V"),
+    ZHUYIN_SHORTCUTS_CANDIDATES("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->candidates(Ljava/lang/Object;)Ljava/util/Iterator;"),
+    ZHUYIN_SHORTCUTS_COMMIT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinShortcutCandidates;->commit(Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_DICTIONARY_RUNTIME_TOKENIZE_SHORTCUT("Ldev/jason/gboardpatches/extension/zhuyindictionary/GboardZhuyinDictionaryRuntime;->tokenizeShortcut(Ljava/lang/String;)[Ljava/lang/String;"),
     EDITING_ACCESS_POINTS_START("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->start(Ljava/lang/Object;)V"),
     EDITING_ACCESS_POINTS_END("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->end()V"),
     ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/accesspointcount/GboardAccessPointCountRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
@@ -129,6 +136,11 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     ZHUYIN_SLIDE_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA("Ldev/jason/gboardpatches/extension/zhuyinslide/GboardZhuyinSlideRuntime;->patchIncomingSoftKeyMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_AFTER_SOFT_KEY_BOUND("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->afterSoftKeyBound(Ljava/lang/Object;)V"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_MAYBE_TOGGLE("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->maybeToggle(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_CANDIDATE_CONVERSION_READY("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinCandidateConversionRuntime;->onDecoderReady(Ljava/lang/Object;)V"),
+    ZHUYIN_CANDIDATE_CONVERSION_FINISHED("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinCandidateConversionRuntime;->onDecoderFinished(Ljava/lang/Object;)V"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_MAYBE_TOGGLE("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->maybeToggleCandidateButton(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_PATCH_METADATA("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchCandidateButtonMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+    ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON_RUNTIME_AFTER_BOUND("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->afterCandidateButtonBound(Ljava/lang/Object;)V"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchIncomingSoftKeyMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_PATCH_POPUP_ACTION("Ldev/jason/gboardpatches/extension/zhuyintoggle/GboardZhuyinTraditionalSimplifiedToggleRuntime;->patchPopupAction(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
 }

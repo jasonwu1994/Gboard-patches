@@ -42,6 +42,7 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
     private final Method buildActionMethod;
     private final Constructor<?> metadataBuilderConstructor;
     private final Method copyMetadataMethod;
+    private final Method setLabelMethod;
     private final Method putActionMethod;
     private final Method buildMetadataMethod;
     private final Field dispatcherContextField;
@@ -84,6 +85,8 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
 
         metadataBuilderConstructor = metadataBuilderClass.getDeclaredConstructor();
         copyMetadataMethod = metadataBuilderClass.getDeclaredMethod("j", actionSetClass);
+        setLabelMethod = metadataBuilderClass.getDeclaredMethod(
+                "f", int.class, CharSequence.class);
         putActionMethod = metadataBuilderClass.getDeclaredMethod("t", actionDefClass);
         buildMetadataMethod = metadataBuilderClass.getDeclaredMethod("d");
 
@@ -111,6 +114,7 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
                 buildActionMethod,
                 metadataBuilderConstructor,
                 copyMetadataMethod,
+                setLabelMethod,
                 putActionMethod,
                 buildMetadataMethod,
                 dispatcherContextField,
@@ -168,6 +172,26 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         return built != null ? built : actionDef;
     }
 
+    Object buildCandidateMetadata(Object metadata, boolean simplified)
+            throws ReflectiveOperationException {
+        Object builder = metadataBuilderConstructor.newInstance();
+        copyMetadataMethod.invoke(builder, metadata);
+        // 18.0.3: ppo.o -> SoftKeyDef.e is the layout, not the key ID.
+        Field layout = builder.getClass().getDeclaredField("o");
+        layout.setAccessible(true);
+        // Stock SINGLE_CHARACTER ON action has the inactive layout; OFF has active.
+        layout.setInt(builder, simplified ? 0x7f0e06fd : 0x7f0e06fc);
+        setLabelMethod.invoke(builder, Integer.valueOf(0x7f0b0651), "簡體");
+        return buildMetadataMethod.invoke(builder);
+    }
+
+    boolean candidateLayoutMatches(Object metadata, boolean simplified)
+            throws ReflectiveOperationException {
+        Field layout = metadata.getClass().getDeclaredField("e");
+        layout.setAccessible(true);
+        return layout.getInt(metadata) == (simplified ? 0x7f0e06fd : 0x7f0e06fc);
+    }
+
     void rebind(Object softKeyView, Object metadata) throws ReflectiveOperationException {
         if (softKeyView == null || metadata == null) {
             return;
@@ -201,6 +225,28 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         Object value = preferenceReadMethod.invoke(
                 preferences, Integer.valueOf(PREFERENCE_KEY_RES_ID), Boolean.FALSE);
         return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    Boolean readCandidateSimplifiedEnabled(Context context) throws ReflectiveOperationException {
+        if (context == null) return null;
+        return readCandidateSimplifiedEnabled(preferenceFactoryMethod.invoke(null, context));
+    }
+
+    Boolean readCandidateSimplifiedEnabled(Object preferences) throws ReflectiveOperationException {
+        if (preferences == null) return null;
+        int resource = GboardZhuyinCandidateConversionRuntime.isCantoneseActive()
+                ? 0x7f140a1a : PREFERENCE_KEY_RES_ID;
+        Object value = preferenceReadMethod.invoke(preferences, resource, Boolean.FALSE);
+        return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    boolean writeCandidateSimplifiedEnabled(Object preferences, boolean enabled)
+            throws ReflectiveOperationException {
+        if (preferences == null) return false;
+        String key = GboardZhuyinCandidateConversionRuntime.isCantoneseActive()
+                ? "enable_sc_tc_conversion_zh_hk" : PREFERENCE_KEY;
+        preferenceWriteMethod.invoke(preferences, key, enabled);
+        return true;
     }
 
     boolean writeSimplifiedEnabled(Object preferences, boolean enabled)

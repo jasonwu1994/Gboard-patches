@@ -289,9 +289,21 @@ Features tailored to Traditional Chinese and Zhuyin input workflows.
 </details>
 
 <details>
+  <summary><code>Zhuyin Personal Dictionary Shortcuts</code></summary>
+
+  Use shortcut entries from Gboard's personal dictionary while typing Zhuyin, such as `ㄉ` suggesting `訂飲料`.
+</details>
+
+<details>
   <summary><code>Zhuyin Quick Traditional/Simplified Toggle</code></summary>
 
   Swipe up on the Zhuyin <code>ㄥ</code> key to quickly toggle between Traditional and Simplified Chinese.
+</details>
+
+<details>
+  <summary><code>Zhuyin Simplified Candidate Button</code></summary>
+
+  Replaces the <code>Single character candidates</code> button at the bottom left of the expanded Zhuyin or Cantonese candidate list with a Simplified Chinese toggle. Switches existing candidates and subsequent input between Traditional and Simplified Chinese while preserving the composing text and expanded candidate view. The native button indicator reflects the selected mode. Uses each input method's native conversion setting and output script. Includes an independent switch in Patches settings.
 </details>
 
 <details>

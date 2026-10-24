@@ -27,6 +27,7 @@ import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowS
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinslide.gboardZhuyinSlideSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.shared.GboardFlagFamilyFeature
 import dev.jason.gboardpatches.patches.gboard.shared.GboardSoftKeyFamilyFeature
@@ -404,9 +405,9 @@ class GboardPortProductCatalogContractTest {
         val byFeatureId = features().associateBy { feature -> feature["feature_id"].asString }
         val registrations = GboardPublishedPatchCatalog.morpheRegistrations
 
-        assertEquals(8, SOFT_KEY_FEATURE_CONTRACTS.size)
+        assertEquals(9, SOFT_KEY_FEATURE_CONTRACTS.size)
         assertEquals(
-            11,
+            13,
             features().sumOf { feature ->
                 feature.getAsJsonArray("contributions").count { contribution ->
                     contribution.asJsonObject["anchor_family_id"].asString == "soft_key_bind"
@@ -696,6 +697,8 @@ class GboardPortProductCatalogContractTest {
             "web_clipboard" to "version-sensitive",
             "zhuyin_bottom_row_key_sizes" to "version-sensitive",
             "zhuyin_quick_traditional_simplified_toggle" to "version-sensitive",
+            "zhuyin_shortcut_dictionary" to "version-sensitive",
+            "zhuyin_simplified_candidate_button" to "version-sensitive",
             "zhuyin_slide_input" to "version-sensitive",
         )
         val FLAG_FEATURE_CONTRACTS = listOf(
@@ -887,6 +890,14 @@ class GboardPortProductCatalogContractTest {
                 GboardSoftKeyFamilyFeature.ZHUYIN_TOGGLE,
                 gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch,
                 "gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch",
+                FEATURE_ROOT + "zhuyintraditionalsimplifiedtoggle/" +
+                    "GboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch.kt",
+            ),
+            SoftKeyFeatureContract(
+                "zhuyin_simplified_candidate_button",
+                GboardSoftKeyFamilyFeature.ZHUYIN_SIMPLIFIED_CANDIDATE_BUTTON,
+                gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch,
+                "gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch",
                 FEATURE_ROOT + "zhuyintraditionalsimplifiedtoggle/" +
                     "GboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch.kt",
             ),

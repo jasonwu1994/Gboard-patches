@@ -3,7 +3,10 @@ package dev.jason.gboardpatches.extension.zhuyintoggle;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.inputmethodservice.InputMethodService;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
+import android.util.Log;
 import android.view.inputmethod.EditorInfo;
 
 import dev.jason.gboardpatches.extension.zhuyinslide.GboardZhuyinSlideRuntime;
@@ -28,6 +31,8 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             new WeakIdentityMap<Object, Object>();
     static final Map<View, Object> VISIBLE_TOGGLE_KEYS = Collections.synchronizedMap(
             new WeakHashMap<View, Object>());
+    private static final Map<View, Boolean> VISIBLE_CANDIDATE_BUTTONS =
+            Collections.synchronizedMap(new WeakHashMap<View, Boolean>());
 
     private GboardZhuyinTraditionalSimplifiedToggleRuntime() {
     }
@@ -62,6 +67,38 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
         }
     }
 
+    public static Object patchCandidateButtonMetadata(Object receiver, Object metadata) {
+        if (!(receiver instanceof View) || metadata == null) {
+            return metadata;
+        }
+        try {
+            GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(receiver);
+            if (!GboardZhuyinTraditionalSimplifiedTogglePolicy.isSingleCharacterCandidateKey(
+                    handles.keyId(metadata))) {
+                return metadata;
+            }
+            Object baseMetadata = resolveBaseMetadata(metadata);
+            Context context = ((View) receiver).getContext();
+            if (!GboardZhuyinSimplifiedCandidateButtonSettings.readEnabled(context)) {
+                return baseMetadata;
+            }
+            if (Boolean.TRUE.equals(PATCHED_METADATA_MARKERS.get(metadata))) {
+                return metadata;
+            }
+            Boolean simplified = handles.readCandidateSimplifiedEnabled(context);
+            if (simplified == null) return metadata;
+            Object patched = handles.buildCandidateMetadata(baseMetadata, simplified);
+            if (patched == null || patched == baseMetadata) {
+                return baseMetadata;
+            }
+            PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);
+            BASE_METADATA_BY_PATCHED.put(patched, baseMetadata);
+            return patched;
+        } catch (Throwable ignored) {
+            return metadata;
+        }
+    }
+
     public static void afterSoftKeyBound(Object receiver) {
         if (!(receiver instanceof View)) {
             return;
@@ -79,6 +116,43 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             VISIBLE_TOGGLE_KEYS.put(view, resolveBaseMetadata(metadata));
         } catch (Throwable ignored) {
             VISIBLE_TOGGLE_KEYS.remove(view);
+        }
+    }
+
+    public static void afterCandidateButtonBound(Object receiver) {
+        if (!(receiver instanceof View)) {
+            return;
+        }
+        View view = (View) receiver;
+        try {
+            GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(receiver);
+            Object metadata = handles.currentMetadata(receiver);
+            if (metadata == null ||
+                    !GboardZhuyinTraditionalSimplifiedTogglePolicy.isSingleCharacterCandidateKey(
+                            handles.keyId(metadata))) {
+                VISIBLE_CANDIDATE_BUTTONS.remove(view);
+                return;
+            }
+            // Track the stock key too, so enabling the feature can update a cached view.
+            VISIBLE_CANDIDATE_BUTTONS.put(view, Boolean.TRUE);
+            Context context = view.getContext();
+            if (!GboardZhuyinSimplifiedCandidateButtonSettings.readEnabled(context)) {
+                return;
+            }
+            Boolean simplifiedEnabled = handles.readCandidateSimplifiedEnabled(context);
+            if (simplifiedEnabled == null) {
+                return;
+            }
+            View label = view.findViewById(
+                    GboardZhuyinTraditionalSimplifiedTogglePolicy
+                            .SINGLE_CHARACTER_CANDIDATE_LABEL_LOCATION);
+            if (label == null) {
+                return;
+            }
+            VISIBLE_CANDIDATE_BUTTONS.put(view, Boolean.TRUE);
+            setCandidateButtonState(view, simplifiedEnabled.booleanValue());
+        } catch (Throwable ignored) {
+            VISIBLE_CANDIDATE_BUTTONS.remove(view);
         }
     }
 
@@ -152,6 +226,49 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
         }
     }
 
+    public static boolean maybeToggleCandidateButton(
+            Object dispatcher, Object action, Object metadata) {
+        if (dispatcher == null || action == null || metadata == null) {
+            return false;
+        }
+        boolean handled = false;
+        try {
+            GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(dispatcher);
+            if (!GboardZhuyinTraditionalSimplifiedTogglePolicy.shouldConsumeCandidateButton(
+                    handles.keyId(metadata), handles.actionName(action))) {
+                return false;
+            }
+            Context context = handles.dispatcherContext(dispatcher);
+            if (context == null || !GboardZhuyinSimplifiedCandidateButtonSettings
+                    .readEnabled(context)) {
+                return false;
+            }
+            handled = true;
+            Object preferences = handles.dispatcherPreferences(dispatcher);
+            if (preferences == null) {
+                return true;
+            }
+            Boolean simplifiedEnabled = handles.readCandidateSimplifiedEnabled(preferences);
+            if (simplifiedEnabled == null) {
+                return true;
+            }
+            boolean nextEnabled = !simplifiedEnabled.booleanValue();
+            if (!handles.writeCandidateSimplifiedEnabled(preferences, nextEnabled)) {
+                return true;
+            }
+            try {
+                refreshVisibleCandidateButtons(nextEnabled);
+            } catch (Throwable error) {
+                Log.e("ZhuyinConversion", "Cannot rebind candidate toggle", error);
+            }
+            GboardZhuyinCandidateConversionRuntime.refreshCandidates();
+            return true;
+        } catch (Throwable error) {
+            Log.e("ZhuyinConversion", "Candidate toggle failed", error);
+            return handled;
+        }
+    }
+
     private static void refreshVisibleKeys(
             GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles,
             boolean simplifiedEnabled) {
@@ -176,6 +293,64 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
                 // Continue refreshing the remaining visible toggle keys.
             }
         }
+    }
+
+    private static void setCandidateButtonState(View view, boolean simplifiedEnabled)
+            throws ReflectiveOperationException {
+        GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(view);
+        Object metadata = handles.currentMetadata(view);
+        if (metadata == null || !GboardZhuyinTraditionalSimplifiedTogglePolicy
+                .isSingleCharacterCandidateKey(handles.keyId(metadata))) return;
+        if (Boolean.TRUE.equals(PATCHED_METADATA_MARKERS.get(metadata))
+                && handles.candidateLayoutMatches(metadata, simplifiedEnabled)) return;
+        Object base = resolveBaseMetadata(metadata);
+        Object patched = handles.buildCandidateMetadata(base, simplifiedEnabled);
+        PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);
+        BASE_METADATA_BY_PATCHED.put(patched, base);
+        // Rebind this key alone: stock theme tags draw the active/inactive underline.
+        handles.rebind(view, patched);
+    }
+
+    private static void refreshVisibleCandidateButtons(boolean simplifiedEnabled) {
+        Map<View, Boolean> snapshot = new HashMap<View, Boolean>();
+        synchronized (VISIBLE_CANDIDATE_BUTTONS) {
+            snapshot.putAll(VISIBLE_CANDIDATE_BUTTONS);
+        }
+        for (View view : snapshot.keySet()) {
+            if (view == null) {
+                continue;
+            }
+            try {
+                setCandidateButtonState(view, simplifiedEnabled);
+            } catch (Throwable error) {
+                Log.e("ZhuyinConversion", "Cannot apply native candidate key layout", error);
+            }
+        }
+    }
+
+    static void onCandidateButtonSettingChanged() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override public void run() {
+                Map<View, Boolean> snapshot = new HashMap<View, Boolean>();
+                synchronized (VISIBLE_CANDIDATE_BUTTONS) {
+                    snapshot.putAll(VISIBLE_CANDIDATE_BUTTONS);
+                }
+                for (View view : snapshot.keySet()) {
+                    try {
+                        GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(view);
+                        Object current = handles.currentMetadata(view);
+                        if (current == null || !GboardZhuyinTraditionalSimplifiedTogglePolicy
+                                .isSingleCharacterCandidateKey(handles.keyId(current))) continue;
+                        // Always rebind from stock metadata. The bind hook reads the saved
+                        // setting and restores either the stock key or the conversion key.
+                        handles.rebind(view, resolveBaseMetadata(current));
+                    } catch (Throwable error) {
+                        Log.e("ZhuyinConversion", "Cannot apply candidate button setting", error);
+                    }
+                }
+                GboardZhuyinCandidateConversionRuntime.refreshCandidates();
+            }
+        });
     }
 
     private static void refreshCurrentInputView(Context context) {

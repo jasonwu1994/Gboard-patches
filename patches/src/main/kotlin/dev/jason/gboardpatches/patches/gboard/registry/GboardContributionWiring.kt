@@ -31,6 +31,8 @@ import dev.jason.gboardpatches.patches.gboard.features.zhuyinslide.gboardZhuyinS
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedToggleGesturePatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedTogglePopupPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinSimplifiedCandidateButtonGesturePatch
+import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch
 
 internal class GboardContributionWiringUnit(
     val contributionIds: Set<String>,
@@ -146,6 +148,17 @@ internal object GboardContributionWiring {
             },
             unit("zhuyin_quick_traditional_simplified_toggle.popup") {
                 arrayOf(gboardZhuyinTraditionalSimplifiedTogglePopupPatch)
+            },
+        ),
+        "zhuyin_simplified_candidate_button" to listOf(
+            unit("zhuyin_simplified_candidate_button.gesture") {
+                arrayOf(gboardZhuyinSimplifiedCandidateButtonGesturePatch)
+            },
+            unit(
+                "zhuyin_simplified_candidate_button.soft_key",
+                "zhuyin_simplified_candidate_button.soft_key_after",
+            ) {
+                arrayOf(gboardZhuyinSimplifiedCandidateButtonSoftKeyPatch)
             },
         ),
         "zhuyin_slide_input" to listOf(
