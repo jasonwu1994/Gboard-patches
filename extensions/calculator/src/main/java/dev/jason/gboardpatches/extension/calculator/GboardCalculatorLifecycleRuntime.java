@@ -2,7 +2,6 @@ package dev.jason.gboardpatches.extension.calculator;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.view.View;
 
 /** Patched-APK adapter between lifecycle delegates, preferences, and portable runtime. */
 public final class GboardCalculatorLifecycleRuntime {
@@ -21,10 +20,9 @@ public final class GboardCalculatorLifecycleRuntime {
                 receiver, enabled));
     }
 
-    public static void onSelectionUpdated(Object receiver, View inputView,
-            int selectionStart, int selectionEnd) {
+    public static void onSelectionUpdated(Object receiver, int selectionStart, int selectionEnd) {
         GboardCalculatorSafety.run(() -> GboardCalculatorRuntime.onSelectionUpdated(
-                receiver, inputView, selectionStart, selectionEnd));
+                receiver, selectionStart, selectionEnd));
     }
 
     public static void onInputWindowHidden() {
