@@ -3250,4 +3250,128 @@
         <translation locale="en">Editing buttons settings unavailable. Reopen settings and try again.</translation>
         <translation locale="zh-Hant">編輯按鈕設定無法載入，請重新開啟設定再試一次。</translation>
     </string>
+    <string name="gboard_duck_email_title">
+        <translation locale="en">DuckDuckGo Email Protection</translation>
+        <translation locale="zh-Hant">DuckDuckGo 電子郵件保護</translation>
+    </string>
+    <string name="gboard_duck_email_summary">
+        <translation locale="en">Generate a private @duck.com address and fill it from the keyboard toolbar.</translation>
+        <translation locale="zh-Hant">從鍵盤工具列產生並填入私密 @duck.com 地址。</translation>
+    </string>
+    <string name="gboard_duck_email_button">
+        <translation locale="en">Duck email</translation>
+        <translation locale="zh-Hant">Duck 電郵</translation>
+    </string>
+    <string name="gboard_duck_email_enable">
+        <translation locale="en">Show Duck email button</translation>
+        <translation locale="zh-Hant">顯示 Duck 電郵按鈕</translation>
+    </string>
+    <string name="gboard_duck_email_restart">
+        <translation locale="en">Force stop and restart Gboard after changing this option. Hold and drag Duck email to pin it to the toolbar.</translation>
+        <translation locale="zh-Hant">更改後請強制停止並重新啟動 Gboard。長按並拖曳 Duck 電郵可釘選至工具列。</translation>
+    </string>
+    <string name="gboard_duck_email_copy_generated">
+        <translation locale="en">Copy generated email to clipboard</translation>
+        <translation locale="zh-Hant">將產生的電郵地址複製到剪貼簿</translation>
+    </string>
+    <string name="gboard_duck_email_copy_generated_summary">
+        <translation locale="en">Also copy each new Duck address to the clipboard. Takes effect immediately.</translation>
+        <translation locale="zh-Hant">同時將每個新產生的 Duck 地址複製到剪貼簿。立即生效。</translation>
+    </string>
+    <string name="gboard_duck_email_account">
+        <translation locale="en">Duck account</translation>
+        <translation locale="zh-Hant">Duck 帳戶</translation>
+    </string>
+    <string name="gboard_duck_email_send_code">
+        <translation locale="en">Enter Duck address and send code</translation>
+        <translation locale="zh-Hant">輸入 Duck 地址並傳送驗證碼</translation>
+    </string>
+    <string name="gboard_duck_email_address_hint">
+        <translation locale="en">Your existing name@duck.com address</translation>
+        <translation locale="zh-Hant">您現有的 name@duck.com 地址</translation>
+    </string>
+    <string name="gboard_duck_email_enter_code">
+        <translation locale="en">Enter emailed code</translation>
+        <translation locale="zh-Hant">輸入電郵驗證碼</translation>
+    </string>
+    <string name="gboard_duck_email_code_hint">
+        <translation locale="en">Paste the code or four-word passphrase from the email</translation>
+        <translation locale="zh-Hant">貼上電郵中的驗證碼或四字通行碼</translation>
+    </string>
+    <string name="gboard_duck_email_code_sent">
+        <translation locale="en">Check your forwarding inbox for the sign-in code.</translation>
+        <translation locale="zh-Hant">請到轉寄信箱查看登入驗證碼。</translation>
+    </string>
+    <string name="gboard_duck_email_signed_out">
+        <translation locale="en">Sign in with an existing DuckDuckGo Email Protection account.</translation>
+        <translation locale="zh-Hant">請使用現有的 DuckDuckGo 電子郵件保護帳戶登入。</translation>
+    </string>
+    <string name="gboard_duck_email_signed_in">
+        <translation locale="en">Signed in. Use Duck email in the keyboard toolbar to generate and fill an address.</translation>
+        <translation locale="zh-Hant">已登入。使用鍵盤工具列的 Duck 電郵產生並填入地址。</translation>
+    </string>
+    <string name="gboard_duck_email_sign_out">
+        <translation locale="en">Sign out</translation>
+        <translation locale="zh-Hant">登出</translation>
+    </string>
+    <string name="gboard_duck_email_sign_out_summary">
+        <translation locale="en">Remove this keyboard\'s saved account and last generated address.</translation>
+        <translation locale="zh-Hant">移除此鍵盤儲存的帳戶及最近產生的地址。</translation>
+    </string>
+    <string name="gboard_duck_email_last_address">
+        <translation locale="en">Copy last generated address</translation>
+        <translation locale="zh-Hant">複製最近產生的地址</translation>
+    </string>
+    <string name="gboard_duck_email_copied">
+        <translation locale="en">Duck address copied</translation>
+        <translation locale="zh-Hant">已複製 Duck 地址</translation>
+    </string>
+    <string name="gboard_duck_email_working">
+        <translation locale="en">Contacting DuckDuckGo…</translation>
+        <translation locale="zh-Hant">正在聯絡 DuckDuckGo…</translation>
+    </string>
+    <string name="gboard_duck_email_sign_in_first">
+        <translation locale="en">Sign in under Gboard settings &gt; Patches &gt; Keyboard tools &gt; DuckDuckGo Email Protection.</translation>
+        <translation locale="zh-Hant">請到 Gboard 設定 &gt; Patches &gt; 鍵盤工具 &gt; DuckDuckGo 電子郵件保護登入。</translation>
+    </string>
+    <string name="gboard_duck_email_no_editor">
+        <translation locale="en">Tap a text field and try Duck email again.</translation>
+        <translation locale="zh-Hant">請點選文字欄位後再試 Duck 電郵。</translation>
+    </string>
+    <string name="gboard_duck_email_generating">
+        <translation locale="en">Generating a Duck address…</translation>
+        <translation locale="zh-Hant">正在產生 Duck 地址…</translation>
+    </string>
+    <string name="gboard_duck_email_filled">
+        <translation locale="en">Duck address filled</translation>
+        <translation locale="zh-Hant">已填入 Duck 地址</translation>
+    </string>
+    <string name="gboard_duck_email_filled_and_copied">
+        <translation locale="en">Duck address filled and copied</translation>
+        <translation locale="zh-Hant">已填入並複製 Duck 地址</translation>
+    </string>
+    <string name="gboard_duck_email_saved">
+        <translation locale="en">Address saved. Copy it from DuckDuckGo Email Protection in Patches settings.</translation>
+        <translation locale="zh-Hant">地址已儲存。請到 Patches 設定的 DuckDuckGo 電子郵件保護複製。</translation>
+    </string>
+    <string name="gboard_duck_email_network_error">
+        <translation locale="en">Could not complete the DuckDuckGo request. Check your connection and try again.</translation>
+        <translation locale="zh-Hant">無法完成 DuckDuckGo 請求。請檢查連線後再試。</translation>
+    </string>
+    <string name="gboard_duck_email_auth_error">
+        <translation locale="en">DuckDuckGo could not authorize this request. Check the code or sign in again in Patches settings.</translation>
+        <translation locale="zh-Hant">DuckDuckGo 無法授權此請求。請檢查驗證碼或在 Patches 設定重新登入。</translation>
+    </string>
+    <string name="gboard_duck_email_rate_limit">
+        <translation locale="en">DuckDuckGo received too many requests. Wait a while before trying again.</translation>
+        <translation locale="zh-Hant">DuckDuckGo 收到太多請求。請稍候再試。</translation>
+    </string>
+    <string name="gboard_duck_email_send_code_button">
+        <translation locale="en">Send code</translation>
+        <translation locale="zh-Hant">傳送驗證碼</translation>
+    </string>
+    <string name="gboard_duck_email_sign_in_button">
+        <translation locale="en">Sign in</translation>
+        <translation locale="zh-Hant">登入</translation>
+    </string>
 </settings-text>

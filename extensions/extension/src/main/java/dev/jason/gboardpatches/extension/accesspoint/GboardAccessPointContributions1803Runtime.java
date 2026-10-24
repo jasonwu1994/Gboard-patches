@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.extension.accesspoint;
 
 import android.content.Context;
+import dev.jason.gboardpatches.extension.duckemail.DuckEmailAccessPoint1803Contribution;
 import android.util.Log;
 import dev.jason.gboardpatches.extension.editingaccesspoints.GboardEditingAccessPoints1803Contribution;
 
@@ -43,6 +44,13 @@ public final class GboardAccessPointContributions1803Runtime {
         } catch (Throwable failure) {
             logFailure("Editing buttons catalog contribution failed", failure);
         }
+        try {
+            if (hasFeature(context, GboardPatchesFeatureAvailability.FEATURE_DUCK_EMAIL)) {
+                result = DuckEmailAccessPoint1803Contribution.INSTANCE.extendOrderCatalog(context, result);
+            }
+        } catch (Throwable failure) {
+            logFailure("Duck email catalog contribution failed", failure);
+        }
         return result;
     }
 
@@ -75,6 +83,17 @@ public final class GboardAccessPointContributions1803Runtime {
             }
         } catch (Throwable failure) {
             logFailure("Editing buttons controller contribution failed", failure);
+        }
+        registerDuckEmail(controller, context);
+    }
+
+    private static void registerDuckEmail(Object controller, Context context) {
+        try {
+            if (hasFeature(context, GboardPatchesFeatureAvailability.FEATURE_DUCK_EMAIL)) {
+                DuckEmailAccessPoint1803Contribution.INSTANCE.register(controller, context);
+            }
+        } catch (Throwable failure) {
+            logFailure("Duck email controller contribution failed", failure);
         }
     }
 

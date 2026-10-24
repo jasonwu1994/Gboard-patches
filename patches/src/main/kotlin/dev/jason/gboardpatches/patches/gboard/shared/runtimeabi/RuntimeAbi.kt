@@ -1,6 +1,8 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    DUCK_EMAIL_START("Ldev/jason/gboardpatches/extension/duckemail/DuckEmailRuntime;->start(Ljava/lang/Object;)V"),
+    DUCK_EMAIL_END("Ldev/jason/gboardpatches/extension/duckemail/DuckEmailRuntime;->end()V"),
     EDITING_ACCESS_POINTS_START("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->start(Ljava/lang/Object;)V"),
     EDITING_ACCESS_POINTS_END("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->end()V"),
     ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/accesspointcount/GboardAccessPointCountRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
