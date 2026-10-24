@@ -9,6 +9,7 @@ import java.util.Locale;
 public final class GboardSettingsText {
     private static final String LANGUAGE_ENGLISH = "en";
     private static final String LANGUAGE_TRADITIONAL_CHINESE = "zh-Hant";
+    private static final String LANGUAGE_JAPANESE = "ja";
 
     private GboardSettingsText() {
     }
@@ -76,7 +77,9 @@ public final class GboardSettingsText {
         }
         Locale formatLocale = LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)
                 ? Locale.TRADITIONAL_CHINESE
-                : Locale.US;
+                : LANGUAGE_JAPANESE.equals(languageTag)
+                        ? Locale.JAPAN
+                        : Locale.US;
         return String.format(formatLocale, template, args);
     }
 
@@ -92,9 +95,8 @@ public final class GboardSettingsText {
                 // Static feature initialization can request stable text without a usable context.
             }
         }
-        return isTraditionalChinese(locale)
-                ? LANGUAGE_TRADITIONAL_CHINESE
-                : LANGUAGE_ENGLISH;
+        return GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
+                GboardSettingsLocaleManager.LANGUAGE_SYSTEM, locale);
     }
 
     private static Locale extractLocale(Context context) {
@@ -124,30 +126,11 @@ public final class GboardSettingsText {
     }
 
     private static String normalizeLanguageTag(String languageTag) {
-        if (LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)) {
-            return LANGUAGE_TRADITIONAL_CHINESE;
+        if (languageTag == null || languageTag.isBlank()) {
+            return LANGUAGE_ENGLISH;
         }
-        if (languageTag != null && !languageTag.isBlank()) {
-            Locale locale = Locale.forLanguageTag(languageTag);
-            if (isTraditionalChinese(locale)) {
-                return LANGUAGE_TRADITIONAL_CHINESE;
-            }
-        }
-        return LANGUAGE_ENGLISH;
-    }
-
-    private static boolean isTraditionalChinese(Locale locale) {
-        if (locale == null || !"zh".equalsIgnoreCase(locale.getLanguage())) {
-            return false;
-        }
-        String script = locale.getScript();
-        if ("Hant".equalsIgnoreCase(script)) {
-            return true;
-        }
-        String country = locale.getCountry();
-        return "TW".equalsIgnoreCase(country)
-                || "HK".equalsIgnoreCase(country)
-                || "MO".equalsIgnoreCase(country);
+        return GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
+                languageTag, Locale.forLanguageTag(languageTag));
     }
 
     private static Context requireContext(Context context) {

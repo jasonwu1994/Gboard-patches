@@ -11,6 +11,7 @@ public final class GboardSettingsLocaleManager {
     public static final String LANGUAGE_SYSTEM = "system";
     public static final String LANGUAGE_ENGLISH = "en";
     public static final String LANGUAGE_TRADITIONAL_CHINESE = "zh-Hant";
+    public static final String LANGUAGE_JAPANESE = "ja";
 
     private GboardSettingsLocaleManager() {
     }
@@ -40,12 +41,16 @@ public final class GboardSettingsLocaleManager {
     public static String resolveEffectiveLanguageTag(String preferenceValue, Locale deviceLocale) {
         String normalizedPreference = normalizePreferenceValue(preferenceValue);
         if (LANGUAGE_ENGLISH.equals(normalizedPreference)
-                || LANGUAGE_TRADITIONAL_CHINESE.equals(normalizedPreference)) {
+                || LANGUAGE_TRADITIONAL_CHINESE.equals(normalizedPreference)
+                || LANGUAGE_JAPANESE.equals(normalizedPreference)) {
             return normalizedPreference;
         }
         Locale locale = deviceLocale != null ? deviceLocale : Locale.getDefault();
         if (locale != null && isTraditionalChinese(locale)) {
             return LANGUAGE_TRADITIONAL_CHINESE;
+        }
+        if (locale != null && "ja".equalsIgnoreCase(locale.getLanguage())) {
+            return LANGUAGE_JAPANESE;
         }
         if (locale != null && "en".equalsIgnoreCase(locale.getLanguage())) {
             return LANGUAGE_ENGLISH;
@@ -94,6 +99,9 @@ public final class GboardSettingsLocaleManager {
         if (LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)) {
             return Locale.forLanguageTag(LANGUAGE_TRADITIONAL_CHINESE);
         }
+        if (LANGUAGE_JAPANESE.equals(languageTag)) {
+            return Locale.JAPAN;
+        }
         return Locale.ENGLISH;
     }
 
@@ -117,6 +125,9 @@ public final class GboardSettingsLocaleManager {
         }
         if (LANGUAGE_TRADITIONAL_CHINESE.equals(value)) {
             return LANGUAGE_TRADITIONAL_CHINESE;
+        }
+        if (LANGUAGE_JAPANESE.equals(value)) {
+            return LANGUAGE_JAPANESE;
         }
         return LANGUAGE_SYSTEM;
     }
