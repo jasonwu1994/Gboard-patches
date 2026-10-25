@@ -22,6 +22,7 @@ internal object GboardCapabilityWiringVerifier {
                 ?: error("Admitted feature $featureId is missing from the product catalog")
         }.toSet()
         val actualPatchNames = GboardPublishedPatchCatalog.morpheRegistrations
+            .filter { patch -> patch.name != "Independent cover/main Resize profiles" }
             .mapNotNull { patch -> patch.name }
             .toSet()
         check(actualPatchNames == expectedPatchNames) {

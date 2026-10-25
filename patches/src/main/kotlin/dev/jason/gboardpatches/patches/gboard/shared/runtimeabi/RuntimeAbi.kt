@@ -1,6 +1,12 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    MODE_VARIANT_BIND_IME("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->bindIme(Ljava/lang/Object;)V"),
+    MODE_VARIANT_BEGIN_READ("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->beginRead(I)V"),
+    MODE_VARIANT_BEGIN_SAVE("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->beginSave()V"),
+    MODE_VARIANT_FAMILY("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->observeFamily(Ljava/lang/Object;)V"),
+    MODE_VARIANT_ROUTE_RESULT("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->chooseVariant(Ljava/lang/String;)Ljava/lang/String;"),
+    MODE_VARIANT_SAVE_KEYBOARD_MODE("Ldev/jason/gboardpatches/extension/modevariant/GboardModeVariantRuntime;->observeSaveKeyboardMode(I)V"),
     EDITING_ACCESS_POINTS_START("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->start(Ljava/lang/Object;)V"),
     EDITING_ACCESS_POINTS_END("Ldev/jason/gboardpatches/extension/editingaccesspoints/GboardEditingAccessPointsRuntime;->end()V"),
     ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/accesspointcount/GboardAccessPointCountRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),

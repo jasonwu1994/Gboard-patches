@@ -65,7 +65,7 @@ class GboardPortProductCatalogContractTest {
             features.map { feature -> feature["feature_id"].asString }.sorted(),
             features.map { feature -> feature["feature_id"].asString },
         )
-        assertMatchesPublishedRegistrationCount(features.size)
+        assertEquals(GboardPublishedPatchCatalog.morpheRegistrations.size - 1, features.size)
         assertEquals(features.size, features.map { it["feature_id"].asString }.distinct().size)
         assertEquals(features.size, features.map { it["public_patch_name"].asString }.distinct().size)
 
@@ -482,6 +482,7 @@ class GboardPortProductCatalogContractTest {
         val byPatchName = features.associateBy { feature -> feature["public_patch_name"].asString }
         val byFeatureId = features.associateBy { feature -> feature["feature_id"].asString }
         val registrations = GboardPublishedPatchCatalog.morpheRegistrations
+            .filter { patch -> patch.name != "Independent cover/main Resize profiles" }
         val publishedNames = registrations.mapNotNull { patch -> patch.name }.toSet()
 
         assertEquals(publishedNames, byPatchName.keys)

@@ -3250,4 +3250,27 @@
         <translation locale="en">Editing buttons settings unavailable. Reopen settings and try again.</translation>
         <translation locale="zh-Hant">編輯按鈕設定無法載入，請重新開啟設定再試一次。</translation>
     </string>
-</settings-text>
+    <string name="gboard_patches_cover_resize_title">
+        <translation locale="en">Cover/main Resize profiles</translation>
+        <translation locale="zh-Hant">外螢幕與主螢幕鍵盤大小設定</translation>
+    </string>
+    <string name="gboard_patches_cover_resize_summary">
+        <translation locale="en">Save independent Gboard Resize layouts for the main and cover screens of a foldable phone.</translation>
+        <translation locale="zh-Hant">在摺疊手機的主螢幕與外螢幕上分別儲存 Gboard 鍵盤大小設定。</translation>
+    </string>
+    <string name="gboard_patches_cover_resize_toggle_title">
+        <translation locale="en">Enable independent cover Resize layout</translation>
+        <translation locale="zh-Hant">啟用外螢幕獨立鍵盤大小配置</translation>
+    </string>
+    <string name="gboard_patches_cover_resize_toggle_summary">
+        <translation locale="en">Off uses native Gboard layouts. When on, resize and save a layout on each screen, then close and reopen the keyboard to apply changes.</translation>
+        <translation locale="zh-Hant">關閉時使用原生 Gboard 配置。啟用後，請在兩個螢幕上各自調整並儲存鍵盤大小，再關閉並重新開啟鍵盤以套用變更。</translation>
+    </string>
+    <string name="gboard_patches_cover_resize_section">
+        <translation locale="en">Foldable display layouts</translation>
+        <translation locale="zh-Hant">摺疊螢幕鍵盤配置</translation>
+    </string>
+    <string name="gboard_patches_cover_resize_error_summary">
+        <translation locale="en">Could not save Resize preference. Reopen Gboard Patches settings and retry.</translation>
+        <translation locale="zh-Hant">無法儲存鍵盤大小偏好設定。請重新開啟 Gboard 修補設定後再試一次。</translation>
+    </string></settings-text>

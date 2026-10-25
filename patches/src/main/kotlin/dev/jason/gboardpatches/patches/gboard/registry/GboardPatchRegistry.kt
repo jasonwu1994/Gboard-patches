@@ -101,6 +101,8 @@ import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmis
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
+import dev.jason.gboardpatches.patches.gboard.features.modevariant.gboardCoverResizeSelectorHook
+import dev.jason.gboardpatches.patches.gboard.features.modevariant.gboardCoverResizeFeatureMarkerPatch
 
 private fun gboardPublicResourcePatch(
     featureId: String,
@@ -876,6 +878,28 @@ val gboardSignatureBypassPatch = gboardPublicResourcePatch(
     )
 }
 
+// Gboard 18.0.3 native Resize variant isolation (opt-in, default OFF).
+// Require the full target's admission rather than advertising the patch in
+// a developer-only/partial target profile with unverified native selectors.
+// This gate does not require users to select or change Package Rename.
+@Suppress("unused")
+val gboardCoverResizeProfilesPatch = resourcePatch(
+    name = "Independent cover/main Resize profiles".takeIf {
+        GboardTargetAdmission.admittedContributions("package_rename").isNotEmpty()
+    },
+    description = "Save separate Resize layouts on foldable main and cover screens (18.0.3 only).",
+    default = false,
+) {
+    if (GboardTargetAdmission.admittedContributions("package_rename").isNotEmpty()) {
+        compatibleWith(COMPATIBILITY_GBOARD)
+        dependsOn(
+            gboardPatchesSettingsPatch,
+            gboardCoverResizeFeatureMarkerPatch,
+            gboardCoverResizeSelectorHook,
+        )
+    }
+}
+
 object GboardPublishedPatchCatalog {
     val morpheRegistrations: Set<Patch<*>> = linkedSetOf(
         gboardZhuyinSlideInputPatch,
@@ -922,6 +946,7 @@ object GboardPublishedPatchCatalog {
         gboardZhuyinBottomRowWeightPatch,
         gboardPackageRenamePatch,
         gboardSignatureBypassPatch,
+        gboardCoverResizeProfilesPatch,
     ).filterTo(linkedSetOf()) { patch -> patch.name != null }
 
     @Suppress("DEPRECATION")

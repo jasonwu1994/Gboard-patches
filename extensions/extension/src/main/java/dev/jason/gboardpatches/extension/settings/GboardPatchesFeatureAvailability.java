@@ -61,6 +61,8 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.cursor_trackpad";
     public static final String FEATURE_ACCESS_POINTS_MENU_STYLE =
             "dev.jason.gboardpatches.feature.access_points_menu_style";
+    public static final String FEATURE_COVER_RESIZE_PROFILES =
+            "dev.jason.gboardpatches.feature.cover_resize_profiles";
     public static final String FEATURE_SPLIT_KEYBOARD =
             "dev.jason.gboardpatches.feature.split_keyboard";
     public static final String FEATURE_ACCESSIBILITY_LAYOUT =
