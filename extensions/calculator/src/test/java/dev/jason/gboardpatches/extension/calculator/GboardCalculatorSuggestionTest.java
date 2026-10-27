@@ -57,6 +57,30 @@ public final class GboardCalculatorSuggestionTest {
                 "1+".repeat(70) + "1"));
     }
 
+    @Test
+    public void usesTheWholeSumWhenTheCursorIsInsideIt() {
+        GboardCalculatorSuggestion.Candidate inside =
+                GboardCalculatorSuggestion.fromTextAroundCursor("Total 300+4", () -> "0 today");
+        Assert.assertEquals("300+40=340", inside.getEquation());
+        Assert.assertEquals(5, inside.getDeleteBeforeCursorCount());
+        Assert.assertEquals(1, inside.getDeleteAfterCursorCount());
+
+        GboardCalculatorSuggestion.Candidate beforeEquals =
+                GboardCalculatorSuggestion.fromTextAroundCursor("1+1", () -> "=");
+        Assert.assertEquals(3, beforeEquals.getDeleteBeforeCursorCount());
+        Assert.assertEquals(1, beforeEquals.getDeleteAfterCursorCount());
+
+        GboardCalculatorSuggestion.Candidate atEnd =
+                GboardCalculatorSuggestion.fromTextAroundCursor("2+3", () -> " apples");
+        Assert.assertEquals("2+3=5", atEnd.getEquation());
+        Assert.assertEquals(0, atEnd.getDeleteAfterCursorCount());
+
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextAroundCursor("2+3", () -> "+"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextAroundCursor("Total ", () -> "2+3"));
+        Assert.assertNull(GboardCalculatorSuggestion.fromTextAroundCursor("hello",
+                () -> { throw new AssertionError("Text after the cursor should not be read"); }));
+    }
+
     private static GboardCalculatorSuggestion.Candidate candidate(String value) {
         GboardCalculatorSuggestion.Candidate candidate =
                 GboardCalculatorSuggestion.fromTextBeforeCursor(value);

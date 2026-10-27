@@ -17,11 +17,11 @@ class GboardCalculatorPatchContractTest {
         val target = source("GboardCalculatorTargets.kt")
         val lifecycle = source("GboardCalculatorLifecyclePatch.kt")
 
-        assertTrue(target.contains("classType = \"Lphr;\""))
-        assertTrue(target.contains("name = \"i\""))
-        assertTrue(target.contains("name = \"onStartInputView\""))
-        assertTrue(target.contains("name = \"onUpdateSelection\""))
-        assertTrue(target.contains("name = \"onWindowHidden\""))
+        // Gboard's code is found by fingerprint, without obfuscated class names.
+        assertFalse(Regex("\"L[a-z]{1,4};\"").containsMatchIn(target))
+        assertTrue(target.contains("\"onStartInputView\""))
+        assertTrue(target.contains("\"onUpdateSelection\""))
+        assertTrue(target.contains("\"onWindowHidden\""))
         assertTrue(lifecycle.contains("SELECTION_HELPER_NAME"))
         assertTrue(lifecycle.contains("p0, p3, p4"))
 
@@ -55,7 +55,7 @@ class GboardCalculatorPatchContractTest {
             ).owner.endsWith("/GboardCalculatorLifecycleRuntime;"),
         )
         assertEquals(
-            "(Ljava/lang/Object;Landroid/view/View;II)V",
+            "(Ljava/lang/Object;II)V",
             RuntimeAbiCatalog.abi(
                 RuntimeCallId.CALCULATOR_RUNTIME_ON_SELECTION_UPDATED,
             ).descriptor,
@@ -65,25 +65,6 @@ class GboardCalculatorPatchContractTest {
             RuntimeAbiCatalog.abi(
                 RuntimeCallId.CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN,
             ).descriptor,
-        )
-    }
-
-    @Test
-    fun frameLayoutCompatibilityIsCheckedAtBuildTime() {
-        val hierarchy = mapOf(
-            "Linput/View;" to "Lintermediate/View;",
-            "Lintermediate/View;" to "Landroid/widget/FrameLayout;",
-            "Lwrong/View;" to "Landroid/view/View;",
-        )
-
-        assertTrue(
-            isCalculatorHostCompatible("Linput/View;") { type -> hierarchy[type] },
-        )
-        assertFalse(
-            isCalculatorHostCompatible("Lwrong/View;") { type -> hierarchy[type] },
-        )
-        assertFalse(
-            isCalculatorHostCompatible("Lmissing/View;") { type -> hierarchy[type] },
         )
     }
 

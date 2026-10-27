@@ -2,6 +2,7 @@ package dev.jason.gboardpatches.extension.calculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.function.Supplier;
 
 /** Finds a complete arithmetic expression immediately before the editor cursor. */
 public final class GboardCalculatorSuggestion {
@@ -9,6 +10,75 @@ public final class GboardCalculatorSuggestion {
     private static final int SCIENTIFIC_EXPONENT_THRESHOLD = 12;
 
     private GboardCalculatorSuggestion() {
+    }
+
+    /**
+     * Like {@link #fromTextBeforeCursor}, but when the cursor sits inside a sum the whole sum is
+     * used, the way Gboard suggests for a whole word rather than the part before the cursor.
+     * The text after the cursor is only read when the text before it could end in a sum.
+     */
+    public static Candidate fromTextAroundCursor(CharSequence textBeforeCursor,
+            Supplier<CharSequence> textAfterCursor) {
+        if (!couldEndInSum(textBeforeCursor)) {
+            return null;
+        }
+        CharSequence after = textAfterCursor.get();
+        int afterLength = continuationLength(after);
+        if (afterLength == 0) {
+            return fromTextBeforeCursor(textBeforeCursor);
+        }
+        Candidate whole = fromTextBeforeCursor(
+                new StringBuilder(textBeforeCursor).append(after, 0, afterLength));
+        if (whole == null || whole.deleteBeforeCursorCount <= afterLength) {
+            // Either the whole sum is not valid, or the cursor is in front of it, not inside it.
+            return null;
+        }
+        return new Candidate(whole.expression, whole.result,
+                whole.deleteBeforeCursorCount - afterLength, afterLength);
+    }
+
+    /** False when the text before the cursor cannot end in a sum, as in most typing. */
+    private static boolean couldEndInSum(CharSequence textBeforeCursor) {
+        if (textBeforeCursor == null || textBeforeCursor.length() == 0) {
+            return false;
+        }
+        int end = textBeforeCursor.length();
+        if (end > 1 && textBeforeCursor.charAt(end - 1) == ' ') {
+            end--; // "3+4 " can still end in a sum, but "hello " cannot.
+        }
+        char last = textBeforeCursor.charAt(end - 1);
+        return !Character.isWhitespace(last)
+                && (isExpressionCharacter(last) || last == ',' || isEquals(last));
+    }
+
+    /** How many characters straight after the cursor carry on the sum before it. */
+    private static int continuationLength(CharSequence textAfterCursor) {
+        if (textAfterCursor == null) {
+            return 0;
+        }
+        int limit = Math.min(textAfterCursor.length(), GboardCalculatorEngine.MAX_EXPRESSION_LENGTH);
+        for (int length = 0; length < limit; length++) {
+            char value = textAfterCursor.charAt(length);
+            if (isEquals(value)) {
+                return length + 1; // A trailing equals sign belongs to the sum.
+            }
+            char next = length + 1 < textAfterCursor.length()
+                    ? textAfterCursor.charAt(length + 1) : ' ';
+            if (!continuesSum(value, next)) {
+                return length;
+            }
+        }
+        return limit;
+    }
+
+    private static boolean continuesSum(char value, char next) {
+        if (value == ',') {
+            return Character.isDigit(next); // 1,000 but not "3+4, then"
+        }
+        if (value == 'x' || value == 'X') {
+            return !Character.isLetter(next); // 2x3 but not "2+3xyz"
+        }
+        return !Character.isWhitespace(value) && isExpressionCharacter(value);
     }
 
     public static Candidate fromTextBeforeCursor(CharSequence textBeforeCursor) {
@@ -188,11 +258,18 @@ public final class GboardCalculatorSuggestion {
         private final String expression;
         private final String result;
         private final int deleteBeforeCursorCount;
+        private final int deleteAfterCursorCount;
 
         private Candidate(String expression, String result, int deleteBeforeCursorCount) {
+            this(expression, result, deleteBeforeCursorCount, 0);
+        }
+
+        private Candidate(String expression, String result, int deleteBeforeCursorCount,
+                int deleteAfterCursorCount) {
             this.expression = expression;
             this.result = result;
             this.deleteBeforeCursorCount = deleteBeforeCursorCount;
+            this.deleteAfterCursorCount = deleteAfterCursorCount;
         }
 
         public String getExpression() {
@@ -209,6 +286,10 @@ public final class GboardCalculatorSuggestion {
 
         public int getDeleteBeforeCursorCount() {
             return deleteBeforeCursorCount;
+        }
+
+        public int getDeleteAfterCursorCount() {
+            return deleteAfterCursorCount;
         }
     }
 }
