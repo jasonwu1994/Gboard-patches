@@ -12,7 +12,10 @@ import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.Instruction
+import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
@@ -37,7 +40,8 @@ import java.util.logging.Logger
  *   calculation, the calculator pair is kept instead of the strip being cleared.
  * - GoogleInputMethodService event dispatch: a CANDIDATE_SELECT event for one of those
  *   candidates is handed to the calculator, which replaces the calculation, instead of Gboard
- *   committing the candidate text.
+ *   committing the candidate text. A DELETE_CANDIDATE event, from the long-press bubble,
+ *   copies the result instead of removing the suggestion.
  *
  * Optional, skipped with a warning if a Gboard update changes them:
  * - LatinFixedCountCandidatesHolderView.setCandidates and resizeSlots: after Gboard sizes the
@@ -46,6 +50,8 @@ import java.util.logging.Logger
  * - LatinCandidatesViewController activation: each keyboard view (letters, symbols, folded,
  *   unfolded) has its own controller, which starts with the toolbar showing. When one is shown,
  *   the calculator shows its pair there again.
+ * - CandidateViewBuilder.addActions: the long-press bubble of those candidates reads "Copy"
+ *   with a copy icon instead of "Remove suggestion" with a bin.
  *
  * Gboard's code is found by fingerprint (see GboardCalculatorTargets.kt), and the extension
  * recognises its candidates by identity, so neither needs obfuscated names.
@@ -53,13 +59,14 @@ import java.util.logging.Logger
 internal fun BytecodePatchContext.applyCalculatorCandidateHooks() {
     val t = resolveCandidateTargets()
 
+    val removableField = optional("copying the result with a long press") { applyCopyBubble(t) }
     t.controller.addHelperMethodIfMissing(
         name = CANDIDATES_HELPER_NAME,
         parameterTypes = listOf("Ljava/util/List;"),
         returnType = "Ljava/util/List;",
         accessFlags = HELPER_ACCESS_FLAGS,
         registerCount = CANDIDATES_HELPER_REGISTER_COUNT,
-        body = candidatesHelperBody(t),
+        body = candidatesHelperBody(t, removableField),
     )
     t.appendTextCandidates.applyCandidatesEntryDelegate(t)
 
@@ -162,11 +169,14 @@ private class CandidateTargets(
     val appendTextCandidates: MutableMethod,
     val candidatesUpdated: MutableMethod,
     val consumeEvent: MutableMethod,
+    val candidateType: String,
     /** Makes the next batch clear the strip instead of being appended to it. */
     val clearPendingField: String,
     /** Set by Gboard after the first letter or backspace; while set, suggestions replace the toolbar. */
     val priorityField: String,
     val builderType: String,
+    /** Maps each candidate field to the builder field Candidate(Builder) copies into it. */
+    val builderFields: Map<String, String>,
     val builderTextField: String,
     val buildMethod: String,
     val eventType: String,
@@ -206,9 +216,11 @@ private fun BytecodePatchContext.resolveCandidateTargets(): CandidateTargets {
         appendTextCandidates = append.method,
         candidatesUpdated = updated.method,
         consumeEvent = consumeEvent.method,
+        candidateType = candidateType,
         clearPendingField = updated.instructionMatches[1].instruction.fieldReference().toString(),
         priorityField = key[6].instruction.fieldReference().toString(),
         builderType = builderType,
+        builderFields = builderFields,
         builderTextField = builderFields.builderField(candidateText),
         buildMethod = build.originalMethod.reference(),
         eventType = eventType,
@@ -254,6 +266,68 @@ private fun MutableMethod.applyCandidatesEntryDelegate(t: CandidateTargets) {
 }
 
 /**
+ * For calculator candidates, swaps the long-press bubble's "Remove suggestion" label and bin icon
+ * for "Copy" and Gboard's copy icon. In the bubble's action setup, the candidate is passed to
+ * setEvent(DELETE_CANDIDATE, null, candidate), whose event code register is free afterwards, so
+ * it holds whether the candidate is a calculator one until the label and icon are loaded.
+ * Returns the builder field that makes a candidate removable, so Gboard offers the bubble.
+ */
+private fun BytecodePatchContext.applyCopyBubble(t: CandidateTargets): String {
+    val bubble = CandidateBubbleFingerprint(t.candidateType).only()
+    val removableField = t.builderFields.builderField(bubble.instructionMatches[0].instruction.fieldReference())
+    val method = bubble.method
+    val isCalculator = RuntimeAbiCatalog.abi(RuntimeCallId.CALCULATOR_CANDIDATES_IS_CALCULATOR)
+    if (method.alreadyDelegates(isCalculator.reference)) {
+        return removableField
+    }
+    val setEvent = bubble.instructionMatches[2]
+    val label = bubble.instructionMatches[3]
+    val icon = bubble.instructionMatches[5]
+    // setEvent(action, code, null, candidate)
+    val event = setEvent.getInstruction<FiveRegisterInstruction>()
+    val flag = event.registerD
+    val candidate = event.registerF
+    val labelRegister = label.getInstruction<OneRegisterInstruction>().registerA
+    val iconRegister = icon.getInstruction<OneRegisterInstruction>().registerA
+    check(listOf(candidate, flag, labelRegister, iconRegister).all { it < 16 }) {
+        "Unexpected registers in ${method.definingClass}->${method.name}"
+    }
+    val removeIcon = icon.getInstruction<NarrowLiteralInstruction>().narrowLiteral
+    val copyIcon = calculatorDrawables?.copyIconLike(removeIcon)
+
+    // Inserted from the last position back, so the earlier indices stay valid.
+    if (copyIcon != null) {
+        method.addInstructionsWithLabels(
+            icon.index + 1,
+            """
+                if-eqz v$flag, :gboard_patches_calculator_icon
+                const v$iconRegister, $copyIcon
+                :gboard_patches_calculator_icon
+                nop
+            """.trimIndent(),
+        )
+    }
+    method.addInstructionsWithLabels(
+        label.index + 1,
+        """
+            if-eqz v$flag, :gboard_patches_calculator_label
+            ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_COPY_LABEL, "")}
+            move-result-object v$labelRegister
+            :gboard_patches_calculator_label
+            nop
+        """.trimIndent(),
+    )
+    method.addInstructions(
+        setEvent.index + 1,
+        """
+            ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_IS_CALCULATOR, "v$candidate")}
+            move-result v$flag
+        """.trimIndent(),
+    )
+    return removableField
+}
+
+/**
  * At the start of the method, runs [call] and returns [returnValue] when it returns true;
  * otherwise, or when [guard] jumps to the continue label, Gboard's own code runs as before.
  */
@@ -296,7 +370,7 @@ private fun MutableMethod.alreadyDelegates(helperReference: String): Boolean {
 }
 
 // p0 = controller, p1 = a batch of Gboard's candidates. Returns the batch to show.
-private fun candidatesHelperBody(t: CandidateTargets): String = """
+private fun candidatesHelperBody(t: CandidateTargets, removableField: String?): String = """
     ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_TEXTS, "p0")}
     move-result-object v0
     if-nez v0, :calculator
@@ -308,7 +382,7 @@ private fun candidatesHelperBody(t: CandidateTargets): String = """
     ${buildCandidate(t, text = "v1", into = "v2")}
     const/4 v1, 0x1
     aget-object v1, v0, v1
-    ${buildCandidate(t, text = "v1", into = "v3")}
+    ${buildCandidate(t, text = "v1", into = "v3", removableField)}
 
     # Clear the strip first, so the pair replaces earlier batches instead of being appended,
     # and let it replace the toolbar like after a backspace, also on the symbols page.
@@ -321,14 +395,28 @@ private fun candidatesHelperBody(t: CandidateTargets): String = """
     return-object v0
 """.trimIndent()
 
-// Builds a Gboard text candidate with Gboard's own builder.
-private fun buildCandidate(t: CandidateTargets, text: String, into: String): String = """
-    new-instance $into, ${t.builderType}
-    invoke-direct {$into}, ${t.builderType}-><init>()V
-    iput-object $text, $into, ${t.builderTextField}
-    invoke-virtual {$into}, ${t.buildMethod}
-    move-result-object $into
-""".trimIndent()
+// Builds a Gboard text candidate with Gboard's own builder. With [removableField], it is marked
+// removable so Gboard offers its long-press bubble, which the calculator turns into "Copy"; this
+// reuses [text] once it is set.
+private fun buildCandidate(
+    t: CandidateTargets,
+    text: String,
+    into: String,
+    removableField: String? = null,
+): String {
+    val removable = if (removableField == null) "" else """
+        const/4 $text, 0x1
+        iput-boolean $text, $into, $removableField
+    """.trimIndent()
+    return """
+        new-instance $into, ${t.builderType}
+        invoke-direct {$into}, ${t.builderType}-><init>()V
+        iput-object $text, $into, ${t.builderTextField}
+        $removable
+        invoke-virtual {$into}, ${t.buildMethod}
+        move-result-object $into
+    """.trimIndent()
+}
 
 // p0 = controller. Sends an empty batch through appendTextCandidates; the entry hook replaces
 // it with the calculator pair for the current text.
@@ -348,6 +436,8 @@ private fun tapHelperBody(t: CandidateTargets): String = """
     move-result-object v0
     if-eqz v0, :not_calculator
     iget v1, v0, ${t.keyCodeField}
+    const/16 v2, $DELETE_CANDIDATE_CODE
+    if-eq v1, v2, :long_press
     const/16 v2, $CANDIDATE_SELECT_CODE
     if-ne v1, v2, :not_calculator
     iget-object v0, v0, ${t.keyPayloadField}
@@ -357,6 +447,13 @@ private fun tapHelperBody(t: CandidateTargets): String = """
     iget-object v0, v0, ${t.candidateDataCandidateField}
 
     ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_ON_SELECTED, "v0")}
+    move-result v0
+    return v0
+
+    # DELETE_CANDIDATE carries the candidate itself.
+    :long_press
+    iget-object v0, v0, ${t.keyPayloadField}
+    ${RuntimeCallEmitter.invoke(RuntimeCallId.CALCULATOR_CANDIDATES_ON_LONG_PRESSED, "v0")}
     move-result v0
     return v0
 

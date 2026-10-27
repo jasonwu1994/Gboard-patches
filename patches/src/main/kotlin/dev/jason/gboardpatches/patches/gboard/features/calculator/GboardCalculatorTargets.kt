@@ -218,7 +218,7 @@ internal class CandidateToStringFingerprint(candidateType: String) : Fingerprint
 
 /**
  * CandidateViewBuilder.addActions(builder, action, index, candidate, ...), which sets a candidate
- * key's tap action.
+ * key's tap action and, for removable candidates, its long-press "Remove suggestion" bubble.
  */
 internal open class CandidateActionsFingerprint(
     candidateType: String,
@@ -237,5 +237,38 @@ internal class CandidateSelectDataFingerprint(candidateType: String) : Candidate
         methodCall(parameters = emptyList(), returnType = "L", opcode = Opcode.INVOKE_VIRTUAL),
         opcode(Opcode.MOVE_RESULT_OBJECT, MatchAfterImmediately()),
         literal(CANDIDATE_SELECT_CODE, location = MatchAfterWithin(1)),
+    ),
+)
+
+internal const val DELETE_CANDIDATE_CODE = -10031
+
+/**
+ * The long-press bubble. Matches, in order: the candidate's removable flag (0), the bubble's
+ * DELETE_CANDIDATE event (1, 2), its label (3) and its icon (5).
+ */
+internal class CandidateBubbleFingerprint(candidateType: String) : CandidateActionsFingerprint(
+    candidateType,
+    listOf(
+        fieldAccess(opcode = Opcode.IGET_BOOLEAN, definingClass = candidateType, type = "Z"),
+        literal(DELETE_CANDIDATE_CODE, location = MatchAfterWithin(12)),
+        // setEvent(code, modifier, payload)
+        methodCall(
+            parameters = listOf("I", "L", "Ljava/lang/Object;"),
+            returnType = "V",
+            opcode = Opcode.INVOKE_VIRTUAL,
+            location = MatchAfterImmediately(),
+        ),
+        fieldAccess(
+            opcode = Opcode.IGET_OBJECT,
+            definingClass = "this",
+            type = "Ljava/lang/String;",
+            location = MatchAfterWithin(2),
+        ),
+        methodCall(
+            parameters = listOf("[Ljava/lang/String;"),
+            returnType = "V",
+            location = MatchAfterWithin(3),
+        ),
+        opcode(Opcode.CONST, MatchAfterWithin(1)),
     ),
 )

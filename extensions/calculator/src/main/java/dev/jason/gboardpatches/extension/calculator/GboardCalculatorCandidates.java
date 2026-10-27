@@ -76,12 +76,31 @@ public final class GboardCalculatorCandidates {
         return candidates;
     }
 
-    /** True when the tapped candidate is a calculator one, which has replaced the calculation. */
-    public static boolean onCandidateSelected(Object candidate) {
-        boolean isEquation = candidate != null && candidate == equationCandidate.get();
-        if (!isEquation && (candidate == null || candidate != resultCandidate.get())) {
+    /** True for the equation and result candidates the calculator is showing. */
+    public static boolean isCalculatorCandidate(Object candidate) {
+        return candidate != null
+                && (candidate == equationCandidate.get() || candidate == resultCandidate.get());
+    }
+
+    /**
+     * True when the long-pressed candidate is a calculator one, whose result has been copied,
+     * so Gboard does not remove it as a suggestion.
+     */
+    public static boolean onCandidateLongPressed(Object candidate) {
+        GboardCalculatorSuggestion.Candidate calculation = shown;
+        if (!isCalculatorCandidate(candidate) || calculation == null) {
             return false;
         }
+        GboardCalculatorSafety.run(() -> GboardCalculatorRuntime.copyResult(calculation));
+        return true;
+    }
+
+    /** True when the tapped candidate is a calculator one, which has replaced the calculation. */
+    public static boolean onCandidateSelected(Object candidate) {
+        if (!isCalculatorCandidate(candidate)) {
+            return false;
+        }
+        boolean isEquation = candidate == equationCandidate.get();
         GboardCalculatorSafety.run(() -> GboardCalculatorRuntime.acceptCurrent(isEquation));
         // Consumed even if the text changed meanwhile, so Gboard never inserts the raw text.
         return true;

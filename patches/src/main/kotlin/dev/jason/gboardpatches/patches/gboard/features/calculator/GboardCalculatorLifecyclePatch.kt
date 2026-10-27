@@ -15,7 +15,7 @@ internal val gboardCalculatorLifecyclePatch = bytecodePatch(
     description = "在 input session lifecycle 加入 calculator 薄 delegate。",
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
-    dependsOn(gboardCalculatorExtensionPatch)
+    dependsOn(gboardCalculatorExtensionPatch, gboardCalculatorCopyIconPatch)
 
     execute {
         OnStartInputViewFingerprint.only().method.applyVoidExitLifecycleDelegate(

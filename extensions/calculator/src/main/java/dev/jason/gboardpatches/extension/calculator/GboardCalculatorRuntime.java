@@ -1,8 +1,12 @@
 package dev.jason.gboardpatches.extension.calculator;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.inputmethodservice.InputMethodService;
+import android.os.Build;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 
@@ -65,6 +69,27 @@ public final class GboardCalculatorRuntime {
             }
         } finally {
             connection.endBatchEdit();
+        }
+    }
+
+    /** Android's own "Copy", in the keyboard's language, for a calculator candidate's long press. */
+    public static String copyLabel() {
+        InputMethodService service = activeService.get();
+        return service != null ? service.getString(android.R.string.copy) : "Copy";
+    }
+
+    static void copyResult(GboardCalculatorSuggestion.Candidate calculation) {
+        InputMethodService service = activeService.get();
+        ClipboardManager clipboard = service != null
+                ? service.getSystemService(ClipboardManager.class) : null;
+        if (clipboard == null) {
+            return;
+        }
+        clipboard.setPrimaryClip(ClipData.newPlainText("Calculator result", calculation.getResult()));
+        // Android 13 and later confirm copies themselves.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(service, GboardCalculatorText.localized(
+                    "已複製計算結果", "Calculator result copied"), Toast.LENGTH_SHORT).show();
         }
     }
 
