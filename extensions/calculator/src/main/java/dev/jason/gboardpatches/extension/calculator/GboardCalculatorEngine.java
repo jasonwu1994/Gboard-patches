@@ -393,7 +393,8 @@ public final class GboardCalculatorEngine {
         private final boolean incomplete;
 
         private ParseFailure(String message, boolean incomplete) {
-            super(message);
+            // Thrown on most keystrokes while a sum is being typed, so skip the stack trace.
+            super(message, null, false, false);
             this.incomplete = incomplete;
         }
 
