@@ -66,22 +66,6 @@ public final class GboardCalculatorSettingsContractTest {
         Assert.assertTrue(lifecycle.contains("DEFAULT_ENABLED = false"));
     }
 
-    @Test
-    public void editorOrchestrationAndSuggestionRenderingAreSeparateModules() throws Exception {
-        String runtime = read("../calculator/src/main/java/dev/jason/gboardpatches/extension/"
-                + "calculator/GboardCalculatorRuntime.java");
-        String view = read("../calculator/src/main/java/dev/jason/gboardpatches/extension/"
-                + "calculator/GboardCalculatorSuggestionView.java");
-        String snapshot = read("../calculator/src/main/java/dev/jason/gboardpatches/extension/"
-                + "calculator/GboardCalculatorDisplaySnapshot.java");
-
-        Assert.assertFalse(runtime.contains("new HorizontalScrollView"));
-        Assert.assertFalse(runtime.contains("findKeyboardPanelTop"));
-        Assert.assertTrue(view.contains("HorizontalScrollView"));
-        Assert.assertTrue(view.contains("findKeyboardPanelTop"));
-        Assert.assertTrue(snapshot.contains("matchesCurrent("));
-    }
-
     private static String read(String path) throws Exception {
         return new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
     }

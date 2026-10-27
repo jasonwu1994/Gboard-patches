@@ -6,42 +6,31 @@ import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.AccessFlags
 import dev.jason.gboardpatches.patches.gboard.shared.addHelperMethodIfMissing
 import dev.jason.gboardpatches.patches.gboard.shared.applyVoidExitLifecycleDelegate
-import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
-import dev.jason.gboardpatches.patches.gboard.shared.mutableClass
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
 internal val gboardCalculatorLifecyclePatch = bytecodePatch(
-    description = "在 18.5.4 input session lifecycle 加入 calculator 薄 delegate。",
+    description = "在 input session lifecycle 加入 calculator 薄 delegate。",
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
     dependsOn(gboardCalculatorExtensionPatch)
 
     execute {
-        val inputView = GboardCalculatorTargets.inputView.resolve(this)
-        check(
-            isCalculatorHostCompatible(inputView.type) { type ->
-                runCatching { mutableClass(type).superclass }.getOrNull()
-            },
-        ) {
-            "Calculator host ${inputView.type} must inherit from $FRAME_LAYOUT_TYPE"
-        }
+        OnStartInputViewFingerprint.only().method.applyVoidExitLifecycleDelegate(
+            RuntimeCallId.CALCULATOR_RUNTIME_ON_INPUT_VIEW_STARTED,
+            "p0 .. p0",
+        )
 
-        findMutableMethodOrThrow(GboardCalculatorTargets.onStartInputView)
-            .applyVoidExitLifecycleDelegate(
-                RuntimeCallId.CALCULATOR_RUNTIME_ON_INPUT_VIEW_STARTED,
-                "p0 .. p0",
-            )
-
-        val updateSelection =
-            findMutableMethodOrThrow(GboardCalculatorTargets.onUpdateSelection)
-        check(updateSelection.implementation?.registerCount == UPDATE_SELECTION_REGISTER_COUNT) {
-            "Unexpected register count in ${GboardCalculatorTargets.onUpdateSelection.reference}: " +
-                updateSelection.implementation?.registerCount
+        val updateSelection = OnUpdateSelectionFingerprint.only().method
+        // The delegate passes p3 and p4 with a non-range invoke, which only reaches v0 to v15.
+        val registerCount = updateSelection.implementation!!.registerCount
+        check(registerCount - UPDATE_SELECTION_PARAMETER_REGISTERS + 4 < 16) {
+            "Unexpected register count in ${updateSelection.definingClass}->onUpdateSelection: " +
+                registerCount
         }
-        GboardCalculatorTargets.onUpdateSelection.ownerClass(this).addHelperMethodIfMissing(
+        mutableClassDefBy(updateSelection.definingClass).addHelperMethodIfMissing(
             name = SELECTION_HELPER_NAME,
             parameterTypes = listOf("I", "I"),
             returnType = "V",
@@ -51,33 +40,17 @@ internal val gboardCalculatorLifecyclePatch = bytecodePatch(
         )
         updateSelection.applyCalculatorSelectionEntryDelegate()
 
-        findMutableMethodOrThrow(GboardCalculatorTargets.onWindowHidden)
-            .applyVoidExitLifecycleDelegate(
-                RuntimeCallId.CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN,
-                "",
-            )
-    }
-}
+        OnWindowHiddenFingerprint.only().method.applyVoidExitLifecycleDelegate(
+            RuntimeCallId.CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN,
+            "",
+        )
 
-internal fun isCalculatorHostCompatible(
-    startType: String,
-    superclassOf: (String) -> String?,
-): Boolean {
-    var current: String? = startType
-    val visited = mutableSetOf<String>()
-    while (current != null && visited.add(current)) {
-        if (current == FRAME_LAYOUT_TYPE) {
-            return true
-        }
-        current = superclassOf(current)
+        applyCalculatorCandidateHooks()
     }
-    return false
 }
 
 private fun MutableMethod.applyCalculatorSelectionEntryDelegate() {
-    val helperReference =
-        "${GboardCalculatorTargets.onUpdateSelection.ownerDescriptor}" +
-            "->$SELECTION_HELPER_NAME(II)V"
+    val helperReference = "$definingClass->$SELECTION_HELPER_NAME(II)V"
     val instructions = implementation?.instructions
         ?: error("No instructions in $definingClass->$name")
     val existing = instructions.count { it.isMethodReference(helperReference) }
@@ -94,17 +67,15 @@ private fun MutableMethod.applyCalculatorSelectionEntryDelegate() {
 }
 
 private fun selectionHelperBody(): String = """
-    iget-object v0, p0, ${GboardCalculatorTargets.inputView.reference}
-
     ${RuntimeCallEmitter.invoke(
         RuntimeCallId.CALCULATOR_RUNTIME_ON_SELECTION_UPDATED,
-        "p0, v0, p1, p2",
+        "p0, p1, p2",
     )}
 
     return-void
 """.trimIndent()
 
-private const val UPDATE_SELECTION_REGISTER_COUNT = 8
-private const val SELECTION_HELPER_REGISTER_COUNT = 4
+// this and six ints.
+private const val UPDATE_SELECTION_PARAMETER_REGISTERS = 7
+private const val SELECTION_HELPER_REGISTER_COUNT = 3
 private const val SELECTION_HELPER_NAME = "gboardPatchesCalculatorSelection"
-private const val FRAME_LAYOUT_TYPE = "Landroid/widget/FrameLayout;"

@@ -1686,6 +1686,7 @@
       ],
       "migration_scope": "version-sensitive",
       "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorCandidatesPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorExtensionPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorFeatureMarkerPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/calculator/GboardCalculatorLifecyclePatch.kt",
@@ -1707,7 +1708,13 @@
           "runtime_calls": [
             "CALCULATOR_RUNTIME_ON_INPUT_VIEW_STARTED",
             "CALCULATOR_RUNTIME_ON_SELECTION_UPDATED",
-            "CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN"
+            "CALCULATOR_RUNTIME_ON_INPUT_WINDOW_HIDDEN",
+            "CALCULATOR_CANDIDATES_TEXTS",
+            "CALCULATOR_CANDIDATES_SHOW",
+            "CALCULATOR_CANDIDATES_ON_SELECTED",
+            "CALCULATOR_CANDIDATES_AFTER_BOUND",
+            "CALCULATOR_CANDIDATES_KEEP_ON_CLEAR",
+            "CALCULATOR_CANDIDATES_ON_ACTIVATED"
           ]
         }
       ]
