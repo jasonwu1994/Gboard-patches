@@ -29,6 +29,10 @@ public final class GboardPatchesIcons {
     public static final int TAG = 15;
     public static final int TRANSLATE = 16;
 
+    public static final int SEARCH = 17;
+    public static final int MORE = 18;
+    public static final int KEYBOARD = 19;
+
     private static final float VIEWPORT = 24f;
 
     private GboardPatchesIcons() {
@@ -95,6 +99,12 @@ public final class GboardPatchesIcons {
                         + "h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63"
                         + " 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12"
                         + " 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z";
+            case SEARCH:
+                return "M9.5,3a6.5,6.5 0,1 0,4.03 11.6L19,20.07 20.07,19l-5.47,-5.47A6.5,6.5 0,0 0,9.5 3zM5,9.5a4.5,4.5 0,1 1,9 0,4.5 4.5,0 0,1 -9,0z";
+            case MORE:
+                return "M6,10a2,2 0,1 0,0 4a2,2 0,1 0,0 -4M12,10a2,2 0,1 0,0 4a2,2 0,1 0,0 -4M18,10a2,2 0,1 0,0 4a2,2 0,1 0,0 -4";
+            case KEYBOARD:
+                return "M4,19q-0.825,0-1.4125-0.5875T2,17V7q0-0.825 0.5875-1.4125T4,5H20q0.825,0 1.4125,0.5875T22,7V17q0,0.825-0.5875,1.4125T20,19H4Zm0-2H20V7H4V17Zm4-1H16V14H8v2ZM5,13h2V11H5v2Zm3,0h2V11H8v2Zm3,0h2V11H11v2Zm3,0h2V11H14v2Zm3,0h2V11H17v2ZM5,10h2V8H5v2Zm3,0h2V8H8v2Zm3,0h2V8H11v2Zm3,0h2V8H14v2Zm3,0h2V8H17v2ZM4,17V7V17Z";
             default:
                 return null;
         }

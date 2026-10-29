@@ -1,3 +1,53 @@
+## [4.1.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.0.0...v4.1.0-dev.1) (2026-10-28)
+
+### ✨ New Features
+
+* **Gboard:** add the Dictionaries & Predictions patch to customize resource versions for dictionaries, text predictions, and input correction models, greatly improving the typing experience.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix the lingering colored light bar and missing word suggestions after official Rambler voice input ends.
+* **Gboard:** fix duplicate countdown updates and card recycling issues when clipboard items are hidden or kept permanently, and reduce unnecessary settings reads to lower resource usage.
+* **Gboard:** fix the Split Keyboard patch so the split state is preserved after closing and reopening the keyboard.
+
+### ✨ 新功能
+
+* **Gboard:** 新增Dictionaries & Predictions Patch，可自訂字典、文字預測與輸入修正的模型資源版本，將大幅提升輸入體驗。
+
+### 🐛 修復
+
+* **Gboard:** 修復官方 Rambler 語音輸入結束後，彩色光帶殘留及候選字詞消失的問題。
+* **Gboard:** 修復剪貼簿隱藏與永久保留時的重複倒數更新及卡片回收問題，並減少不必要的設定讀取，降低額外資源消耗。
+* **Gboard:** 修復「分離式鍵盤」(split keyboard) Patch 在關閉並重新開啟鍵盤後，無法保留分離狀態的問題。
+
+## [4.0.0](https://github.com/jasonwu1994/Gboard-patches/compare/v3.13.0...v4.0.0) (2026-10-26)
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix the occasionally blank shortcut toolbar when opening the keyboard with Rambler enabled.
+* **Gboard:** remove the `Hyperspeed Typing Animation` patch because Gboard 18.5.3 no longer includes its core implementation.
+* **Gboard:** fix runtime settings access before the first unlock after boot to prevent errors when swiping down to dismiss the keyboard.
+* **Gboard:** fix the `Zhuyin Bottom Row Key Sizes` patch so bottom-row keys retain their configured sizes while typing on the Zhuyin keyboard.
+* **Gboard:** eliminate brief white or dark background flashes when opening or switching keyboards with custom opacity enabled.
+* **Gboard:** fix black borders around keyboard corners when adjusting custom opacity.
+
+### 🚀 Updated App Support
+
+* **Gboard:** update the supported Gboard version to `18.5.4.993608717-release-arm64-v8a`.
+
+### 🐛 修復
+
+* **Gboard:** 修復啟用 Rambler 時，開啟鍵盤後快捷工具列偶爾空白的問題。
+* **Gboard:** 移除 `Hyperspeed Typing Animation` Patch，因 Gboard 18.5.3 已移除所需的核心實作。
+* **Gboard:** 修復開機後首次解鎖前，向下滑動關閉鍵盤功能存取設定時可能發生的錯誤。
+* **Gboard:** 修復「注音底排按鍵大小」Patch 在注音輸入時無法維持自訂按鍵大小的問題。
+* **Gboard:** 修復啟用自訂透明度後，開啟或切換鍵盤時背景短暫閃白或閃黑的問題。
+* **Gboard:** 修復調整自訂透明度時，鍵盤邊角出現黑邊的問題。
+
+### 🚀 支援版本更新
+
+* **Gboard:** 更新支援的 Gboard 版本至 `18.5.4.993608717-release-arm64-v8a`。
+
 ## [4.0.0-dev.5](https://github.com/jasonwu1994/Gboard-patches/compare/v4.0.0-dev.4...v4.0.0-dev.5) (2026-10-25)
 
 ### 🚀 Updated App Support

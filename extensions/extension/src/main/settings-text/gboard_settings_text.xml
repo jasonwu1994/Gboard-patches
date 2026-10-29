@@ -3268,4 +3268,326 @@
         <translation locale="en">Voice typing has three modes: Standard, Standard - Advanced features (colorful microphone), and Rambler. Standard - Advanced features requires the Dictation payload.</translation>
         <translation locale="zh-Hant">語音輸入分為三種：標準、標準-進階功能（彩色麥克風）以及 Rambler。「標準-進階功能」需要 Dictation payload。</translation>
     </string>
+    <string name="language_models_entry_title">
+        <translation locale="en">Dictionaries &amp; Predictions</translation>
+        <translation locale="zh-Hant">字典與預測</translation>
+    </string>
+    <string name="language_models_title">
+        <translation locale="en">Language model versions</translation>
+        <translation locale="zh-Hant">語言模型版本</translation>
+    </string>
+    <string name="language_models_summary">
+        <translation locale="en">Choose dictionary and prediction resources by language, and inspect observed versions.</translation>
+        <translation locale="zh-Hant">按語言選擇字典與預測資源，並查看已觀察到的載入版本。</translation>
+    </string>
+    <string name="language_models_enabled_help">
+        <translation locale="en">Enable to use custom versions; disable to restore APK defaults. Restart Gboard after changes.</translation>
+        <translation locale="zh-Hant">開啟使用自選版本；關閉恢復 APK 內建資源。變更後需重啟 Gboard。</translation>
+    </string>
+    <string name="language_models_version">
+        <translation locale="en">Resource version</translation>
+        <translation locale="zh-Hant">資源版本</translation>
+    </string>
+    <string name="language_models_apk">
+        <translation locale="en">APK default</translation>
+        <translation locale="zh-Hant">APK 內建</translation>
+    </string>
+    <string name="language_models_group_suggestions">
+        <translation locale="en">Word suggestions and dictionaries</translation>
+        <translation locale="zh-Hant">詞語建議與字典</translation>
+    </string>
+    <string name="language_models_group_correction">
+        <translation locale="en">Input correction</translation>
+        <translation locale="zh-Hant">輸入修正</translation>
+    </string>
+    <string name="language_models_group_auxiliary">
+        <translation locale="en">Auxiliary resources</translation>
+        <translation locale="zh-Hant">輔助資源</translation>
+    </string>
+    <string name="language_models_hmm_title">
+        <translation locale="en">HMM</translation>
+        <translation locale="zh-Hant">HMM</translation>
+    </string>
+    <string name="language_models_hmm_help">
+        <translation locale="en">Traditional Chinese and other Chinese and Korean languages</translation>
+        <translation locale="zh-Hant">繁體中文、其他中韓語言</translation>
+    </string>
+    <string name="language_models_delight_title">
+        <translation locale="en">Delight</translation>
+        <translation locale="zh-Hant">Delight</translation>
+    </string>
+    <string name="language_models_delight_help">
+        <translation locale="en">English, German, Thai and more languages</translation>
+        <translation locale="zh-Hant">英文、德文、泰文及更多語言</translation>
+    </string>
+    <string name="language_models_nwp_title">
+        <translation locale="en">NWP</translation>
+        <translation locale="zh-Hant">NWP</translation>
+    </string>
+    <string name="language_models_nwp_help">
+        <translation locale="en">American English · Next-word and multiword prediction</translation>
+        <translation locale="zh-Hant">美式英文・下一詞與多詞預測</translation>
+    </string>
+    <string name="language_models_key_correction_title">
+        <translation locale="en">Key correction</translation>
+        <translation locale="zh-Hant">按鍵修正</translation>
+    </string>
+    <string name="language_models_key_correction_help">
+        <translation locale="en">American English · Key-correction model</translation>
+        <translation locale="zh-Hant">美式英文・按鍵修正模型</translation>
+    </string>
+    <string name="language_models_saft_title">
+        <translation locale="en">SAFT</translation>
+        <translation locale="zh-Hant">SAFT</translation>
+    </string>
+    <string name="language_models_saft_help">
+        <translation locale="en">English, German, Spanish and French · User-feature-cache resources</translation>
+        <translation locale="zh-Hant">英、德、西、法語・使用者特徵快取輔助資源</translation>
+    </string>
+    <string name="language_models_mozc_spell_title">
+        <translation locale="en">Mozc spellchecker</translation>
+        <translation locale="zh-Hant">Mozc spellchecker</translation>
+    </string>
+    <string name="language_models_mozc_spell_help">
+        <translation locale="en">Japanese · Spelling-correction data</translation>
+        <translation locale="zh-Hant">日文・拼寫校正資料</translation>
+    </string>
+    <string name="language_models_not_configured">
+        <translation locale="en">Not configured</translation>
+        <translation locale="zh-Hant">未指定</translation>
+    </string>
+    <string name="language_models_unknown_version">
+        <translation locale="en">Version unavailable</translation>
+        <translation locale="zh-Hant">版號未提供</translation>
+    </string>
+    <string name="language_models_hash_identity">
+        <translation locale="en">Resource version identified by the reviewed model file SHA-256</translation>
+        <translation locale="zh-Hant">資源版號已依模型檔 SHA-256 識別</translation>
+    </string>
+    <string name="language_models_mozc_title">
+        <translation locale="en">Mozc</translation>
+        <translation locale="zh-Hant">Mozc</translation>
+    </string>
+    <string name="language_models_mozc_help">
+        <translation locale="en">Japanese · Main dictionary and language data</translation>
+        <translation locale="zh-Hant">日文・主要字典與語言資料</translation>
+    </string>
+    <string name="language_models_grammar_title">
+        <translation locale="en">Grammar</translation>
+        <translation locale="zh-Hant">Grammar</translation>
+    </string>
+    <string name="language_models_grammar_help">
+        <translation locale="en">English, Spanish, French and Portuguese · Grammar correction</translation>
+        <translation locale="zh-Hant">英、西、法、葡語・語法校正</translation>
+    </string>
+    <string name="language_models_langid_title">
+        <translation locale="en">Lang-id</translation>
+        <translation locale="zh-Hant">Lang-id</translation>
+    </string>
+    <string name="language_models_langid_help">
+        <translation locale="en">Multiple languages · Language identification</translation>
+        <translation locale="zh-Hant">多語言・語言識別</translation>
+    </string>
+    <string name="language_models_nwp_2023">
+        <translation locale="en">S25 Ultra</translation>
+        <translation locale="zh-Hant">S25 Ultra</translation>
+    </string>
+    <string name="language_models_pixel_disabled">
+        <translation locale="en">Pixel 2026-10-27 · Disable this NWP engine</translation>
+        <translation locale="zh-Hant">Pixel 2026-10-27・停用此 NWP 引擎</translation>
+    </string>
+    <string name="language_models_dictionary_languages">
+        <translation locale="en">Delight · Dictionary versions by language</translation>
+        <translation locale="zh-Hant">Delight・各語言字典版本</translation>
+    </string>
+    <string name="language_models_dictionary_languages_help">
+        <translation locale="en">The Delight selector chooses the overall catalog version. Its 890 language and variant entries each have their own dictionary version. Look up the dictionaries specified by each catalog; this does not select versions or enable languages.</translation>
+        <translation locale="zh-Hant">Delight 選的是整份清單版本（大版本）；內部 890 個語言／分支各有自己的字典版號。此處只查詢各清單對應的字典版本，不會另外選版或啟用語言。</translation>
+    </string>
+    <string name="language_models_results_count">
+        <translation locale="en">Delight dictionaries: %1$d language and variant entries</translation>
+        <translation locale="zh-Hant">Delight 字典版本（%1$d 個語言／分支）</translation>
+    </string>
+    <string name="language_models_about">
+        <translation locale="en">How versions work</translation>
+        <translation locale="zh-Hant">版本說明</translation>
+    </string>
+    <string name="language_models_hmm_about_title">
+        <translation locale="en">HMM · Chinese and Korean dictionaries and conversion</translation>
+        <translation locale="zh-Hant">HMM・中韓字典與輸入轉換</translation>
+    </string>
+    <string name="language_models_hmm_about">
+        <translation locale="en">Dictionary and model resources for Traditional Chinese, Simplified Chinese, Korean and related input methods. Switching may affect word conversion, candidate ranking and continuation predictions for input such as Zhuyin and Pinyin.</translation>
+        <translation locale="zh-Hant">繁中、簡中、韓文等輸入法使用的字典與模型資源。切換可能影響注音、拼音等輸入的字詞轉換、候選排序及接續預測。</translation>
+    </string>
+    <string name="language_models_delight_about_title">
+        <translation locale="en">Delight · Multilingual dictionaries and suggestions</translation>
+        <translation locale="zh-Hant">Delight・多語字典與候選</translation>
+    </string>
+    <string name="language_models_delight_about">
+        <translation locale="en">Dictionaries and language models for English, German, Thai and many other languages. Switching may affect suggested vocabulary, spelling correction, candidate ranking and next-word suggestions. The selector chooses the overall dictionary catalog; each language and variant has its own dictionary version and may update at a different time.</translation>
+        <translation locale="zh-Hant">英文、德文、泰文等多種語言使用的字典與語言模型。切換可能影響可建議的詞彙、拼字修正、候選排序與接詞建議。選擇的是整份字典清單版本；各語言與分支有各自的字典版號，也不一定同時更新。</translation>
+    </string>
+    <string name="language_models_nwp_about_title">
+        <translation locale="en">NWP · Next-word and multiword prediction</translation>
+        <translation locale="zh-Hant">NWP・下一詞與多詞預測</translation>
+    </string>
+    <string name="language_models_nwp_about">
+        <translation locale="en">Next-word prediction: an additional American English engine that suggests following words from the text already entered. It does not replace the main dictionary; disabling it does not disable every source of next-word suggestions.</translation>
+        <translation locale="zh-Hant">Next-word prediction，這裡是美式英文額外的接詞／多詞預測引擎，依已輸入內容建議後續詞語。它不替換一般字典；停用此引擎也不代表所有接詞建議都關閉。</translation>
+    </string>
+    <string name="language_models_key_correction_about_title">
+        <translation locale="en">Key correction · Correction-trigger decisions</translation>
+        <translation locale="zh-Hant">按鍵修正・修正觸發與輸入判斷</translation>
+    </string>
+    <string name="language_models_key_correction_about">
+        <translation locale="en">A Google American English TFLite model used for input-correction triggering, separate from the main dictionary. Presets apply the matching TFLite enable and key-routing flags together.</translation>
+        <translation locale="zh-Hant">Google 的美式英文 TFLite 按鍵修正模型，參與輸入修正的觸發判斷，與一般字典分開。選項連同該來源的 TFLite 觸發開關及適用按鍵設定一起套用。</translation>
+    </string>
+    <string name="language_models_saft_about_title">
+        <translation locale="en">SAFT · User-feature-cache resources</translation>
+        <translation locale="zh-Hant">SAFT・使用者特徵快取輔助資源</translation>
+    </string>
+    <string name="language_models_saft_about">
+        <translation locale="en">Auxiliary models and biasing dictionaries retrieved by the Gboard user-feature-cache manager. This catalog provides American English, German, Spanish and French resources, rather than the main Traditional Chinese model. This selects resource configuration; Gboard controls usage conditions. Native SAFT version detection is not yet available.</translation>
+        <translation locale="zh-Hant">Gboard 使用者特徵快取管理器取得的輔助模型與偏置字典。此清單提供美式英文、德文、西班牙文、法文資源，並非繁中主模型。這裡選擇資源配置，實際使用條件由 Gboard 控制；目前未提供 SAFT 原生載入版號偵測。</translation>
+    </string>
+    <string name="language_models_mozc_spell_about_title">
+        <translation locale="en">Mozc spellchecker · Japanese spelling correction</translation>
+        <translation locale="zh-Hant">Mozc spellchecker・日文拼寫校正</translation>
+    </string>
+    <string name="language_models_mozc_spell_about">
+        <translation locale="en">Separate data for Japanese spelling-correction suggestions. It is independent of the main kana-to-kanji dictionary. Selecting resources does not enable system spell checking.</translation>
+        <translation locale="zh-Hant">日文拼寫校正使用的獨立資料，可能影響錯字修正建議。它與假名轉漢字的主要 Mozc 字典分開；選擇資源不會自動開啟系統拼寫檢查。</translation>
+    </string>
+    <string name="language_models_mozc_about_title">
+        <translation locale="en">Mozc · Japanese dictionary and conversion</translation>
+        <translation locale="zh-Hant">Mozc・日文字典與轉換</translation>
+    </string>
+    <string name="language_models_mozc_about">
+        <translation locale="en">Main dictionary and language data for Japanese input. Switching may affect vocabulary for kana-to-kanji conversion, conversion candidates and their ranking.</translation>
+        <translation locale="zh-Hant">日文輸入的主要字典與語言資料。切換可能影響假名轉漢字的詞彙、轉換候選及其排序。</translation>
+    </string>
+    <string name="language_models_grammar_about_title">
+        <translation locale="en">Grammar · Grammar correction</translation>
+        <translation locale="zh-Hant">Grammar・語法校正</translation>
+    </string>
+    <string name="language_models_grammar_about">
+        <translation locale="en">Grammar correction resources for supported languages such as English, Spanish, French and Portuguese. These affect sentence error detection and correction suggestions. Selecting resources here does not enable the Grammar Checker feature.</translation>
+        <translation locale="zh-Hant">英、西、法、葡語等支援語言的語法校正資源，影響句子錯誤偵測與修正建議。此處只選資源，不會自動開啟「語法校正」功能。</translation>
+    </string>
+    <string name="language_models_langid_about_title">
+        <translation locale="en">Lang-id · Language identification</translation>
+        <translation locale="zh-Hant">Lang-id・語言識別</translation>
+    </string>
+    <string name="language_models_langid_about">
+        <translation locale="en">Identifies the likely language of multilingual input to help select suggestions from the appropriate language. It is not a dictionary and does not add input languages; switching may affect language decisions for multilingual suggestions.</translation>
+        <translation locale="zh-Hant">辨識多語輸入內容較接近哪種語言，協助選用對應語言的候選。它不是字典，也不會新增可輸入的語言；切換可能影響多語候選的語言判斷。</translation>
+    </string>
+    <string name="language_models_actual_title">
+        <translation locale="en">Observed loaded resources</translation>
+        <translation locale="zh-Hant">已觀察到的載入資源</translation>
+    </string>
+    <string name="language_models_restart_help">
+        <translation locale="en">Restart Gboard, open the relevant language keyboard, then check again.</translation>
+        <translation locale="zh-Hant">請重啟 Gboard，開啟對應語言鍵盤後再查看。</translation>
+    </string>
+
+    <string name="language_models_loaded">
+        <translation locale="en">Native language-model load succeeded</translation>
+        <translation locale="zh-Hant">原生語言模型載入成功</translation>
+    </string>
+    <string name="language_models_enrolled">
+        <translation locale="en">Native input-scheme enrollment succeeded</translation>
+        <translation locale="zh-Hant">原生輸入方案註冊成功</translation>
+    </string>
+    <string name="language_models_submitted">
+        <translation locale="en">Submitted to NWP engine; readiness is not yet confirmed</translation>
+        <translation locale="zh-Hant">已提交至 NWP 引擎，尚未確認 Ready</translation>
+    </string>
+    <string name="language_models_search">
+        <translation locale="en">Search languages</translation>
+        <translation locale="zh-Hant">搜尋語言</translation>
+    </string>
+    <string name="language_models_search_hint">
+        <translation locale="en">Language name or locale, for example English, German, Thai, en-US</translation>
+        <translation locale="zh-Hant">語言名稱或語系，例如英文、德文、泰文、en-US</translation>
+    </string>
+    <string name="language_models_refine_search">
+        <translation locale="en">No matching entry. Try another language name or locale.</translation>
+        <translation locale="zh-Hant">沒有相符條目，請輸入其他語言名稱或語系。</translation>
+    </string>
+    <string name="language_models_unavailable">
+        <translation locale="en">Dictionary version lookup is unavailable.</translation>
+        <translation locale="zh-Hant">目前無法查詢字典版本。</translation>
+    </string>
+
+    <string name="language_models_details">
+        <translation locale="en">View observed model loads</translation>
+        <translation locale="zh-Hant">查看實際載入紀錄</translation>
+    </string>
+    <string name="language_models_details_help">
+        <translation locale="en">Confirmed loads and engine submission status.</translation>
+        <translation locale="zh-Hant">已確認的載入及引擎提交狀態。</translation>
+    </string>
+    <string name="language_models_nwp_ready">
+        <translation locale="en">Native NWP engine confirmed Ready</translation>
+        <translation locale="zh-Hant">原生 NWP 引擎已確認 Ready</translation>
+    </string>
+    <string name="language_models_disabled">
+        <translation locale="en">Disabled</translation>
+        <translation locale="zh-Hant">停用</translation>
+    </string>
+    <string name="language_models_expected_version">
+        <translation locale="en">The selected catalog specifies %1$d. Sync may still be pending, or another source may be active. Reopen the keyboard after sync.</translation>
+        <translation locale="zh-Hant">所選清單的語言包版本為 %1$d。可能仍在同步或由其他來源提供；同步後請重開鍵盤再確認。</translation>
+    </string>
+    <string name="language_models_detection_scope">
+        <translation locale="en">Detection coverage</translation>
+        <translation locale="zh-Hant">載入偵測範圍</translation>
+    </string>
+    <string name="language_models_detection_scope_help">
+        <translation locale="en">Native load observation is available for HMM, Delight, NWP and key correction. Key-correction resource versions are identified by reviewed file SHA-256 values. Mozc main/spellchecker, Grammar, Lang-id and SAFT currently provide configuration selection without native version detection.</translation>
+        <translation locale="zh-Hant">可偵測 HMM、Delight、NWP 及按鍵修正的原生載入；按鍵修正資源版號以已核對的檔案 SHA-256 識別。Mozc 主資料／拼寫校正、Grammar、Lang-id、SAFT 目前提供配置選擇，尚未偵測原生載入版號。</translation>
+    </string>
+    <string name="gboard_patches_group_more_title">
+        <translation locale="en">More settings</translation>
+        <translation locale="zh-Hant">更多設定</translation>
+    </string>
+    <string name="gboard_patches_group_more_summary">
+        <translation locale="en">FTP Server, settings style, backup and restore, and developer options.</translation>
+        <translation locale="zh-Hant">FTP 伺服器、設定樣式、備份與還原、開發人員選項。</translation>
+    </string>
+    <string name="gboard_patches_group_more_empty_title">
+        <translation locale="en">No additional settings available</translation>
+        <translation locale="zh-Hant">沒有可用的其他設定</translation>
+    </string>
+    <string name="gboard_patches_group_more_empty_summary">
+        <translation locale="en">This build does not include any additional settings features.</translation>
+        <translation locale="zh-Hant">這個 build 沒有包含其他設定功能。</translation>
+    </string>
+    <string name="language_models_observation_title">
+        <translation locale="en">Detect loaded models</translation>
+        <translation locale="zh-Hant">載入紀錄偵測</translation>
+    </string>
+    <string name="language_models_observation_help">
+        <translation locale="en">Enabling restarts Gboard once to detect fresh model loads. Then open the keyboard preview.</translation>
+        <translation locale="zh-Hant">開啟時會自動重新啟動 Gboard 一次，以偵測新的模型載入；接著請開啟鍵盤預覽。</translation>
+    </string>
+    <string name="language_models_observation_wait_title">
+        <translation locale="en">Waiting for model loads</translation>
+        <translation locale="zh-Hant">等待模型載入</translation>
+    </string>
+    <string name="language_models_observation_off">
+        <translation locale="en">Detection is off. Enable it to inspect the resources loaded by your keyboard.</translation>
+        <translation locale="zh-Hant">偵測已關閉。開啟後即可查看鍵盤實際載入的資源。</translation>
+    </string>
+    <string name="language_models_observation_wait">
+        <translation locale="en">Waiting for model loads. Open the keyboard preview below; new observations appear here automatically. If none appear, use Restart Gboard above and open the preview again.</translation>
+        <translation locale="zh-Hant">尚未收到模型載入事件。請用右下角開啟鍵盤預覽，新紀錄會自動顯示在此頁；若仍無紀錄，請按右上角重新啟動 Gboard 後再開啟預覽。</translation>
+    </string>
+    <string name="language_models_observation_restart_failed">
+        <translation locale="en">Detection is enabled, but Gboard could not restart automatically. Use Restart Gboard above, then open the keyboard preview.</translation>
+        <translation locale="zh-Hant">偵測已開啟，但無法自動重新啟動 Gboard。請按右上角重新啟動 Gboard，再開啟鍵盤預覽。</translation>
+    </string>
 </settings-text>

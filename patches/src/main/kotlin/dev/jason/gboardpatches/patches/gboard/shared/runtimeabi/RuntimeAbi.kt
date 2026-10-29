@@ -1,6 +1,15 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->applyOverriddenFlagValue(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+    LANGUAGE_MODELS_RUNTIME_RESTRICT_NWP_CACHED_PACK("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->restrictNwpCachedPack(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+    LANGUAGE_MODELS_RUNTIME_AFTER_HMM_ENROLL("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->afterHmmEnroll(Ljava/lang/Object;Ljava/lang/String;Z)V"),
+    LANGUAGE_MODELS_RUNTIME_AFTER_LANGUAGE_MODEL_LOAD("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->afterLanguageModelLoad(Ljava/lang/Object;Ljava/lang/Object;Z)V"),
+    LANGUAGE_MODELS_RUNTIME_AFTER_LANGUAGE_MODEL_UNLOAD("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->afterLanguageModelUnload(Ljava/lang/Object;Ljava/lang/Object;Z)V"),
+    LANGUAGE_MODELS_RUNTIME_AFTER_ENGINE_ADDED("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->afterEngineAdded(Ljava/lang/Object;Ljava/lang/Object;)V"),
+    LANGUAGE_MODELS_RUNTIME_AFTER_ENGINE_REMOVED("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->afterEngineRemoved(Ljava/lang/Object;Ljava/lang/Object;)V"),
+    LANGUAGE_MODELS_RUNTIME_BEFORE_DECODER_RESET("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->beforeDecoderReset(Ljava/lang/Object;)V"),
+
     CLIPBOARD_RUNTIME_ABORT_ITEM_BIND("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->abortItemBind()V"),
     CLIPBOARD_RUNTIME_RESOLVE_COLUMN_COUNT("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->resolveColumnCount(Ljava/lang/Object;I)I"),
     CLIPBOARD_RUNTIME_AFTER_LAYOUT("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->afterLayout(Ljava/lang/Object;)V"),
@@ -114,6 +123,8 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     ROUNDED_KEYBOARD_RUNTIME_RESOLVE_EFFECTIVE_RADII_DP("Ldev/jason/gboardpatches/extension/roundedkeyboard/GboardRoundedKeyboardRuntime;->resolveEffectiveRadiiDp(Ljava/lang/String;)[F"),
     SETTINGS_HOMEPAGE_RUNTIME_APPLY_SETTINGS_HOMEPAGE_POLICY("Ldev/jason/gboardpatches/extension/settingshomepage/GboardSettingsHomepageRuntime;->applySettingsHomepagePolicy(Ljava/lang/Object;)V"),
     SPLIT_KEYBOARD_RUNTIME_APPLY_ACCESS_POINT_STATE("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->applyAccessPointState(Ljava/lang/String;I)I"),
+    SPLIT_KEYBOARD_RUNTIME_APPLY_DEVICE_ELIGIBILITY("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->applyDeviceEligibility(Z)Z"),
+    SPLIT_KEYBOARD_RUNTIME_APPLY_WIDTH_ELIGIBILITY("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->applyWidthEligibility(ZZZI)Z"),
     SPLIT_KEYBOARD_RUNTIME_AFTER_MODE_ENVIRONMENT_CHANGED("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->afterModeEnvironmentChanged(Ljava/lang/Object;)V"),
     SPLIT_KEYBOARD_RUNTIME_INCLUDE_ACCESS_POINT_IN_ORDER("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->includeAccessPointInOrder(Ljava/lang/Object;)Ljava/lang/Object;"),
     SPLIT_KEYBOARD_RUNTIME_INTERCEPT_SPLIT_ACTION("Ldev/jason/gboardpatches/extension/splitkeyboard/GboardSplitKeyboardRuntime;->interceptSplitAction(Ljava/lang/Object;)Z"),

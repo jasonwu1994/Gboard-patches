@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.patches.gboard.features.rambler
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
 import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 import dev.jason.gboardpatches.patches.gboard.shared.GboardMethodTarget
 import dev.jason.gboardpatches.patches.gboard.shared.addHelperMethodIfMissing
@@ -21,6 +22,10 @@ internal val gboardRambler1803OfficialSelectorPatch = bytecodePatch(
     compatibleWith(COMPATIBILITY_GBOARD)
     dependsOn(gboardPatchesExtensionCarrierPatch)
     execute {
+        val cleanupClasses = mutableListOf<ClassDef>()
+        classDefForEach { cleanupClasses.add(it) }
+        GboardMethodTarget("Lflb;", "i", listOf("Z"), "V").resolve(this)
+            .preservePendingRamblerResetCleanup(cleanupClasses)
         val targets = listOf(
             GboardMethodTarget(VOICE, "aC", emptyList(), "I"),
             GboardMethodTarget(VOICE, "ac", emptyList(), "V"),

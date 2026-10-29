@@ -16,6 +16,7 @@ import dev.jason.gboardpatches.extension.lanftp.config.LanFtpPreferences;
 import dev.jason.gboardpatches.extension.lanftp.runtime.LanFtpSessionInfo;
 import dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity;
+import dev.jason.gboardpatches.extension.settings.GboardMoreSettingsGroupFeature;
 
 /** The single control seam for LAN FTP callers outside the runtime implementation. */
 public final class LanFtpServerController {
@@ -164,6 +165,7 @@ public final class LanFtpServerController {
         Intent intent = new Intent(context, GboardPatchesSettingsActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         ArrayList<String> path = new ArrayList<>();
+        path.add(GboardMoreSettingsGroupFeature.class.getName());
         path.add(GboardLanFtpSettingsFeature.class.getName());
         intent.putStringArrayListExtra(GboardPatchesSettingsActivity.EXTRA_NAVIGATION_PATH, path);
         return intent;

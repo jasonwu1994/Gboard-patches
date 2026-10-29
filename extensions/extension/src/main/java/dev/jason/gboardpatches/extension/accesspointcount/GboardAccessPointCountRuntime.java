@@ -10,6 +10,10 @@ public final class GboardAccessPointCountRuntime {
 
     public static Object applyFlagValue(String flagName, Object stockResult) {
         try {
+            if (!GboardAccessPointCountPolicy.isTargetFlagName(flagName)
+                    || !(stockResult instanceof Long)) {
+                return stockResult;
+            }
             return applyFlagValue(
                     flagName,
                     stockResult,

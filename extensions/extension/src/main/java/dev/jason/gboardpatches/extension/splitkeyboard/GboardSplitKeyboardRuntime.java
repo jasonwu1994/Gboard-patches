@@ -19,6 +19,25 @@ public final class GboardSplitKeyboardRuntime {
     private GboardSplitKeyboardRuntime() {
     }
 
+    public static boolean applyDeviceEligibility(boolean stockEligible) {
+        if (stockEligible) {
+            return true;
+        }
+        try {
+            SharedPreferences preferences = GboardFlagRuntimeContext.preferencesOrNull();
+            return preferences != null && GboardSplitKeyboardPolicy.resolveDeviceEligibility(
+                    stockEligible, GboardSplitKeyboardSettings.readEnabled(preferences));
+        } catch (Throwable unavailable) {
+            return stockEligible;
+        }
+    }
+
+    public static boolean applyWidthEligibility(boolean stockEligible,
+            boolean stockDeviceEligible, boolean admittedDeviceEligible, int availableWidth) {
+        return GboardSplitKeyboardPolicy.resolveWidthEligibility(
+                stockEligible, stockDeviceEligible, admittedDeviceEligible, availableWidth);
+    }
+
     public static int applyAccessPointState(String accessPointName, int stockState) {
         try {
             SharedPreferences preferences = GboardFlagRuntimeContext.preferencesOrNull();

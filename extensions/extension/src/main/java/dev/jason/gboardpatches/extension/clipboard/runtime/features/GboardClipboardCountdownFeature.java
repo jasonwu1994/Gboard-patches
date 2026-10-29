@@ -1,5 +1,7 @@
 package dev.jason.gboardpatches.extension.clipboard;
 
+import android.widget.TextView;
+
 final class GboardClipboardCountdownFeature {
     private final GboardClipboardRuntimeSupport support;
     private final GboardClipboardRetentionFeature retentionFeature;
@@ -16,7 +18,9 @@ final class GboardClipboardCountdownFeature {
             if (binding == null || settings == null) {
                 return Boolean.FALSE;
             }
-            if (!settings.showExpiryCountdown || binding.pinned || binding.special) {
+            TextView view = binding.textView();
+            if (!settings.showExpiryCountdown || binding.pinned || binding.special
+                    || binding.clipboardTtlMs < 0L || !binding.isVisible(view)) {
                 return Boolean.FALSE;
             }
             long remainingMs = retentionFeature.remainingMs(binding.clipTimestamp,
@@ -25,7 +29,7 @@ final class GboardClipboardCountdownFeature {
                 return Boolean.FALSE;
             }
             return Boolean.valueOf(
-                    support.activeCountdownByTextView.get(binding.textView) == binding);
+                    support.activeCountdownByTextView.get(view) == binding);
         }, Boolean.FALSE).booleanValue();
     }
 
@@ -47,8 +51,9 @@ final class GboardClipboardCountdownFeature {
 
             long remainingMs = retentionFeature.remainingMs(binding.clipTimestamp,
                     binding.clipboardTtlMs);
-            long primaryTimestamp = support.readPrimaryTimestamp(handles,
-                    binding.textView.getContext());
+            TextView view = binding.textView();
+            long primaryTimestamp = view == null ? 0L : support.readPrimaryTimestamp(handles,
+                    view.getContext());
             boolean isPrimary = primaryTimestamp == binding.clipTimestamp
                     && primaryTimestamp > 0L;
             long remainingSeconds = Math.max(0L, (remainingMs + 999L) / 1000L);

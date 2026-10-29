@@ -96,6 +96,19 @@ import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhu
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
+@Suppress("unused")
+val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
+    featureId = "language_model_versions",
+    name = "Dictionaries & Predictions",
+    description = "可選擇字典、預測及輸入修正的資源版本\nChoose resource versions for dictionaries, predictions, and input correction.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelResourcesPatch)
+}
+
 private fun gboardPublicResourcePatch(
     featureId: String,
     name: String,
@@ -883,6 +896,7 @@ object GboardPublishedPatchCatalog {
         gboardInlineSuggestionsFlagPatch,
         gboardKeyShapeSelectionFlagPatch,
         gboardAiWritingToolsPatch,
+        gboardLanguageModelVersionsPatch,
         gboardOcrScanTextPatch,
         gboardSettingsHomepagePatch,
         gboardLatinGlobeKeyIgnoreIntervalPatch,

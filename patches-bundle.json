@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-26T06:43:45",
-  "description": "### 🚀 Updated App Support\n\n* **Gboard:** update the supported Gboard version to `18.5.4.993608717-release-arm64-v8a`.\n\n### 🚀 支援版本更新\n\n* **Gboard:** 更新支援的 Gboard 版本至 `18.5.4.993608717-release-arm64-v8a`。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.0.0-dev.5/patches-4.0.0-dev.5.mpp",
+  "created_at": "2026-10-29T02:16:02",
+  "description": "### ✨ New Features\n\n* **Gboard:** add the Dictionaries & Predictions patch to customize resource versions for dictionaries, text predictions, and input correction models, greatly improving the typing experience.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix the lingering colored light bar and missing word suggestions after official Rambler voice input ends.\n* **Gboard:** fix duplicate countdown updates and card recycling issues when clipboard items are hidden or kept permanently, and reduce unnecessary settings reads to lower resource usage.\n* **Gboard:** fix the Split Keyboard patch so the split state is preserved after closing and reopening the keyboard.\n\n### ✨ 新功能\n\n* **Gboard:** 新增Dictionaries & Predictions Patch，可自訂字典、文字預測與輸入修正的模型資源版本，將大幅提升輸入體驗。\n\n### 🐛 修復\n\n* **Gboard:** 修復官方 Rambler 語音輸入結束後，彩色光帶殘留及候選字詞消失的問題。\n* **Gboard:** 修復剪貼簿隱藏與永久保留時的重複倒數更新及卡片回收問題，並減少不必要的設定讀取，降低額外資源消耗。\n* **Gboard:** 修復「分離式鍵盤」(split keyboard) Patch 在關閉並重新開啟鍵盤後，無法保留分離狀態的問題。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.0-dev.1/patches-4.1.0-dev.1.mpp",
   "signature_download_url": "",
-  "version": "4.0.0-dev.5"
+  "version": "4.1.0-dev.1"
 }

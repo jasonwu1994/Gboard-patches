@@ -1,8 +1,10 @@
 package dev.jason.gboardpatches.extension.clipboard;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,6 +76,18 @@ final class GboardClipboardUiHookAdapter {
 
     void onCountdownTick(GboardClipboardRuntimeSupport.CountdownBinding binding) {
         support.runSafely("update clipboard countdown label", () -> {
+            TextView view = binding.textView();
+            if (binding.disposed || view == null
+                    || support.activeCountdownByTextView.get(view) != binding) return;
+            if (!view.isAttachedToWindow()) {
+                binding.onViewDetachedFromWindow(view);
+                return;
+            }
+            if (!binding.isVisible(view)) {
+                view.removeCallbacks(binding);
+                binding.wasVisible = false;
+                return;
+            }
             updateClipboardMetadataLabel(binding);
         });
     }
@@ -181,6 +195,7 @@ final class GboardClipboardUiHookAdapter {
         GboardClipboardRuntimeSupport.CountdownBinding binding =
                 new GboardClipboardRuntimeSupport.CountdownBinding(
                         this,
+                        support,
                         handles,
                         textView,
                         originalText,
@@ -191,6 +206,7 @@ final class GboardClipboardUiHookAdapter {
                         settings.clipboardTtlMs,
                         clipOrder);
         support.activeCountdownByTextView.put(textView, binding);
+        binding.watch(textView);
         updateClipboardMetadataLabel(binding);
         scheduleVisibleOrderIndexRefresh(receiver, textView);
         support.logLimited(support.countdownBindCount, 30,
@@ -205,21 +221,23 @@ final class GboardClipboardUiHookAdapter {
 
     private void updateClipboardMetadataLabel(GboardClipboardRuntimeSupport.CountdownBinding binding)
             throws Throwable {
+        TextView textView = binding.textView();
+        if (textView == null || binding.disposed) return;
         GboardClipboardRuntimeSupport.CountdownBinding activeBinding =
-                support.activeCountdownByTextView.get(binding.textView);
+                support.activeCountdownByTextView.get(textView);
         if (activeBinding != binding) {
             return;
         }
 
         GboardClipboardRuntimeSupport.RuntimeSettings settings = support.runtimeSettings();
         if (!settings.enabled) {
-            previewLinesFeature.restoreStockMaxLines(binding.textView);
-            clearCountdownBinding(binding.textView);
+            previewLinesFeature.restoreStockMaxLines(textView);
+            clearCountdownBinding(textView);
             return;
         }
-        previewLinesFeature.applyConfiguredMaxLines(binding.textView, -1, settings);
+        previewLinesFeature.applyConfiguredMaxLines(textView, -1, settings);
         if (!settings.showExpiryCountdown && !settings.showCreationTime && binding.clipOrder <= 0) {
-            clearCountdownBinding(binding.textView);
+            clearCountdownBinding(textView);
             return;
         }
 
@@ -233,11 +251,11 @@ final class GboardClipboardUiHookAdapter {
             renderedText = metadataLine + "\n" + binding.originalText;
         }
         binding.renderedText = renderedText;
-        binding.textView.setText(renderedText);
+        if (!TextUtils.equals(textView.getText(), renderedText)) textView.setText(renderedText);
 
-        binding.textView.removeCallbacks(binding);
+        textView.removeCallbacks(binding);
         if (countdownFeature.shouldContinueUpdates(binding, settings)) {
-            binding.textView.postDelayed(binding,
+            textView.postDelayed(binding,
                     GboardClipboardRuntimeSupport.COUNTDOWN_UPDATE_INTERVAL_MS);
         }
     }
@@ -346,6 +364,11 @@ final class GboardClipboardUiHookAdapter {
     private void clearCountdownBinding(TextView textView) {
         GboardClipboardRuntimeSupport.CountdownBinding previousBinding =
                 support.activeCountdownByTextView.get(textView);
+        if (previousBinding == null) {
+            WeakReference<GboardClipboardRuntimeSupport.CountdownBinding> detached =
+                    support.detachedCountdownByTextView.get(textView);
+            previousBinding = detached == null ? null : detached.get();
+        }
         clearCountdownBinding(textView, previousBinding == null
                 ? null
                 : Long.valueOf(previousBinding.clipId));
@@ -354,8 +377,11 @@ final class GboardClipboardUiHookAdapter {
     private void clearCountdownBinding(TextView textView, Long nextClipId) {
         GboardClipboardRuntimeSupport.CountdownBinding previousBinding =
                 support.activeCountdownByTextView.remove(textView);
+        WeakReference<GboardClipboardRuntimeSupport.CountdownBinding> detached =
+                support.detachedCountdownByTextView.remove(textView);
+        if (previousBinding == null && detached != null) previousBinding = detached.get();
         if (previousBinding != null) {
-            textView.removeCallbacks(previousBinding);
+            previousBinding.dispose(textView);
             CharSequence currentText = textView.getText();
             // An after-bind callback cannot distinguish a same-ID stock rewrite to identical
             // bytes from a repeated callback. Same-ID restoration keeps repeated binds idempotent.
@@ -379,7 +405,7 @@ final class GboardClipboardUiHookAdapter {
         if (binding == null) {
             return;
         }
-        scheduleVisibleOrderIndexRefresh(receiver, binding.textView);
+        scheduleVisibleOrderIndexRefresh(receiver, binding.textView());
     }
 
     private void scheduleVisibleOrderIndexRefresh(Object receiver, TextView anchorView) {
@@ -480,7 +506,7 @@ final class GboardClipboardUiHookAdapter {
                     visibleClipCount,
                     visibleIndex,
                     settings.clipboardOrderIndexMode);
-            updateClipboardMetadataLabel(binding);
+            if (binding.isVisible(binding.textView())) updateClipboardMetadataLabel(binding);
         }
     }
 
@@ -501,7 +527,7 @@ final class GboardClipboardUiHookAdapter {
         synchronized (support.activeCountdownByTextView) {
             for (GboardClipboardRuntimeSupport.CountdownBinding binding
                     : support.activeCountdownByTextView.values()) {
-                if (binding != null) {
+                if (binding != null && binding.textView() != null) {
                     return binding;
                 }
             }
@@ -511,7 +537,7 @@ final class GboardClipboardUiHookAdapter {
 
     private TextView firstActiveBindingTextView() {
         GboardClipboardRuntimeSupport.CountdownBinding binding = firstActiveBinding();
-        return binding == null ? null : binding.textView;
+        return binding == null ? null : binding.textView();
     }
 
     private void restoreAdapterAfterStockLiveTrim(

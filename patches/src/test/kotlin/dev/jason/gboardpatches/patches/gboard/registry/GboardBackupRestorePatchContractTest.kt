@@ -120,7 +120,7 @@ class GboardBackupRestorePatchContractTest {
             "patches/src/main/resources/gboard/gboard-port-product-catalog.json"
         const val SETTINGS_REGISTRY_PATH =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
-                "GboardPatchesSettingsFeatureRegistry.java"
+                "GboardMoreSettingsGroupFeature.java"
         const val SETTINGS_TEXT_PATH =
             "extensions/extension/src/main/settings-text/gboard_settings_text.xml"
     }

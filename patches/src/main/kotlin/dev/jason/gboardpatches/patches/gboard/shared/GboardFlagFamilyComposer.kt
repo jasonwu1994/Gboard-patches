@@ -28,6 +28,11 @@ internal enum class GboardFlagFamilyFeature(
     val runtimeCall: RuntimeCallId,
     val argumentShape: GboardFlagFamilyArgumentShape,
 ) {
+    LANGUAGE_MODELS(
+        5,
+        RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.RECEIVER_AND_RESULT,
+    ),
     DEVICE_INTELLIGENCE(
         10,
         RuntimeCallId.DEVICE_INTELLIGENCE_RUNTIME_APPLY_FLAG_VALUE,
@@ -227,6 +232,7 @@ private data class GboardFlagFamilyTransformationPlan(
             receiverPreservationIndex,
             "move-object v$RECEIVER_SCRATCH_REGISTER, p0",
         )
+        method.protectLanguageModelFlagCalls()
     }
 
     companion object {
@@ -327,7 +333,7 @@ private data class GboardFlagFamilyTransformationPlan(
                         familyCallIndices = familyCallIndices,
                         registers = registers,
                         resultMaterializationIndex = resultMaterializationIndex,
-                    ) -> GboardFlagFamilyTransformationState.PATCHED
+                    ) && method.hasLanguageModelFlagGuards() -> GboardFlagFamilyTransformationState.PATCHED
                 else -> error(
                     "Malformed or extraneous flag-family transformation before mutation: " +
                         "receiverMoves=$receiverMoves, familyCalls=$familyCallIndices, " +
@@ -348,6 +354,36 @@ private data class GboardFlagFamilyReturnPlan(
     val returnIndex: Int,
     val delegate: String,
 )
+
+/** Ignore an extension linkage/initialization failure without clobbering the three live registers. */
+internal fun MutableMethod.protectLanguageModelFlagCalls() {
+    val code = checkNotNull(implementation)
+    val calls = code.instructions.indices.filter { index ->
+        code.instructions[index].runtimeCallId() == RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE
+    }
+    calls.forEach { index ->
+        check(code.instructions[index + 1].opcode.name.normalized() == "MOVE_RESULT_OBJECT")
+        val resume = code.newLabelForIndex(index + 2)
+        code.addCatch("Ljava/lang/Throwable;", code.newLabelForIndex(index), resume, resume)
+    }
+}
+
+private fun MutableMethod.hasLanguageModelFlagGuards(): Boolean {
+    val code = checkNotNull(implementation)
+    val instructions = code.instructions
+    return instructions.indices.filter { index ->
+        instructions[index].runtimeCallId() == RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE
+    }.all { index ->
+        val start = instructions.take(index).sumOf { it.codeUnits }
+        val end = start + instructions.drop(index).take(2).sumOf { it.codeUnits }
+        code.tryBlocks.count { block ->
+            block.startCodeAddress == start && block.codeUnitCount == end - start &&
+                block.exceptionHandlers.singleOrNull()?.let { handler ->
+                    handler.exceptionType == "Ljava/lang/Throwable;" && handler.handlerCodeAddress == end
+                } == true
+        } == 1
+    }
+}
 
 private fun com.android.tools.smali.dexlib2.iface.instruction.Instruction
     .isReceiverPreservationMove(receiverRegister: Int): Boolean {
@@ -536,6 +572,10 @@ private fun MethodReference.matches(abi: RuntimeAbi): Boolean =
 private fun String.normalized(): String = uppercase().replace('-', '_').replace('/', '_')
 
 private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): String = when (call) {
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+        registers,
+    )
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
         RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
         registers,
@@ -626,6 +666,7 @@ private const val FORMAL_18_0_3_REGISTER_COUNT = 3
 private const val MAX_MOVE_RESULT_OBJECT_REGISTER = 255
 
 private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESSIBILITY_LAYOUT_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINTS_MENU_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,

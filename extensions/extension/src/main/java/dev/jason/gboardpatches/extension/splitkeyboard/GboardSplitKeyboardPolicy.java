@@ -12,6 +12,15 @@ public final class GboardSplitKeyboardPolicy {
     private GboardSplitKeyboardPolicy() {
     }
 
+    public static boolean resolveDeviceEligibility(boolean stockEligible, boolean enabled) {
+        return stockEligible || enabled;
+    }
+
+    public static boolean resolveWidthEligibility(boolean stockEligible,
+            boolean stockDeviceEligible, boolean admittedDeviceEligible, int availableWidth) {
+        return stockEligible || (!stockDeviceEligible && admittedDeviceEligible && availableWidth > 0);
+    }
+
     public static int forceAccessPointState(
             String accessPointName, int stockState, boolean enabled) {
         return enabled

@@ -86,6 +86,8 @@ public final class GboardPatchesFeatureAvailability {
     public static final String FEATURE_SWIPE_DISMISS =
             "dev.jason.gboardpatches.feature.swipe_dismiss";
 
+    public static final String FEATURE_LANGUAGE_MODELS = "dev.jason.gboardpatches.feature.language_models";
+
     private static final String TAG = "GboardPatches";
 
     private GboardPatchesFeatureAvailability() {

@@ -65,7 +65,8 @@ class GboardLanFtpManifestPatchTest {
             childElements(tile, "meta-data").map { androidAttribute(it, "name") }.toSet(),
         )
         assertEquals(
-            "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature",
+            "dev.jason.gboardpatches.extension.settings.GboardMoreSettingsGroupFeature;" +
+                "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature",
             childElements(tile, "meta-data").single {
                 androidAttribute(it, "name") ==
                     "dev.jason.gboardpatches.tile.NAVIGATION_PATH"
