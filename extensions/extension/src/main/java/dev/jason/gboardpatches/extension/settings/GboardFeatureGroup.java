@@ -82,7 +82,7 @@ public final class GboardFeatureGroup implements GboardPatchesSettingsContract.F
                                 child.getEntryTitle(),
                                 child.getEntrySummary(),
                                 true,
-                                () -> GboardPatchesSettingsContract.openFeature(host, child));
+                                () -> child.openRootEntry(host));
                 GboardFeatureEntryState state = GboardFeatureEntryState.inspect(child, host);
                 if (state.getMasterToggle() != null) {
                     row.setDecoration(new GboardPatchesSettingsContract.RowDecoration()

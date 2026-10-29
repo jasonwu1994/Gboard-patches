@@ -1,3 +1,13 @@
+## [4.1.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0-dev.1...v4.1.0-dev.2) (2026-10-28)
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix an issue that prevented the Developer options page from opening.
+
+### 🐛 修復
+
+* **Gboard:** 修復無法開啟「開發人員選項」（Developer options）頁面的問題。
+
 ## [4.1.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.0.0...v4.1.0-dev.1) (2026-10-28)
 
 ### ✨ New Features
