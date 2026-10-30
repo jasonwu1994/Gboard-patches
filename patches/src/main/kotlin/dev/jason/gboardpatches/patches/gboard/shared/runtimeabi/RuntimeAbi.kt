@@ -69,6 +69,8 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     FROSTED_GLASS_RUNTIME_ON_INPUT_VIEW_STARTED("Ldev/jason/gboardpatches/extension/frostedglass/GboardFrostedGlassLifecycleRuntime;->onInputViewStarted(Ljava/lang/Object;)V"),
     FROSTED_GLASS_RUNTIME_AFTER_CONFIGURE_WINDOW("Ldev/jason/gboardpatches/extension/frostedglass/GboardFrostedGlassLifecycleRuntime;->afterConfigureWindow(Landroid/view/Window;ZZ)V"),
     FROSTED_GLASS_RUNTIME_ON_INPUT_WINDOW_HIDDEN("Ldev/jason/gboardpatches/extension/frostedglass/GboardFrostedGlassLifecycleRuntime;->onInputWindowHidden(Ljava/lang/Object;)V"),
+    FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_ENTRY("Ldev/jason/gboardpatches/extension/frostedglass/GboardFrostedGlassLifecycleRuntime;->onApplyNavBarEntry(Landroid/view/Window;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+    FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_EXIT("Ldev/jason/gboardpatches/extension/frostedglass/GboardFrostedGlassLifecycleRuntime;->onApplyNavBarExit(Ljava/lang/Object;)V"),
     CLIPBOARD_CONTENT_LIMIT_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE("Ldev/jason/gboardpatches/extension/clipboardcontentlimit/GboardClipboardContentLimitRuntime;->applyOverriddenFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     CLOSE_PROACTIVE_SUGGESTIONS_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/closeproactivesuggestions/GboardCloseProactiveSuggestionsRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     CLIPBOARD_RUNTIME_AFTER_ADAPTER_TRIM("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->afterAdapterTrim(Ljava/lang/Object;)V"),

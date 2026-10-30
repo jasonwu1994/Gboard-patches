@@ -51,7 +51,7 @@ class GboardPortProductCatalogContractTest {
     @Test
     fun catalogIsDeterministicAndDeclaresSelectedOnlyZeroSelectionComposition() {
         assertEquals("gboard-port-product-catalog.v1", catalog["format"].asString)
-        assertEquals("1.19.0", catalog["catalog_version"].asString)
+        assertEquals("1.20.0", catalog["catalog_version"].asString)
         val composition = catalog.getAsJsonObject("composition")
         assertEquals(
             setOf("selected_only_call_chain", "runtime_feature_mask"),
@@ -74,6 +74,17 @@ class GboardPortProductCatalogContractTest {
             StandardCharsets.UTF_8,
         ).trim()
         assertEquals(expectedDigest, sha256(normalizedCatalogBytes()))
+    }
+
+    @Test
+    fun frostedNavigationDeclaresItsModelAndBothRuntimeDelegates() {
+        val feature = features().single { it["feature_id"].asString == "frosted_glass" }
+        val contribution = feature.getAsJsonArray("contributions").single().asJsonObject
+        assertTrue(contribution.getAsJsonArray("required_bindings").map { it.asString }.containsAll(
+            listOf("frosted_nav_apply", "frosted_nav_params_constructor", "frosted_nav_color",
+                "frosted_nav_divider", "frosted_nav_body", "frosted_nav_header", "frosted_nav_light")))
+        assertTrue(contribution.getAsJsonArray("runtime_calls").map { it.asString }.containsAll(
+            listOf("FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_ENTRY", "FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_EXIT")))
     }
 
     @Test
@@ -148,7 +159,7 @@ class GboardPortProductCatalogContractTest {
     }
 
     @Test
-    fun admittedBindingUnionExactlyMatchesTheAuthoritative1853Profile() {
+    fun admittedBindingUnionExactlyMatchesTheAuthoritative1854Profile() {
         val bindingProfile = JsonParser.parseString(
             Files.readString(
                 repositoryRoot().resolve(BINDINGS_PATH),
@@ -176,7 +187,7 @@ class GboardPortProductCatalogContractTest {
                 }
         }.toSet()
 
-        assertEquals(231, authoritativeKeys.size)
+        assertEquals(238, authoritativeKeys.size)
         assertEquals(authoritativeKeys, requiredKeys)
         assertEquals(
             authoritativeKinds,

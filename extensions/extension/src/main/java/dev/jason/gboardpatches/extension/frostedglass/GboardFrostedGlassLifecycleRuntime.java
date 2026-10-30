@@ -14,4 +14,12 @@ public final class GboardFrostedGlassLifecycleRuntime {
     public static void onInputWindowHidden(Object receiver) {
         GboardFrostedGlassRuntime.onWindowHidden(receiver);
     }
+    /** Entry of the 18.5.4 nav-bar styling method; returns the model to apply. */
+    public static Object onApplyNavBarEntry(Window window, Object owner, Object params) {
+        return GboardSeamlessNavBarRuntime.onApplyNavBarEntry(window, owner, params);
+    }
+    /** Before each return of the nav-bar styling method. */
+    public static void onApplyNavBarExit(Object params) {
+        GboardSeamlessNavBarRuntime.onApplyNavBarExit(params);
+    }
 }

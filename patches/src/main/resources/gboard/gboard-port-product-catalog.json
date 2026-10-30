@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.19.0",
+  "catalog_version": "1.20.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -120,6 +120,13 @@
     "flag_name_field": "field",
     "frosted_configure": "method",
     "frosted_hidden": "method",
+    "frosted_nav_apply": "method",
+    "frosted_nav_body": "field",
+    "frosted_nav_color": "field",
+    "frosted_nav_divider": "field",
+    "frosted_nav_header": "field",
+    "frosted_nav_light": "field",
+    "frosted_nav_params_constructor": "method",
     "frosted_shown": "method",
     "gesture_dispatch": "method",
     "gesture_dispatcher_type": "type",
@@ -1243,12 +1250,21 @@
           "required_bindings": [
             "frosted_configure",
             "frosted_hidden",
+            "frosted_nav_apply",
+            "frosted_nav_body",
+            "frosted_nav_color",
+            "frosted_nav_divider",
+            "frosted_nav_header",
+            "frosted_nav_light",
+            "frosted_nav_params_constructor",
             "frosted_shown"
           ],
           "runtime_calls": [
             "FROSTED_GLASS_RUNTIME_ON_INPUT_VIEW_STARTED",
             "FROSTED_GLASS_RUNTIME_AFTER_CONFIGURE_WINDOW",
-            "FROSTED_GLASS_RUNTIME_ON_INPUT_WINDOW_HIDDEN"
+            "FROSTED_GLASS_RUNTIME_ON_INPUT_WINDOW_HIDDEN",
+            "FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_ENTRY",
+            "FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_EXIT"
           ]
         }
       ]

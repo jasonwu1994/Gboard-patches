@@ -25,6 +25,10 @@ final class GboardFrostedGlassShape {
         bottomRight = br;
     }
 
+    static GboardFrostedGlassShape rectangle(Rect bounds) {
+        return new GboardFrostedGlassShape(bounds, 0, 0, 0, 0);
+    }
+
     static GboardFrostedGlassShape resolve(View view, Drawable original) {
         if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
         ViewOutlineProvider provider = view.getOutlineProvider();
@@ -88,6 +92,10 @@ final class GboardFrostedGlassShape {
 
     boolean isUniform() {
         return topLeft == topRight && topLeft == bottomLeft && topLeft == bottomRight;
+    }
+
+    GboardFrostedGlassShape withoutBottomCorners() {
+        return new GboardFrostedGlassShape(bounds, topLeft, topRight, 0, 0);
     }
 
     float[] pathRadii() {

@@ -44,4 +44,27 @@ public final class GboardFrostedGlassSettingsRuntime {
         }
         return -1;
     }
+
+    /** Key background alpha 0–255, or -1 to follow the theme. */
+    public static int customKeyOpacity() {
+        try {
+            SharedPreferences p = prefs();
+            if (GboardFrostedGlassSettings.TRANSPARENCY_MODE_CUSTOM.equals(
+                    GboardFrostedGlassSettings.readKeyTransparencyMode(p))) {
+                return Math.round((100 - GboardFrostedGlassSettings.readKeyCustomOpacity(p)) * 255f / 100f);
+            }
+        } catch (Throwable ignored) {
+            // Fall through to theme key transparency when preferences are unavailable.
+        }
+        return -1;
+    }
+
+    public static boolean isSeamlessNavBarEnabled() {
+        try {
+            SharedPreferences p = prefs();
+            return p != null && GboardFrostedGlassSettings.readSeamlessNavBarEnabled(p);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
 }

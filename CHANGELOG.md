@@ -1,3 +1,23 @@
+## [4.1.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0-dev.2...v4.1.0-dev.3) (2026-10-30)
+
+### ✨ New Features
+
+* **Gboard:** add Key Opacity to Frosted Glass, allowing keys to follow the theme or use a custom percentage independently of background opacity.
+* **Gboard:** add Extend to Navigation Bar to Frosted Glass, extending the blur effect into the bottom navigation area for a seamless appearance and automatically adjusting navigation button colors.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** reduce excessive power consumption in Frosted Glass by eliminating redundant calculations during drawing and layout updates.
+
+### ✨ 新功能
+
+* **Gboard:** 磨砂玻璃新增「按鍵透明度」設定，可跟隨主題或自訂百分比，並與背景透明度分開調整。
+* **Gboard:** 磨砂玻璃新增「延伸到導覽列」設定，將模糊效果延伸至底部導覽區，讓鍵盤與導覽列融為一體，並自動調整導覽按鈕的顏色。
+
+### 🐛 修復
+
+* **Gboard:** 修復磨砂玻璃耗電偏高的問題，移除繪製與重新排版時的重複運算，降低資源消耗。
+
 ## [4.1.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0-dev.1...v4.1.0-dev.2) (2026-10-28)
 
 ### 🐛 Bug Fixes

@@ -25,8 +25,16 @@
         <translation locale="zh-Hant">啟用即時模糊</translation>
     </string>
     <string name="gboard_patches_frosted_glass_enabled_summary">
-        <translation locale="en">Android 12+ devices with supported cross-window blur. Custom themes only, such as Animal Black.</translation>
-        <translation locale="zh-Hant">限 Android 12 以上且裝置支援跨視窗模糊。只支援自訂主題，例如 Animal Black。</translation>
+        <translation locale="en">Requires Android 12 or later and a device that supports cross-window blur.</translation>
+        <translation locale="zh-Hant">限 Android 12 以上且裝置支援跨視窗模糊。</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_transparency_help_title">
+        <translation locale="en">Background transparency and blur</translation>
+        <translation locale="zh-Hant">背景透明度與磨砂效果</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_transparency_help_summary">
+        <translation locale="en">If the theme background is opaque, select Custom under Background transparency below and increase its value to reveal the blur effect. Official themes use opaque backgrounds by default, so their background transparency also needs to be overridden. Changing Key transparency alone does not make the background transparent.</translation>
+        <translation locale="zh-Hant">若主題背景不透明，請將下方「背景透明度」設為「自訂」，並提高透明度，才能顯示磨砂效果。官方主題預設使用不透明背景，也需要覆寫背景透明度。僅調整「按鍵透明度」不會讓背景變透明。</translation>
     </string>
     <string name="gboard_patches_frosted_glass_radius_title">
         <translation locale="en">Blur strength</translation>
@@ -41,12 +49,12 @@
         <translation locale="zh-Hant">輸入強度 1-100</translation>
     </string>
     <string name="gboard_patches_frosted_glass_transparency_title">
-        <translation locale="en">Transparency</translation>
-        <translation locale="zh-Hant">透明度</translation>
+        <translation locale="en">Background transparency</translation>
+        <translation locale="zh-Hant">背景透明度</translation>
     </string>
     <string name="gboard_patches_frosted_glass_transparency_summary">
-        <translation locale="en">Follow the theme or use a custom keyboard value.</translation>
-        <translation locale="zh-Hant">選擇跟隨主題，或使用自訂鍵盤透明度。</translation>
+        <translation locale="en">Follow the theme or set a custom keyboard background transparency.</translation>
+        <translation locale="zh-Hant">選擇跟隨主題，或使用自訂鍵盤背景透明度。</translation>
     </string>
     <string name="gboard_patches_frosted_glass_transparency_theme">
         <translation locale="en">Follow theme</translation>
@@ -57,16 +65,40 @@
         <translation locale="zh-Hant">自訂</translation>
     </string>
     <string name="gboard_patches_frosted_glass_opacity_title">
-        <translation locale="en">Custom opacity</translation>
+        <translation locale="en">Custom transparency</translation>
         <translation locale="zh-Hant">自訂透明度</translation>
     </string>
     <string name="gboard_patches_frosted_glass_opacity_summary">
-        <translation locale="en">Set keyboard background opacity from 0 to 100 percent.</translation>
+        <translation locale="en">Set keyboard background transparency from 0 to 100%.</translation>
         <translation locale="zh-Hant">設定鍵盤背景透明度，範圍為 0 到 100%。</translation>
     </string>
     <string name="gboard_patches_frosted_glass_opacity_hint">
-        <translation locale="en">Enter opacity 0-100%</translation>
+        <translation locale="en">Enter transparency 0-100%</translation>
         <translation locale="zh-Hant">輸入透明度 0-100%</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_key_transparency_title">
+        <translation locale="en">Key transparency</translation>
+        <translation locale="zh-Hant">按鍵透明度</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_key_transparency_summary">
+        <translation locale="en">Follow the theme or adjust key backgrounds while keeping labels and icons clear.</translation>
+        <translation locale="zh-Hant">選擇跟隨主題，或調整按鍵背景透明度，保留文字與圖示清晰。</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_key_opacity_title">
+        <translation locale="en">Custom transparency</translation>
+        <translation locale="zh-Hant">自訂透明度</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_key_opacity_summary">
+        <translation locale="en">Set key background transparency from 0 to 100%.</translation>
+        <translation locale="zh-Hant">設定按鍵背景透明度，範圍為 0 到 100%。</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_seamless_nav_bar_title">
+        <translation locale="en">Extend to navigation bar</translation>
+        <translation locale="zh-Hant">延伸到導覽列</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_seamless_nav_bar_summary">
+        <translation locale="en">Extend frosted glass into the bottom navigation area and adjust navigation button colors; turn this off if the buttons are hard to see or the bottom area displays incorrectly.</translation>
+        <translation locale="zh-Hant">讓磨砂玻璃延伸到底部導覽區並調整導覽按鈕顏色；若導覽按鈕看不清楚或底部顯示異常，可關閉。</translation>
     </string>
     <string name="gboard_patches_activity_title">
         <translation locale="en">Patches</translation>

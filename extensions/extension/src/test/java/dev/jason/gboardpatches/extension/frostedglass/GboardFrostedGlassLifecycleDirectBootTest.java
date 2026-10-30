@@ -162,5 +162,8 @@ public final class GboardFrostedGlassLifecycleDirectBootTest {
         @Implementation public static boolean isEnabled() { reads++; return enabled; }
         @Implementation public static int blurRadiusPx() { reads++; return 32; }
         @Implementation public static int customOpacityPercent() { reads++; return 77; }
+        @Implementation public static int customKeyOpacity() { reads++; return -1; }
+        // No host settings provider for the folded seamless toggle; tests opt in via State.
+        @Implementation public static boolean isSeamlessNavBarEnabled() { reads++; return false; }
     }
 }
