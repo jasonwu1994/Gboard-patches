@@ -113,6 +113,11 @@ internal enum class GboardFlagFamilyFeature(
         RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
         GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
     ),
+    KEYPRESS_HAPTICS(
+        1400,
+        RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
+    ),
     ;
 
     val spec: GboardFlagFamilyFeatureSpec
@@ -232,7 +237,7 @@ private data class GboardFlagFamilyTransformationPlan(
             receiverPreservationIndex,
             "move-object v$RECEIVER_SCRATCH_REGISTER, p0",
         )
-        method.protectLanguageModelFlagCalls()
+        method.protectGuardedFlagCalls()
     }
 
     companion object {
@@ -333,7 +338,7 @@ private data class GboardFlagFamilyTransformationPlan(
                         familyCallIndices = familyCallIndices,
                         registers = registers,
                         resultMaterializationIndex = resultMaterializationIndex,
-                    ) && method.hasLanguageModelFlagGuards() -> GboardFlagFamilyTransformationState.PATCHED
+                    ) && method.hasGuardedFlagCalls() -> GboardFlagFamilyTransformationState.PATCHED
                 else -> error(
                     "Malformed or extraneous flag-family transformation before mutation: " +
                         "receiverMoves=$receiverMoves, familyCalls=$familyCallIndices, " +
@@ -356,10 +361,10 @@ private data class GboardFlagFamilyReturnPlan(
 )
 
 /** Ignore an extension linkage/initialization failure without clobbering the three live registers. */
-internal fun MutableMethod.protectLanguageModelFlagCalls() {
+internal fun MutableMethod.protectGuardedFlagCalls() {
     val code = checkNotNull(implementation)
     val calls = code.instructions.indices.filter { index ->
-        code.instructions[index].runtimeCallId() == RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE
+        code.instructions[index].runtimeCallId() in GUARDED_FLAG_FAMILY_CALLS
     }
     calls.forEach { index ->
         check(code.instructions[index + 1].opcode.name.normalized() == "MOVE_RESULT_OBJECT")
@@ -368,11 +373,11 @@ internal fun MutableMethod.protectLanguageModelFlagCalls() {
     }
 }
 
-private fun MutableMethod.hasLanguageModelFlagGuards(): Boolean {
+private fun MutableMethod.hasGuardedFlagCalls(): Boolean {
     val code = checkNotNull(implementation)
     val instructions = code.instructions
     return instructions.indices.filter { index ->
-        instructions[index].runtimeCallId() == RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE
+        instructions[index].runtimeCallId() in GUARDED_FLAG_FAMILY_CALLS
     }.all { index ->
         val start = instructions.take(index).sumOf { it.codeUnits }
         val end = start + instructions.drop(index).take(2).sumOf { it.codeUnits }
@@ -572,6 +577,9 @@ private fun MethodReference.matches(abi: RuntimeAbi): Boolean =
 private fun String.normalized(): String = uppercase().replace('-', '_').replace('/', '_')
 
 private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): String = when (call) {
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE, registers,
+    )
     RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
         RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
         registers,
@@ -665,7 +673,13 @@ private const val FORMAL_18_0_3_RECEIVER_REGISTER = 2
 private const val FORMAL_18_0_3_REGISTER_COUNT = 3
 private const val MAX_MOVE_RESULT_OBJECT_REGISTER = 255
 
+private val GUARDED_FLAG_FAMILY_CALLS = setOf(
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
+)
+
 private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESSIBILITY_LAYOUT_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,

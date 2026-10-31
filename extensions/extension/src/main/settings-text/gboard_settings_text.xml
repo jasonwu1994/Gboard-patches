@@ -3622,4 +3622,28 @@
         <translation locale="en">Detection is enabled, but Gboard could not restart automatically. Use Restart Gboard above, then open the keyboard preview.</translation>
         <translation locale="zh-Hant">偵測已開啟，但無法自動重新啟動 Gboard。請按右上角重新啟動 Gboard，再開啟鍵盤預覽。</translation>
     </string>
+    <string name="gboard_patches_keypress_haptics_title">
+        <translation locale="en">Keypress vibration intensity control</translation>
+        <translation locale="zh-Hant">按鍵震動力度控制</translation>
+    </string>
+    <string name="gboard_patches_keypress_haptics_entry_summary">
+        <translation locale="en">Control keypress vibration intensity instead of duration.</translation>
+        <translation locale="zh-Hant">將按鍵震動由持續時間改為力度控制。</translation>
+    </string>
+    <string name="gboard_patches_keypress_haptics_summary">
+        <translation locale="en">Control keypress vibration intensity instead of duration.\nPreferences &gt; Vibration strength on keypress.</translation>
+        <translation locale="zh-Hant">將按鍵震動由持續時間改為力度控制。\n偏好設定 &gt; 按鍵時的振動強度。</translation>
+    </string>
+    <string name="gboard_patches_keypress_haptics_supported">
+        <translation locale="en">This device supports click haptics</translation>
+        <translation locale="zh-Hant">此裝置支援點擊觸覺回饋</translation>
+    </string>
+    <string name="gboard_patches_keypress_haptics_unsupported">
+        <translation locale="en">This device does not support click haptics; Gboard keeps its original vibration</translation>
+        <translation locale="zh-Hant">此裝置不支援點擊觸覺回饋，Gboard 將保留原有震動</translation>
+    </string>
+    <string name="gboard_patches_keypress_haptics_support_unknown">
+        <translation locale="en">Unable to check device support; Gboard still checks before playing</translation>
+        <translation locale="zh-Hant">無法確認裝置支援狀態，播放時仍由 Gboard 檢查</translation>
+    </string>
 </settings-text>

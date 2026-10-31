@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.20.0",
+  "catalog_version": "1.21.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -1454,6 +1454,36 @@
           ],
           "runtime_calls": [
             "KEY_SHAPE_SELECTION_RUNTIME_APPLY_FLAG_VALUE"
+          ]
+        }
+      ]
+    },
+    {
+      "feature_id": "keypress_haptics",
+      "public_patch_name": "Keypress Vibration Intensity Control",
+      "feature_marker": "dev.jason.gboardpatches.feature.keypress_haptics",
+      "target_family_ids": [
+        "flag.reader"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/keypresshaptics/GboardKeypressHapticsFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/keypresshaptics/GboardKeypressHapticsFlagValuePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "keypress_haptics.flag",
+          "anchor_family_id": "flag_bool_getter",
+          "phase": "after_stock_result",
+          "order": 1400,
+          "required_bindings": [
+            "flag_bool_getter",
+            "flag_name_field"
+          ],
+          "runtime_calls": [
+            "KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE"
           ]
         }
       ]

@@ -1,5 +1,5 @@
 {
-  "version": "4.1.0-dev.3",
+  "version": "4.1.0-dev.4",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -328,6 +328,18 @@
     {
       "name": "Key Shape Selection",
       "description": "啟用圓角按鍵，主題詳情 > 按鍵形狀\nEnable Key shape in Theme details.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Keypress Vibration Intensity Control",
+      "description": "將按鍵震動由持續時間改為力度控制。\nControl keypress vibration intensity instead of duration.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

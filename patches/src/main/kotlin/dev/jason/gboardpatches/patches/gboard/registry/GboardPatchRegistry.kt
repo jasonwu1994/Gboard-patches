@@ -109,6 +109,19 @@ val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
         dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelResourcesPatch)
 }
 
+@Suppress("unused")
+val gboardKeypressHapticsPatch = gboardPublicResourcePatch(
+    featureId = "keypress_haptics",
+    name = "Keypress Vibration Intensity Control",
+    description = "將按鍵震動由持續時間改為力度控制。\nControl keypress vibration intensity instead of duration.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFlagValuePatch)
+}
+
 private fun gboardPublicResourcePatch(
     featureId: String,
     name: String,
@@ -897,6 +910,7 @@ object GboardPublishedPatchCatalog {
         gboardKeyShapeSelectionFlagPatch,
         gboardAiWritingToolsPatch,
         gboardLanguageModelVersionsPatch,
+        gboardKeypressHapticsPatch,
         gboardOcrScanTextPatch,
         gboardSettingsHomepagePatch,
         gboardLatinGlobeKeyIgnoreIntervalPatch,

@@ -1,3 +1,21 @@
+## [4.1.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0-dev.3...v4.1.0-dev.4) (2026-10-30)
+
+### ✨ New Features
+
+* **Gboard:** add the Keypress Vibration Intensity Control patch to control keypress vibration strength instead of duration.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix background color blocks remaining after tapping suggestions when custom key opacity is enabled.
+
+### ✨ 新功能
+
+* **Gboard:** 新增 Keypress Vibration Intensity Control Patch，將按鍵震動從持續時間控制改為力度控制。
+
+### 🐛 修復
+
+* **Gboard:** 修復啟用自訂按鍵透明度時，點選候選詞後背景色塊仍然殘留的問題。
+
 ## [4.1.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0-dev.2...v4.1.0-dev.3) (2026-10-30)
 
 ### ✨ New Features

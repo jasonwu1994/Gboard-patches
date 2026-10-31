@@ -1021,6 +1021,9 @@ public final class GboardFrostedGlassRuntime {
     }
 
     static int targetKinds(String tag) {
+        // Candidate fills belong to the theme, including their transparent released state.
+        // Tracking a pressed fill here can make that released state visible again.
+        if (tag.endsWith(".for-candidate-key") || tag.contains(".for-candidate-key.")) return 0;
         int kinds = 0;
         if (tag.equals(".keytop") || tag.startsWith(".keytop.")
                 || tag.equals(".space_bar") || tag.startsWith(".space_bar.")) {

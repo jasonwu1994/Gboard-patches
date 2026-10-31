@@ -51,7 +51,7 @@ class GboardPortProductCatalogContractTest {
     @Test
     fun catalogIsDeterministicAndDeclaresSelectedOnlyZeroSelectionComposition() {
         assertEquals("gboard-port-product-catalog.v1", catalog["format"].asString)
-        assertEquals("1.20.0", catalog["catalog_version"].asString)
+        assertEquals("1.21.0", catalog["catalog_version"].asString)
         val composition = catalog.getAsJsonObject("composition")
         assertEquals(
             setOf("selected_only_call_chain", "runtime_feature_mask"),
@@ -210,7 +210,7 @@ class GboardPortProductCatalogContractTest {
     }
 
     @Test
-    fun flagFamilyDeclaresSeventeenSelectedOnlyComposerCallsInCanonicalOrder() {
+    fun flagFamilyDeclaresEighteenSelectedOnlyComposerCallsInCanonicalOrder() {
         val flagContributions = features().flatMap { feature ->
             feature.getAsJsonArray("contributions")
                 .map { contribution -> contribution.asJsonObject }
@@ -220,18 +220,18 @@ class GboardPortProductCatalogContractTest {
                 .map { contribution -> feature["feature_id"].asString to contribution }
         }.sortedBy { (_, contribution) -> contribution["order"].asInt }
 
-        assertEquals(17, flagContributions.size)
+        assertEquals(18, flagContributions.size)
         assertEquals(
             listOf(
                 5, 10, 20, 30, 40, 100, 200, 300, 400,
-                500, 600, 700, 800, 900, 1000, 1200, 1300,
+                500, 600, 700, 800, 900, 1000, 1200, 1300, 1400,
             ),
             flagContributions.map { (_, contribution) -> contribution["order"].asInt },
         )
         val runtimeCalls = flagContributions.map { (_, contribution) ->
             contribution.getAsJsonArray("runtime_calls").first().asString
         }
-        assertEquals(17, runtimeCalls.distinct().size)
+        assertEquals(18, runtimeCalls.distinct().size)
         assertFalse("FEATURE_FLAGS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE" in runtimeCalls)
         flagContributions.forEach { (featureId, contribution) ->
             assertEquals(
@@ -697,6 +697,7 @@ class GboardPortProductCatalogContractTest {
             "incognito_mode_toggle" to "version-sensitive",
             "inline_suggestions" to "version-sensitive",
             "key_shape_selection" to "version-sensitive",
+            "keypress_haptics" to "version-sensitive",
             "lan_ftp_server" to "version-neutral-extension",
             "latin_globe_key_ignore_interval" to "version-sensitive",
             "long_press_editing_shortcuts" to "version-sensitive",
@@ -714,6 +715,14 @@ class GboardPortProductCatalogContractTest {
             "zhuyin_slide_input" to "version-sensitive",
         )
         val FLAG_FEATURE_CONTRACTS = listOf(
+            FlagFeatureContract(
+                "keypress_haptics",
+                GboardFlagFamilyFeature.KEYPRESS_HAPTICS,
+                dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFlagValuePatch,
+                "gboardKeypressHapticsFlagValuePatch",
+                FEATURE_ROOT + "keypresshaptics/GboardKeypressHapticsFlagValuePatch.kt",
+                FEATURE_ROOT + "keypresshaptics/GboardKeypressHapticsFeatureMarkerPatch.kt",
+            ),
             FlagFeatureContract(
                 "language_model_versions",
                 GboardFlagFamilyFeature.LANGUAGE_MODELS,

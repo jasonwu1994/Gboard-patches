@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-30T21:15:55",
-  "description": "### ✨ New Features\n\n* **Gboard:** add Key Opacity to Frosted Glass, allowing keys to follow the theme or use a custom percentage independently of background opacity.\n* **Gboard:** add Extend to Navigation Bar to Frosted Glass, extending the blur effect into the bottom navigation area for a seamless appearance and automatically adjusting navigation button colors.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** reduce excessive power consumption in Frosted Glass by eliminating redundant calculations during drawing and layout updates.\n\n### ✨ 新功能\n\n* **Gboard:** 磨砂玻璃新增「按鍵透明度」設定，可跟隨主題或自訂百分比，並與背景透明度分開調整。\n* **Gboard:** 磨砂玻璃新增「延伸到導覽列」設定，將模糊效果延伸至底部導覽區，讓鍵盤與導覽列融為一體，並自動調整導覽按鈕的顏色。\n\n### 🐛 修復\n\n* **Gboard:** 修復磨砂玻璃耗電偏高的問題，移除繪製與重新排版時的重複運算，降低資源消耗。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.0-dev.3/patches-4.1.0-dev.3.mpp",
+  "created_at": "2026-10-31T00:45:58",
+  "description": "### ✨ New Features\n\n* **Gboard:** add the Keypress Vibration Intensity Control patch to control keypress vibration strength instead of duration.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix background color blocks remaining after tapping suggestions when custom key opacity is enabled.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 Keypress Vibration Intensity Control Patch，將按鍵震動從持續時間控制改為力度控制。\n\n### 🐛 修復\n\n* **Gboard:** 修復啟用自訂按鍵透明度時，點選候選詞後背景色塊仍然殘留的問題。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.0-dev.4/patches-4.1.0-dev.4.mpp",
   "signature_download_url": "",
-  "version": "4.1.0-dev.3"
+  "version": "4.1.0-dev.4"
 }
