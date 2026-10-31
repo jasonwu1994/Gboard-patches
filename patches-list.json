@@ -375,7 +375,7 @@
     },
     {
       "name": "Package Rename",
-      "description": "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\nRename the package to dev.jason.com.google.android.inputmethod.latin and allow a custom app name so it can be installed alongside the official Gboard.",
+      "description": "將套件名稱改成可自訂的值，並可自訂 App 名稱，以便共存安裝\nRename the package to a configurable package name and allow a custom app name so it can be installed alongside the official Gboard.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
@@ -397,6 +397,17 @@
             "Gboard Patches": "Gboard Patches",
             "Gboard Mod": "Gboard Mod",
             "GboardWu": "GboardWu"
+          }
+        },
+        {
+          "key": "package_name",
+          "title": "套件名稱 / Package name",
+          "description": "自訂套件名稱，必須是有效的 Android 套件名稱，且不能與官方 Gboard 相同。\nCustom Android package name. Must be valid and different from the official Gboard package.",
+          "required": true,
+          "type": "kotlin.String",
+          "default": "dev.jason.com.google.android.inputmethod.latin",
+          "values": {
+            "dev.jason.com.google.android.inputmethod.latin": "dev.jason.com.google.android.inputmethod.latin"
           }
         }
       ]
