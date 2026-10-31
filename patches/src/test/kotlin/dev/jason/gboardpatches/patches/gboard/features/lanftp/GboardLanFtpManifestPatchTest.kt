@@ -214,7 +214,7 @@ class GboardLanFtpManifestPatchTest {
 
     private companion object {
         const val SOURCE_PACKAGE = "com.google.android.inputmethod.latin"
-        const val FINAL_PACKAGE = "dev.jason.com.google.android.inputmethod.latin"
+        const val FINAL_PACKAGE = "com.touchtype.swiftkey"
         const val MANIFEST_FIXTURE =
             "/gboard/18.5.3/packagerename/AndroidManifest.xml"
         const val SETTINGS_FIXTURE = "/gboard/18.5.3/packagerename/settings.xml"

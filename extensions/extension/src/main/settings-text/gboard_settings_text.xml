@@ -377,8 +377,8 @@
         <translation locale="zh-Hant">不支援的 Gboard 套件名稱</translation>
     </string>
     <string name="gboard_patches_developer_options_package_warning_message">
-        <translation locale="en">The current Gboard package is %1$s. Gboard Patches supports only the official package com.google.android.inputmethod.latin and dev.jason.com.google.android.inputmethod.latin. Mixing Gboard builds from multiple sources may cause instability.</translation>
-        <translation locale="zh-Hant">目前的 Gboard 套件名稱是 %1$s。Gboard Patches 只支援官方套件名稱 com.google.android.inputmethod.latin 與 dev.jason.com.google.android.inputmethod.latin，混用多個來源的 Gboard 可能導致不穩定。</translation>
+        <translation locale="en">The current Gboard package is %1$s. Gboard Patches supports only the official package com.google.android.inputmethod.latin and com.touchtype.swiftkey. Mixing Gboard builds from multiple sources may cause instability.</translation>
+        <translation locale="zh-Hant">目前的 Gboard 套件名稱是 %1$s。Gboard Patches 只支援官方套件名稱 com.google.android.inputmethod.latin 與 com.touchtype.swiftkey，混用多個來源的 Gboard 可能導致不穩定。</translation>
     </string>
     <string name="gboard_patches_developer_options_try_anyway">
         <translation locale="en">Try anyway</translation>

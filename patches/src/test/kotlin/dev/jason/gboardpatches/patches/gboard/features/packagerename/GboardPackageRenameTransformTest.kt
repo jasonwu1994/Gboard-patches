@@ -839,8 +839,8 @@ class GboardPackageRenameTransformTest {
 
     private companion object {
         const val SOURCE_PACKAGE = "com.google.android.inputmethod.latin"
-        const val FINAL_PACKAGE = "dev.jason.com.google.android.inputmethod.latin"
-        const val DOUBLE_PREFIX = "dev.jason.dev.jason.com.google.android.inputmethod.latin"
+        const val FINAL_PACKAGE = "com.touchtype.swiftkey"
+        const val DOUBLE_PREFIX = "com.touchtype.swiftkeycom.touchtype.swiftkey"
         const val SETTINGS_ACTIVITY_CLASS =
             "dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity"
         const val SETTINGS_PROVIDER_CLASS =

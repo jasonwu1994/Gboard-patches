@@ -568,6 +568,6 @@ private data class SettingsIdentity(
 )
 
 private const val DOUBLE_PREFIX =
-    "dev.jason.dev.jason.com.google.android.inputmethod.latin"
+    "com.touchtype.swiftkeycom.touchtype.swiftkey"
 
 private const val REQUIRED_SPLITS_METADATA = "com.android.vending.splits.required"

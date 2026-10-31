@@ -15,7 +15,7 @@ import java.util.zip.ZipOutputStream;
 
 public final class GboardDictationPayloadDetectorTest {
     private static final String MORPHE_PACKAGE =
-            "dev.jason.com.google.android.inputmethod.latin";
+            "com.touchtype.swiftkey";
     private static final String OFFICIAL_PACKAGE =
             "com.google.android.inputmethod.latin";
     private static final String DICTATION_ENTRY =

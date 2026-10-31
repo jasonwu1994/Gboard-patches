@@ -101,7 +101,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final String GBOARD_PACKAGE_JASON_DEV =
             "com.google.android.inputmethod.latin.jason.dev";
     private static final String GBOARD_PACKAGE_REVERSED_DEV =
-            "dev.jason.com.google.android.inputmethod.latin";
+            "com.touchtype.swiftkey";
     private static final String LIVE_TRANSCRIBE_PACKAGE_NAME =
             "com.google.audio.hearing.visualization.accessibility.scribe";
     private static final String SPEECH_SERVICES_PACKAGE_NAME =

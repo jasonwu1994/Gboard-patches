@@ -23,7 +23,7 @@ public final class GboardPatchesSettingsProvider extends ContentProvider {
     private static final String GBOARD_PACKAGE_JASON_DEV =
             "com.google.android.inputmethod.latin.jason.dev";
     private static final String GBOARD_PACKAGE_REVERSED_DEV =
-            "dev.jason.com.google.android.inputmethod.latin";
+            "com.touchtype.swiftkey";
     public static final String METHOD_GET_SYMBOL_FOOTER_ORDER_SETTINGS =
             "get_symbol_footer_order_settings";
     public static final String BUNDLE_KEY_SYMBOL_FOOTER_ORDER =

@@ -35,7 +35,7 @@ class GboardPackageRenamePatchContractTest {
         assertEquals(1, patch.dependencies.size)
         assertSame(gboardPackageRenameResourcePatch, patch.dependencies.single())
         assertEquals("com.google.android.inputmethod.latin", GBOARD_PACKAGE_NAME)
-        assertEquals("dev.jason.com.google.android.inputmethod.latin", GBOARD_PATCHED_PACKAGE_NAME)
+        assertEquals("com.touchtype.swiftkey", GBOARD_PATCHED_PACKAGE_NAME)
 
         val compatibilities = checkNotNull(patch.compatibility)
         assertEquals(1, compatibilities.size)
@@ -109,8 +109,8 @@ class GboardPackageRenamePatchContractTest {
     private companion object {
         const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val PACKAGE_RENAME_DESCRIPTION =
-            "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
-                "Rename the package to dev.jason.com.google.android.inputmethod.latin " +
+            "將套件名稱改成 com.touchtype.swiftkey，並可自訂 App 名稱，以便共存安裝\n" +
+                "Rename the package to com.touchtype.swiftkey " +
                 "and allow a custom app name so it can be installed alongside " +
                 "the official Gboard."
         const val APP_DISPLAY_NAME_OPTION_KEY = "app_display_name"

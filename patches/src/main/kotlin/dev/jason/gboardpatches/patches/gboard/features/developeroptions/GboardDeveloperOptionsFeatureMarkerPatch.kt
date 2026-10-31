@@ -61,5 +61,5 @@ private const val DEVELOPER_OPTIONS_FEATURE_MARKER_NAME =
 private val SUPPORTED_GBOARD_PACKAGES = listOf(
     "com.google.android.inputmethod.latin",
     "com.google.android.inputmethod.latin.jason.dev",
-    "dev.jason.com.google.android.inputmethod.latin"
+    "com.touchtype.swiftkey"
 )

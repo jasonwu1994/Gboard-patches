@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 @Config(sdk=33,manifest=Config.NONE)
 @ConscryptMode(ConscryptMode.Mode.OFF)
 public final class LanFtpNotificationResourceBoundaryTest {
-    private static final String TARGET_PACKAGE="dev.jason.com.google.android.inputmethod.latin";
+    private static final String TARGET_PACKAGE="com.touchtype.swiftkey";
     private static final int RELOCATED_ICON=android.R.drawable.ic_menu_upload;
     private static final int LIBRARY_ICON=dev.jason.gboardpatches.extension.R.drawable.ic_lan_ftp_tile;
 

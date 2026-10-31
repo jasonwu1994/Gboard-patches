@@ -823,8 +823,8 @@ val gboardZhuyinBottomRowWeightPatch = gboardPublicResourcePatch(
 val gboardPackageRenamePatch = gboardPublicResourcePatch(
     featureId = "package_rename",
     name = "Package Rename",
-    description = "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
-        "Rename the package to dev.jason.com.google.android.inputmethod.latin and allow " +
+    description = "將套件名稱改成 com.touchtype.swiftkey，並可自訂 App 名稱，以便共存安裝\n" +
+        "Rename the package to com.touchtype.swiftkey and allow " +
         "a custom app name so it can be installed alongside the official Gboard.",
     default = true
 ) {
