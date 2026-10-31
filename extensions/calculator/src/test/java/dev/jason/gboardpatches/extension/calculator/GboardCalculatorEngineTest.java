@@ -52,6 +52,101 @@ public final class GboardCalculatorEngineTest {
         assertResult("-".repeat(120) + "1+1", "2");
     }
 
+    @Test
+    public void appliesPercentagesToTheTermBeforeAdditionOrSubtraction() {
+        assertResult("382-2%", "374.36");
+        assertResult("74.99-5%", "71.2405");
+        assertResult("50+20%", "60");
+        assertResult("10+5-10%", "14.5");
+        assertResult("20-5+10%", "14.5");
+        assertResult("1+2*5+10%", "12");
+        assertResult("100-10%-10%", "81");
+        assertResult("50+10%+10%", "60.5");
+        assertResult("200-(10+5)%", "170");
+        assertResult("100 - -5%", "105");
+        assertResult("50+20\uff05", "60");
+    }
+
+    @Test
+    public void treatsOtherPercentagesAsHundredths() {
+        assertResult("5%", "0.05");
+        assertResult("80*15%", "12");
+        assertResult("100/50%", "200");
+        assertResult("5%+10", "10.05");
+        assertError("5%3");
+    }
+
+    @Test
+    public void evaluatesWholeNumberPowersRightToLeft() {
+        assertResult("2^10", "1024");
+        assertResult("2 ^ 3", "8");
+        assertResult("2**3", "8");
+        assertResult("2 ** 3 ** 2", "512");
+        assertResult("2^3^2", "512");
+        assertResult("-2^2", "-4");
+        assertResult("(-2)^2", "4");
+        assertResult("2^-1", "0.5");
+        assertResult("0^0", "1");
+        assertResult("10^999", "1" + "0".repeat(999));
+        assertError("2^0.5");
+        assertError("10^1000");
+        assertError("2^9999999999");
+        assertError("0^-1");
+        assertError("(10^999)^2");
+        assertError("10^999*10");
+    }
+
+    @Test
+    public void acceptsLetterXAsMultiplicationBetweenNumbers() {
+        assertResult("2x3", "6");
+        assertResult("2 X 3", "6");
+        assertResult("1920x1080", "2073600");
+        assertError("x2");
+    }
+
+    @Test
+    public void multipliesImplicitlyOnlyWhenParenthesisDirectlyFollows() {
+        assertResult("2(3+4)", "14");
+        assertResult("(1+2)(3+4)", "21");
+        assertResult("2(3)^2", "18");
+        assertError("2 (3)");
+        assertError("(020)7946");
+        assertError("(020) 7946 0958");
+    }
+
+    @Test
+    public void readsCommaThousandsSeparators() {
+        assertResult("1,299.99-5%", "1234.9905");
+        assertResult("1,000,000/4", "250000");
+        assertError("1,23");
+        assertError("1,2345");
+        assertError("1234,567");
+        assertError("1.5,000");
+    }
+
+    @Test
+    public void evaluatesSquareRootsAndPi() {
+        assertResult("\u221a2", "1.414213562373095");
+        assertResult("\u221a16", "4");
+        assertResult("\u221a(9+16)", "5");
+        assertResult("\u221a\u221a16", "2");
+        assertResult("\u221a9^2", "9");
+        assertResult("2\u221a9", "6");
+        assertResult("\u221a0.0004", "0.02");
+        assertResult("\u221a1" + "0".repeat(100), "1" + "0".repeat(50));
+        assertResult("\u03c0", "3.141592653589793");
+        assertResult("2\u03c0", "6.283185307179586");
+        assertResult("\u03c0*3^2", "28.27433388230814");
+        assertError("\u221a-4");
+        assertError("\u221a1" + "0".repeat(400));
+        assertError("\u03c02");
+    }
+
+    private static void assertError(String expression) {
+        Assert.assertEquals(expression, GboardCalculatorEngine.Status.ERROR,
+                GboardCalculatorEngine.evaluate(expression).getStatus());
+    }
+
     private static void assertResult(String expression, String expected) {
         GboardCalculatorEngine.Evaluation evaluation =
                 GboardCalculatorEngine.evaluate(expression);
