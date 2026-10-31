@@ -94,6 +94,7 @@ android {
     }
 
     defaultConfig {
+        minSdk = 26
         buildConfigField("String", "PATCH_AUTHOR", "\"jasonwu1994\"")
         buildConfigField("String", "PATCH_AUTHOR_URL", "\"https://github.com/jasonwu1994\"")
         buildConfigField(
@@ -111,9 +112,16 @@ android {
         java.directories.add(generatedCustomThemeBindingsJavaDir.get().asFile.absolutePath)
         res.directories.add(generatedSettingsTextResDir.get().asFile.absolutePath)
     }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+        checkOnly += "NewApi"
+    }
 }
 
 dependencies {
+    compileOnly("androidx.annotation:annotation:1.9.1")
     implementation(libs.apache.ftpserver.core)
     implementation(libs.apache.mina.core)
     implementation(libs.hidden.api.bypass)
@@ -575,6 +583,10 @@ tasks.named("preBuild") {
     dependsOn(generateSettingsText)
     dependsOn(generateLanFtpMessageResource)
     dependsOn(generateCustomThemeVersionBindings)
+}
+
+tasks.named("syncExtension") {
+    dependsOn("lintDebug")
 }
 
 tasks.named("syncExtension") {

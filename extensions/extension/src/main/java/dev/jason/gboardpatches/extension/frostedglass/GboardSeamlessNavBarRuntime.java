@@ -2,6 +2,7 @@ package dev.jason.gboardpatches.extension.frostedglass;
 
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Build;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsetsController;
@@ -13,13 +14,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.WeakHashMap;
+import androidx.annotation.RequiresApi;
 import dev.jason.gboardpatches.extension.flagsettings.GboardFlagRuntimeContext;
 
 /**
- * Seamless navigation bar styling integrated with Frosted Glass.
+ * Seamless navigation bar integration for Gboard 18.5.4, folded into Frosted Glass.
  * Window navigation styling is taken over only while a frosted nav-strip surface exists.
  * Never changes IME geometry.
  */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class GboardSeamlessNavBarRuntime {
     private static final int EDGE_FLAGS = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
@@ -27,16 +30,11 @@ public final class GboardSeamlessNavBarRuntime {
     private static final ThreadLocal<Boolean> REPLAYING = ThreadLocal.withInitial(() -> false);
     // rra.f reuses its Window register before returning; carry the entry Window to the exit.
     private static final ThreadLocal<Window> PENDING = new ThreadLocal<>();
-    private static final ClassValue<Params> PARAMS = new ClassValue<>() {
-        @Override protected Params computeValue(Class<?> type) {
-            try { return new Params(type); }
-            catch (ReflectiveOperationException failure) { throw new IllegalArgumentException(failure); }
-        }
-    };
+    private static volatile Params cachedParams;
 
     private GboardSeamlessNavBarRuntime() {}
 
-    public static void validateParams(Class<?> type) { PARAMS.get(type); }
+    public static void validateParams(Class<?> type) throws ReflectiveOperationException { paramsFor(type); }
     public static boolean isReplaying() { return REPLAYING.get(); }
 
     /** Patched entry of {@code rra.f(Window, rqz)}; returns the model the stock body applies. */
@@ -91,7 +89,7 @@ public final class GboardSeamlessNavBarRuntime {
         if (window == null || original == null
                 || !GboardFlagRuntimeContext.isUserUnlocked(window.getContext())) return original;
         try {
-            Params fields = PARAMS.get(original.getClass());
+            Params fields = paramsFor(original.getClass());
             State state = stateFor(window);
             state.owner = new WeakReference<>(owner);
             state.method = method;
@@ -121,7 +119,7 @@ public final class GboardSeamlessNavBarRuntime {
         if (window == null || params == null
                 || !GboardFlagRuntimeContext.isUserUnlocked(window.getContext())) return;
         try {
-            Params fields = PARAMS.get(params.getClass());
+            Params fields = paramsFor(params.getClass());
             State state = stateFor(window);
             if (!state.glass) return;
             applyWindow(window, state, fields.nav.getInt(params), fields.divider.getInt(params),
@@ -133,7 +131,7 @@ public final class GboardSeamlessNavBarRuntime {
 
     /** Called only after a real keyboard-local glass backend has succeeded. */
     public static boolean onFrostedSurfaceApplied(Window window) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return false;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false;
         if (window == null || !GboardFlagRuntimeContext.isUserUnlocked(window.getContext())) return false;
         try {
             State state = stateFor(window);
@@ -161,7 +159,7 @@ public final class GboardSeamlessNavBarRuntime {
 
     private static boolean stockLightIcons(State state) {
         try {
-            if (state.original != null) return PARAMS.get(state.original.getClass()).light.getBoolean(state.original);
+            if (state.original != null) return paramsFor(state.original.getClass()).light.getBoolean(state.original);
         } catch (Throwable ignored) { /* Use the captured Window appearance. */ }
         return state.stockLightIcons;
     }
@@ -181,7 +179,7 @@ public final class GboardSeamlessNavBarRuntime {
         if (window.isNavigationBarContrastEnforced()) window.setNavigationBarContrastEnforced(false);
         View decor = window.getDecorView();
         int flags = decor.getSystemUiVisibility();
-        if (state.glass && android.os.Build.VERSION.SDK_INT < 36) {
+        if (state.glass && Build.VERSION.SDK_INT < 36) {
             state.addedUiFlags |= EDGE_FLAGS & ~flags;
             if ((flags & EDGE_FLAGS) != EDGE_FLAGS) decor.setSystemUiVisibility(flags | EDGE_FLAGS);
         } else if (state.addedUiFlags != 0) {
@@ -212,7 +210,7 @@ public final class GboardSeamlessNavBarRuntime {
         int nav = state.nav, divider = state.divider;
         try {
             if (state.original != null) {
-                Params fields = PARAMS.get(state.original.getClass());
+                Params fields = paramsFor(state.original.getClass());
                 nav = fields.nav.getInt(state.original);
                 divider = fields.divider.getInt(state.original);
             }
@@ -240,6 +238,14 @@ public final class GboardSeamlessNavBarRuntime {
         catch (Throwable ignored) { /* One unsupported Window operation must not abort cleanup. */ }
     }
 
+    private static Params paramsFor(Class<?> type) throws ReflectiveOperationException {
+        Params cached = cachedParams;
+        if (cached != null && cached.type == type) return cached;
+        Params created = new Params(type);
+        cachedParams = created;
+        return created;
+    }
+
     private static State stateFor(Window window) {
         synchronized (WINDOWS) {
             State state = WINDOWS.get(window);
@@ -249,9 +255,11 @@ public final class GboardSeamlessNavBarRuntime {
     }
 
     private static final class Params {
+        final Class<?> type;
         final Field nav, divider, body, header, light;
         final Constructor<?> constructor;
         Params(Class<?> type) throws ReflectiveOperationException {
+            this.type = type;
             nav = field(type, "a", int.class);
             divider = field(type, "b", int.class);
             body = type.getDeclaredField("c");

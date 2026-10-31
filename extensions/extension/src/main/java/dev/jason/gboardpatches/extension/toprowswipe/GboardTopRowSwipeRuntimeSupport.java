@@ -498,7 +498,7 @@ final class GboardTopRowSwipeRuntimeSupport {
                     }
                 }
             }
-            return tokens.toArray(String[]::new);
+            return tokens.toArray(new String[0]);
         }
 
         String extractSinglePayloadToken(Object actionDef) throws Throwable {

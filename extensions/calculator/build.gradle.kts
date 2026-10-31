@@ -4,6 +4,20 @@ extension {
 
 android {
     namespace = "dev.jason.gboardpatches.calculator"
+
+    defaultConfig {
+        minSdk = 26
+    }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+        checkOnly += "NewApi"
+    }
+}
+
+tasks.named("syncExtension") {
+    dependsOn("lintDebug")
 }
 
 dependencies {

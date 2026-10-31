@@ -34,10 +34,12 @@ import java.lang.reflect.Method;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
+import androidx.annotation.RequiresApi;
 
 import dev.jason.gboardpatches.extension.flagsettings.GboardFlagRuntimeContext;
 
 /** Android public-API runtime for a bounded IME background blur. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class GboardFrostedGlassRuntime {
     private static final String TAG = "GboardPatchesBlur";
     private static final String KEYBOARD_ROOT_TAG = ".keyboard-base-area.keyboard-outline";
@@ -199,7 +201,9 @@ public final class GboardFrostedGlassRuntime {
     private static long hideRestoreDelayMs() {
         float scale = 1f;
         try {
-            scale = android.animation.ValueAnimator.getDurationScale();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                scale = android.animation.ValueAnimator.getDurationScale();
+            }
         } catch (Throwable ignored) {
             // Use the unscaled duration.
         }

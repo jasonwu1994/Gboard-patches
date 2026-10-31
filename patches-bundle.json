@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-31T00:45:58",
-  "description": "### ✨ New Features\n\n* **Gboard:** add the Keypress Vibration Intensity Control patch to control keypress vibration strength instead of duration.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix background color blocks remaining after tapping suggestions when custom key opacity is enabled.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 Keypress Vibration Intensity Control Patch，將按鍵震動從持續時間控制改為力度控制。\n\n### 🐛 修復\n\n* **Gboard:** 修復啟用自訂按鍵透明度時，點選候選詞後背景色塊仍然殘留的問題。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.0-dev.4/patches-4.1.0-dev.4.mpp",
+  "created_at": "2026-10-31T10:44:01",
+  "description": "### 🐛 Bug Fixes\n\n* **Gboard:** fix a crash when opening the keyboard on Android 13 and earlier.\n* **Gboard:** fix Android stopping Web Clipboard after 6 hours and a crash when restarting the service.\n\n### 🐛 修復\n\n* **Gboard:** 修復在 Android 13 及更早版本上開啟鍵盤時閃退的問題。\n* **Gboard:** 修復 Web Clipboard 執行 6 小時後被 Android 停止，以及重新啟動服務時閃退的問題。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.1-dev.1/patches-4.1.1-dev.1.mpp",
   "signature_download_url": "",
-  "version": "4.1.0-dev.4"
+  "version": "4.1.1-dev.1"
 }
