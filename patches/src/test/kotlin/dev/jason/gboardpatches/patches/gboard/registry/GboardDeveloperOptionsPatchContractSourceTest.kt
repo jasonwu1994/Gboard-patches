@@ -111,7 +111,7 @@ class GboardDeveloperOptionsPatchContractSourceTest {
         assertTrue(activity.contains("intent.putExtra(ENTER_PREF_HEADER_EXTRA, headerKeyResourceId)"))
         assertTrue(activity.contains("new ComponentName(packageName, GBOARD_SETTINGS_ACTIVITY_CLASS)"))
         assertTrue(activity.contains("String currentPackage = getPackageName();"))
-        assertTrue(activity.contains("isSupportedTargetPackage(currentPackage)"))
+        assertTrue(activity.contains("isSupportedTargetPackage(currentPackage, getPackageName())"))
         assertTrue(activity.contains("showUnsupportedDeveloperOptionsPackageDialog("))
         assertTrue(activity.contains("tryLaunchUnverifiedDeveloperOptions("))
         assertTrue(activity.contains("catch (Throwable throwable)"))
