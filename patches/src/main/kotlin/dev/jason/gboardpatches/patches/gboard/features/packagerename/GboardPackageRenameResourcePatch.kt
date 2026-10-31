@@ -353,10 +353,29 @@ internal fun applyGboardPackageRename(
         manifestDocument = manifestDocument,
         state = state,
     )
+    // Developer Options adds package-visibility queries for stock, legacy-dev,
+    // and renamed Gboard. These queries are not application identity mappings.
+    // Only allow these exact values under manifest/queries/package; keep the
+    // strict original-package audit for every other manifest attribute.
+    val knownVisibilityPackages = setOf(
+        GBOARD_PACKAGE_NAME,
+        "$GBOARD_PACKAGE_NAME.jason.dev",
+        GBOARD_PATCHED_PACKAGE_NAME,
+    )
+    val visibilityQueryAttributes = manifestDocument.documentElement
+        .childElements("queries")
+        .flatMap { queries -> queries.childElements("package") }
+        .mapNotNull { query -> query.androidAttribute("name") }
+        .filter { attribute -> attribute.value in knownVisibilityPackages }
+        .toList()
+    check(visibilityQueryAttributes.map { it.value }.toSet().size ==
+        visibilityQueryAttributes.size
+    ) { "Duplicate known Gboard visibility query; refusing manifest rename" }
+
     val allowedPackageAttributes = selectedAttributes + listOfNotNull(
         settingsIdentity.providerAuthority,
         lanFtpStatusProviderAuthority,
-    )
+    ) + visibilityQueryAttributes
     val unexpectedPackageAttribute = allManifestAttributes.firstOrNull { (_, attribute) ->
         attribute.nodeValue.contains(GBOARD_PACKAGE_NAME) &&
             allowedPackageAttributes.none { allowed -> allowed === attribute }
