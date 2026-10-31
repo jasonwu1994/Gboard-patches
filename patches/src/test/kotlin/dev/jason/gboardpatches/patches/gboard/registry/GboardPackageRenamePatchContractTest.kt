@@ -4,7 +4,7 @@ import com.google.gson.JsonParser
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.gboardPackageRenameResourcePatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_PACKAGE_NAME
-import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_PATCHED_PACKAGE_NAME
+import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_DEFAULT_PATCHED_PACKAGE_NAME
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -24,7 +24,12 @@ class GboardPackageRenamePatchContractTest {
         assertEquals("Package Rename", patch.name)
         assertEquals(PACKAGE_RENAME_DESCRIPTION, patch.description)
         assertTrue(patch.default)
-        assertEquals(setOf(APP_DISPLAY_NAME_OPTION_KEY), patch.options.keys)
+        assertEquals(setOf(APP_DISPLAY_NAME_OPTION_KEY, PACKAGE_NAME_OPTION_KEY), patch.options.keys)
+        val packageOption = patch.options[PACKAGE_NAME_OPTION_KEY]
+        assertEquals(GBOARD_DEFAULT_PATCHED_PACKAGE_NAME, packageOption.default)
+        assertEquals(GBOARD_DEFAULT_PATCHED_PACKAGE_NAME, packageOption.value)
+        assertTrue(packageOption.required)
+        assertEquals("kotlin.String", packageOption.type.toString())
         val option = patch.options[APP_DISPLAY_NAME_OPTION_KEY]
         assertEquals(APP_DISPLAY_NAME_OPTION_DESCRIPTION, option.description)
         assertEquals(APP_DISPLAY_NAME_DEFAULT, option.default)
@@ -35,7 +40,7 @@ class GboardPackageRenamePatchContractTest {
         assertEquals(1, patch.dependencies.size)
         assertSame(gboardPackageRenameResourcePatch, patch.dependencies.single())
         assertEquals("com.google.android.inputmethod.latin", GBOARD_PACKAGE_NAME)
-        assertEquals("dev.jason.com.google.android.inputmethod.latin", GBOARD_PATCHED_PACKAGE_NAME)
+        assertEquals("dev.jason.com.google.android.inputmethod.latin", GBOARD_DEFAULT_PATCHED_PACKAGE_NAME)
 
         val compatibilities = checkNotNull(patch.compatibility)
         assertEquals(1, compatibilities.size)
@@ -60,8 +65,13 @@ class GboardPackageRenamePatchContractTest {
         assertEquals(PACKAGE_RENAME_DESCRIPTION, row.get("description").asString)
         assertTrue(row.getAsJsonArray("dependencies").isEmpty)
         val options = row.getAsJsonArray("options")
-        assertEquals(1, options.size())
-        val option = options.single().asJsonObject
+        assertEquals(2, options.size())
+        val option = options[0].asJsonObject
+        val packageOption = options[1].asJsonObject
+        assertEquals(PACKAGE_NAME_OPTION_KEY, packageOption.get("key").asString)
+        assertEquals(GBOARD_DEFAULT_PATCHED_PACKAGE_NAME, packageOption.get("default").asString)
+        assertTrue(packageOption.get("required").asBoolean)
+        assertEquals("kotlin.String", packageOption.get("type").asString)
         assertEquals(APP_DISPLAY_NAME_OPTION_KEY, option.get("key").asString)
         assertEquals(APP_DISPLAY_NAME_OPTION_TITLE, option.get("title").asString)
         assertEquals(APP_DISPLAY_NAME_OPTION_DESCRIPTION, option.get("description").asString)
@@ -109,10 +119,11 @@ class GboardPackageRenamePatchContractTest {
     private companion object {
         const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val PACKAGE_RENAME_DESCRIPTION =
-            "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
-                "Rename the package to dev.jason.com.google.android.inputmethod.latin " +
-                "and allow a custom app name so it can be installed alongside " +
+            "將套件名稱改成可自訂的值，並可自訂 App 名稱，以便共存安裝\n" +
+                "Rename the package to a configurable package name and allow " +
+                "a custom app name so it can be installed alongside " +
                 "the official Gboard."
+        const val PACKAGE_NAME_OPTION_KEY = "package_name"
         const val APP_DISPLAY_NAME_OPTION_KEY = "app_display_name"
         const val APP_DISPLAY_NAME_OPTION_TITLE = "App 名稱 / App name"
         const val APP_DISPLAY_NAME_OPTION_DESCRIPTION = ""

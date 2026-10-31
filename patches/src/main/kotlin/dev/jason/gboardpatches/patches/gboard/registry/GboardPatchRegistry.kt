@@ -67,7 +67,9 @@ import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardMan
 import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoPolicyPatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.applyGboardApplicationDisplayName
+import dev.jason.gboardpatches.patches.gboard.features.packagerename.GboardPackageRenameTarget
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.gboardPackageRenameResourcePatch
+import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboardTargetPackageName
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboardAppDisplayName
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFlagValuePatch
@@ -95,6 +97,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmis
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
+import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_DEFAULT_PATCHED_PACKAGE_NAME
 
 @Suppress("unused")
 val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
@@ -823,8 +826,8 @@ val gboardZhuyinBottomRowWeightPatch = gboardPublicResourcePatch(
 val gboardPackageRenamePatch = gboardPublicResourcePatch(
     featureId = "package_rename",
     name = "Package Rename",
-    description = "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
-        "Rename the package to dev.jason.com.google.android.inputmethod.latin and allow " +
+    description = "將套件名稱改成可自訂的值，並可自訂 App 名稱，以便共存安裝\n" +
+        "Rename the package to a configurable package name and allow " +
         "a custom app name so it can be installed alongside the official Gboard.",
     default = true
 ) {
@@ -847,9 +850,27 @@ val gboardPackageRenamePatch = gboardPublicResourcePatch(
         isValidGboardAppDisplayName(value)
     }
 
+    val packageName = stringOption(
+        key = "package_name",
+        default = GBOARD_DEFAULT_PATCHED_PACKAGE_NAME,
+        values = linkedMapOf(
+            GBOARD_DEFAULT_PATCHED_PACKAGE_NAME to GBOARD_DEFAULT_PATCHED_PACKAGE_NAME,
+        ),
+        title = "套件名稱 / Package name",
+        description = "自訂套件名稱，必須是有效的 Android 套件名稱，且不能與官方 Gboard 相同。\n" +
+            "Custom Android package name. Must be valid and different from the official Gboard package.",
+        required = true,
+    ) { value ->
+        isValidGboardTargetPackageName(value)
+    }
+
     dependsOn(
         gboardPackageRenameResourcePatch
     )
+
+    execute {
+        GboardPackageRenameTarget.packageName = checkNotNull(packageName.value)
+    }
 
     finalize {
         applyGboardApplicationDisplayName(displayName = checkNotNull(appDisplayName.value))
