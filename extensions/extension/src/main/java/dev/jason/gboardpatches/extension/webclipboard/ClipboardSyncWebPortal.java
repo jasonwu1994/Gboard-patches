@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -658,8 +659,8 @@ public final class ClipboardSyncWebPortal {
             if (separator <= 0) {
                 continue;
             }
-            String key = URLDecoder.decode(pair.substring(0, separator), StandardCharsets.UTF_8);
-            String value = URLDecoder.decode(pair.substring(separator + 1), StandardCharsets.UTF_8);
+            String key = decodeUtf8(pair.substring(0, separator));
+            String value = decodeUtf8(pair.substring(separator + 1));
             if (!key.isBlank()) {
                 result.put(key, value);
             }
@@ -940,9 +941,17 @@ public final class ClipboardSyncWebPortal {
             if (!fieldName.equals(key)) {
                 continue;
             }
-            return URLDecoder.decode(pair.substring(separator + 1), StandardCharsets.UTF_8);
+            return decodeUtf8(pair.substring(separator + 1));
         }
         return "";
+    }
+
+    private static String decodeUtf8(String value) {
+        try {
+            return URLDecoder.decode(value, "UTF-8");
+        } catch (UnsupportedEncodingException impossible) {
+            throw new IllegalStateException(impossible);
+        }
     }
 
     private String sanitizeClientId(String value) {

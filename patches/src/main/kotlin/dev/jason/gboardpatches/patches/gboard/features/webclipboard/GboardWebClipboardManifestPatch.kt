@@ -71,7 +71,7 @@ internal fun applyGboardWebClipboardManifest(document: Document) {
         CLIPBOARD_SYNC_SERVICE_CLASS,
     ).apply {
         setManifestAndroidAttribute("exported", "false")
-        setManifestAndroidAttribute("foregroundServiceType", "dataSync")
+        setManifestAndroidAttribute("foregroundServiceType", "connectedDevice")
     }
 
     val tileService = ensureManifestComponent(
@@ -126,8 +126,9 @@ private val WEB_CLIPBOARD_PERMISSIONS = listOf(
     "android.permission.INTERNET",
     "android.permission.ACCESS_LOCAL_NETWORK",
     "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.CHANGE_NETWORK_STATE",
     "android.permission.FOREGROUND_SERVICE",
-    "android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+    "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"
 )
 
 private const val PATCHES_SETTINGS_ACTIVITY_CLASS =

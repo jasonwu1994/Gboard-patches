@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.frostedglass;
 
+import android.os.Build;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -89,7 +90,8 @@ public final class GboardFrostedGlassSettingsFeature
 
     @Override
     public boolean isAvailable(Context context) {
-        return GboardPatchesFeatureAvailability.hasFeature(
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && GboardPatchesFeatureAvailability.hasFeature(
                 context, GboardPatchesFeatureAvailability.FEATURE_FROSTED_GLASS);
     }
 

@@ -1,3 +1,27 @@
+## [4.1.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0...v4.1.1) (2026-10-31)
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix a crash when opening the keyboard on Android 13 and earlier.
+* **Gboard:** fix Android stopping Web Clipboard after 6 hours and a crash when restarting the service.
+
+### 🐛 修復
+
+* **Gboard:** 修復在 Android 13 及更早版本上開啟鍵盤時閃退的問題。
+* **Gboard:** 修復 Web Clipboard 執行 6 小時後被 Android 停止，以及重新啟動服務時閃退的問題。
+
+## [4.1.1-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0...v4.1.1-dev.1) (2026-10-31)
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix a crash when opening the keyboard on Android 13 and earlier.
+* **Gboard:** fix Android stopping Web Clipboard after 6 hours and a crash when restarting the service.
+
+### 🐛 修復
+
+* **Gboard:** 修復在 Android 13 及更早版本上開啟鍵盤時閃退的問題。
+* **Gboard:** 修復 Web Clipboard 執行 6 小時後被 Android 停止，以及重新啟動服務時閃退的問題。
+
 ## [4.1.0](https://github.com/jasonwu1994/Gboard-patches/compare/v4.0.0...v4.1.0) (2026-10-30)
 
 ### ✨ New Features

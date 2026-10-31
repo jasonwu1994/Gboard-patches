@@ -18,9 +18,10 @@ public final class LanFtpRuntimeObserver implements AutoCloseable {
     private final Uri statusUri;
     private final Handler handler;
     private final Runnable refresh;
-    private final Runnable delayedProgressRefresh = this::dispatchRefresh;
+    private final Runnable delayedProgressRefresh = this::runDelayedProgressRefresh;
     private final ContentObserver observer;
     private boolean registered;
+    private boolean progressRefreshPosted;
     private long lastRefreshElapsedMs = Long.MIN_VALUE;
 
     public LanFtpRuntimeObserver(Context context, Runnable refresh) {
@@ -47,7 +48,7 @@ public final class LanFtpRuntimeObserver implements AutoCloseable {
 
     @Override
     public void close() {
-        handler.removeCallbacks(delayedProgressRefresh);
+        cancelProgressRefresh();
         if (!registered) {
             return;
         }
@@ -64,18 +65,28 @@ public final class LanFtpRuntimeObserver implements AutoCloseable {
             return;
         }
         if (!LanFtpStatusProvider.isProgressUri(uri)) {
-            handler.removeCallbacks(delayedProgressRefresh);
+            cancelProgressRefresh();
             dispatchRefresh();
             return;
         }
         long now = SystemClock.elapsedRealtime();
         long delay = progressDelayMillis(lastRefreshElapsedMs, now);
         if (delay == 0L) {
-            handler.removeCallbacks(delayedProgressRefresh);
+            cancelProgressRefresh();
             dispatchRefresh();
-        } else if (!handler.hasCallbacks(delayedProgressRefresh)) {
-            handler.postDelayed(delayedProgressRefresh, delay);
+        } else if (!progressRefreshPosted) {
+            progressRefreshPosted = handler.postDelayed(delayedProgressRefresh, delay);
         }
+    }
+
+    private void runDelayedProgressRefresh() {
+        progressRefreshPosted = false;
+        dispatchRefresh();
+    }
+
+    private void cancelProgressRefresh() {
+        handler.removeCallbacks(delayedProgressRefresh);
+        progressRefreshPosted = false;
     }
 
     private void dispatchRefresh() {

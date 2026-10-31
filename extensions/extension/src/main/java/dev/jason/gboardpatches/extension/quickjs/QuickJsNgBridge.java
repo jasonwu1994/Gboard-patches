@@ -440,7 +440,7 @@ public final class QuickJsNgBridge {
             if (current == '\r') {
                 int next = input.read();
                 if (next == '\n') {
-                    return output.toString(StandardCharsets.ISO_8859_1);
+                    return output.toString("ISO-8859-1");
                 }
                 if (next != -1) {
                     output.write(current);
@@ -449,14 +449,14 @@ public final class QuickJsNgBridge {
                 continue;
             }
             if (current == '\n') {
-                return output.toString(StandardCharsets.ISO_8859_1);
+                return output.toString("ISO-8859-1");
             }
             output.write(current);
         }
         if (output.size() == 0) {
             return null;
         }
-        return output.toString(StandardCharsets.ISO_8859_1);
+        return output.toString("ISO-8859-1");
     }
 
     private static byte[] readResponseBody(InputStream input, Map<String, String> headers,
