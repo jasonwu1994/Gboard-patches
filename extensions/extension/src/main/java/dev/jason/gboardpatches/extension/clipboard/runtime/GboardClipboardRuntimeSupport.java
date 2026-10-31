@@ -6,8 +6,11 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -64,6 +67,8 @@ final class GboardClipboardRuntimeSupport {
             Collections.synchronizedMap(new WeakHashMap<ClassLoader, ReflectionHandles>());
     final Map<TextView, CountdownBinding> activeCountdownByTextView =
             Collections.synchronizedMap(new WeakHashMap<TextView, CountdownBinding>());
+    final Map<TextView, WeakReference<CountdownBinding>> detachedCountdownByTextView =
+            Collections.synchronizedMap(new WeakHashMap<>());
     final Map<TextView, Integer> activeMaxLinesOverrideByTextView =
             Collections.synchronizedMap(new WeakHashMap<TextView, Integer>());
     final Map<Object, OrderIndexRefreshState> orderIndexRefreshStateByAdapter =
@@ -568,10 +573,13 @@ final class GboardClipboardRuntimeSupport {
         }
     }
 
-    static final class CountdownBinding implements Runnable {
+    static final class CountdownBinding implements Runnable,
+            View.OnAttachStateChangeListener, ViewTreeObserver.OnGlobalLayoutListener,
+            ViewTreeObserver.OnPreDrawListener {
         final GboardClipboardUiHookAdapter module;
+        final GboardClipboardRuntimeSupport support;
         final ReflectionHandles handles;
-        final TextView textView;
+        final WeakReference<TextView> textViewReference;
         final String originalText;
         final long clipId;
         final long clipTimestamp;
@@ -580,13 +588,18 @@ final class GboardClipboardRuntimeSupport {
         final long clipboardTtlMs;
         int clipOrder;
         String renderedText;
+        private WeakReference<ViewTreeObserver> observedTree = new WeakReference<>(null);
+        boolean wasVisible;
+        boolean disposed;
 
-        CountdownBinding(GboardClipboardUiHookAdapter module, ReflectionHandles handles,
+        CountdownBinding(GboardClipboardUiHookAdapter module, GboardClipboardRuntimeSupport support,
+                ReflectionHandles handles,
                 TextView textView, String originalText, long clipId, long clipTimestamp,
                 boolean pinned, boolean special, long clipboardTtlMs, int clipOrder) {
             this.module = module;
+            this.support = support;
             this.handles = handles;
-            this.textView = textView;
+            this.textViewReference = new WeakReference<>(textView);
             this.originalText = originalText == null ? "" : originalText;
             this.clipId = clipId;
             this.clipTimestamp = clipTimestamp;
@@ -594,6 +607,85 @@ final class GboardClipboardRuntimeSupport {
             this.special = special;
             this.clipboardTtlMs = clipboardTtlMs;
             this.clipOrder = clipOrder;
+        }
+
+        TextView textView() { return textViewReference.get(); }
+
+        boolean isVisible(TextView view) {
+            return view != null && view.isAttachedToWindow() && view.isShown()
+                    && view.getWindowVisibility() == View.VISIBLE;
+        }
+
+        void watch(TextView view) {
+            view.addOnAttachStateChangeListener(this);
+            if (view.isAttachedToWindow()) observeTree(view);
+            wasVisible = isVisible(view);
+        }
+
+        private void observeTree(TextView view) {
+            stopObservingTree();
+            ViewTreeObserver tree = view.getViewTreeObserver();
+            tree.addOnGlobalLayoutListener(this);
+            // Detect window-only visibility changes without requesting frames or polling.
+            tree.addOnPreDrawListener(this);
+            observedTree = new WeakReference<>(tree);
+        }
+
+        private void stopObservingTree() {
+            ViewTreeObserver tree = observedTree.get();
+            if (tree != null && tree.isAlive()) {
+                tree.removeOnGlobalLayoutListener(this);
+                tree.removeOnPreDrawListener(this);
+            }
+            observedTree.clear();
+        }
+
+        void dispose(TextView view) {
+            disposed = true;
+            view.removeCallbacks(this);
+            view.removeOnAttachStateChangeListener(this);
+            stopObservingTree();
+        }
+
+        @Override public void onViewAttachedToWindow(View view) {
+            if (disposed || !(view instanceof TextView label)) return;
+            CountdownBinding current = support.activeCountdownByTextView.get(label);
+            if (current != null && current != this) {
+                dispose(label);
+                return;
+            }
+            support.detachedCountdownByTextView.remove(label);
+            support.activeCountdownByTextView.put(label, this);
+            observeTree(label);
+            refreshVisibility();
+        }
+
+        @Override public void onViewDetachedFromWindow(View view) {
+            view.removeCallbacks(this);
+            stopObservingTree();
+            wasVisible = false;
+            if (support.activeCountdownByTextView.get(view) == this) {
+                support.detachedCountdownByTextView.put((TextView) view, new WeakReference<>(this));
+                support.activeCountdownByTextView.remove(view);
+            }
+            // Only the view owns this attach listener; both registry paths remain weak.
+        }
+
+        @Override public void onGlobalLayout() { refreshVisibility(); }
+
+        @Override public boolean onPreDraw() {
+            refreshVisibility();
+            return true;
+        }
+
+        private void refreshVisibility() {
+            TextView view = textView();
+            if (disposed || view == null || support.activeCountdownByTextView.get(view) != this) return;
+            boolean visible = isVisible(view);
+            if (visible == wasVisible) return;
+            wasVisible = visible;
+            if (!visible) view.removeCallbacks(this);
+            else module.onCountdownTick(this);
         }
 
         @Override

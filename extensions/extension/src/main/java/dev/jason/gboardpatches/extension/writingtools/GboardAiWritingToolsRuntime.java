@@ -72,13 +72,15 @@ public final class GboardAiWritingToolsRuntime {
 
     public static Object applyOverriddenFlagValue(Object receiver, Object originalResult) {
         try {
+            if (receiver == null) return originalResult;
+            String flagName = readFlagName(receiver);
+            if (!isOverrideCandidate(flagName, originalResult)) return originalResult;
             Context context = resolveContext();
-            if (context == null || receiver == null) {
+            if (context == null) {
                 return originalResult;
             }
             GboardAiWritingToolsSettings.Snapshot settings =
                     GboardAiWritingToolsSettings.snapshot(context);
-            String flagName = readFlagName(receiver);
             Object enforced = computeOverrideValue(
                     flagName,
                     originalResult,
@@ -144,17 +146,35 @@ public final class GboardAiWritingToolsRuntime {
             return originalResult;
         }
 
-        if (FLAG_CONFIG_PROOFREAD.equals(flagName)
+        if (isEnabledCapabilityFlag(flagName)) {
+            return Boolean.TRUE;
+        }
+        return originalResult;
+    }
+
+    private static boolean isOverrideCandidate(String flagName, Object result) {
+        if (result instanceof String) {
+            return isServerModelConfiguration(flagName)
+                    || FLAG_MODELESS_SMART_EDIT_REGEX_VERSION.equals(flagName)
+                    || FLAG_WRITING_HELPER_SUPPORTED_LANGUAGE_TAGS.equals(flagName)
+                    || FLAG_LLM_PC_SUPPORTED_LANGUAGE_TAGS.equals(flagName);
+        }
+        if (result instanceof Long) return FLAG_BACKEND_TYPE.equals(flagName);
+        return result instanceof Boolean && (isEnabledCapabilityFlag(flagName)
+                || FLAG_HYBRID.equals(flagName)
+                || FLAG_ON_DEVICE_PROOFREAD.equals(flagName)
+                || FLAG_ENABLE_WRITING_TOOLS_VOICE_COMMANDS.equals(flagName));
+    }
+
+    private static boolean isEnabledCapabilityFlag(String flagName) {
+        return FLAG_CONFIG_PROOFREAD.equals(flagName)
                 || FLAG_WRITING_TOOLS.equals(flagName)
                 || FLAG_ENABLE_WRITING_TOOLS_COOPERATIVE_MODE.equals(flagName)
                 || FLAG_WRITING_HELPER_ON_SELECTED_TEXT.equals(flagName)
                 || FLAG_WRITING_HELPER_ENABLE_TEXT_STYLIZATION_INTERNAL.equals(flagName)
                 || FLAG_WRITING_HELPER.equals(flagName)
                 || FLAG_ENABLE_WRITING_TOOLS_FOR_MINORS.equals(flagName)
-                || FLAG_ENABLE_MODELESS_SMART_EDIT.equals(flagName)) {
-            return Boolean.TRUE;
-        }
-        return originalResult;
+                || FLAG_ENABLE_MODELESS_SMART_EDIT.equals(flagName);
     }
 
     private static boolean isServerModelConfiguration(String flagName) {

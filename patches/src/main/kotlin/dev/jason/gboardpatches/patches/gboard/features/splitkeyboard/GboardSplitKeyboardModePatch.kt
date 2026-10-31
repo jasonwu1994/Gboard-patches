@@ -23,6 +23,13 @@ internal val gboardSplitKeyboardModePatch = bytecodePatch(
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
     execute {
+        val eligibility = findMutableMethodOrThrow(GboardSplitKeyboardTargets.splitEligibility)
+        val rewritten = eligibility.applySplitKeyboardEligibilityOverrides()
+        if (rewritten !== eligibility) {
+            val owner = GboardSplitKeyboardTargets.splitEligibility.ownerClass(this)
+            check(owner.methods.remove(eligibility)) { "Native Split eligibility method disappeared" }
+            check(owner.methods.add(rewritten)) { "Duplicate Split eligibility method" }
+        }
         findMutableMethodOrThrow(GboardSplitKeyboardTargets.modeAttach)
             .applySplitKeyboardModeLifecycleDelegate()
         findMutableMethodOrThrow(GboardSplitKeyboardTargets.modeEnvironmentReload)

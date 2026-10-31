@@ -10,6 +10,10 @@ public final class GboardCloseProactiveSuggestionsRuntime {
 
     public static Object applyFlagValue(String flagName, Object stockResult) {
         try {
+            if (!GboardCloseProactiveSuggestionsPolicy.isTargetFlagName(flagName)
+                    || !(stockResult instanceof Boolean)) {
+                return stockResult;
+            }
             return applyFlagValue(
                     flagName,
                     stockResult,

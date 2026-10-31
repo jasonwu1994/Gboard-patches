@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.17.0",
+  "catalog_version": "1.21.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -120,6 +120,13 @@
     "flag_name_field": "field",
     "frosted_configure": "method",
     "frosted_hidden": "method",
+    "frosted_nav_apply": "method",
+    "frosted_nav_body": "field",
+    "frosted_nav_color": "field",
+    "frosted_nav_divider": "field",
+    "frosted_nav_header": "field",
+    "frosted_nav_light": "field",
+    "frosted_nav_params_constructor": "method",
     "frosted_shown": "method",
     "gesture_dispatch": "method",
     "gesture_dispatcher_type": "type",
@@ -132,6 +139,32 @@
     "keyboard_definition_type": "type",
     "keyboard_extension_manager": "method",
     "keyboard_provider_request": "method",
+    "language_models_baked_getter": "method",
+    "language_models_decoder_add_engine": "method",
+    "language_models_decoder_dump": "method",
+    "language_models_decoder_load": "method",
+    "language_models_decoder_remove_engine": "method",
+    "language_models_decoder_reset": "method",
+    "language_models_decoder_unload": "method",
+    "language_models_descriptor": "field",
+    "language_models_engine_model_file": "field",
+    "language_models_engine_model_version": "field",
+    "language_models_engine_models": "field",
+    "language_models_engine_type": "field",
+    "language_models_hmm_enroll": "method",
+    "language_models_hmm_pack": "field",
+    "language_models_hmm_provider": "field",
+    "language_models_hmm_version": "field",
+    "language_models_model_country": "field",
+    "language_models_model_file": "field",
+    "language_models_model_language": "field",
+    "language_models_model_type": "field",
+    "language_models_model_version": "field",
+    "language_models_nwp_manager_factory": "method",
+    "language_models_nwp_open": "method",
+    "language_models_pack_metadata": "method",
+    "language_models_pack_parent": "method",
+    "language_models_parent_version": "method",
     "latin_globe_factory": "method",
     "latin_globe_interval_field": "field",
     "long_press_quick_actions_input_event": "method",
@@ -188,6 +221,7 @@
     "soft_key_metadata_type": "type",
     "soft_key_view_type": "type",
     "split_access_point_name": "field",
+    "split_device_eligibility": "method",
     "split_eligibility": "method",
     "split_mode_attach": "method",
     "split_mode_current": "method",
@@ -197,6 +231,7 @@
     "split_mode_transition": "method",
     "split_order": "method",
     "split_state": "method",
+    "split_width_eligibility": "method",
     "swipe_dismiss_header_dispatch": "method",
     "symbol_footer_corpus": "method",
     "voice_eligibility_constructor": "method",
@@ -1071,6 +1106,7 @@
       "migration_scope": "version-sensitive",
       "consumer_files": [
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/splitkeyboard/GboardSplitKeyboardAccessPointPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/splitkeyboard/GboardSplitKeyboardEligibilityPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/splitkeyboard/GboardSplitKeyboardFeatureMarkerPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/splitkeyboard/GboardSplitKeyboardModePatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/splitkeyboard/GboardSplitKeyboardTargets.kt",
@@ -1084,6 +1120,7 @@
           "order": 1100,
           "required_bindings": [
             "split_access_point_name",
+            "split_device_eligibility",
             "split_eligibility",
             "split_mode_attach",
             "split_mode_current",
@@ -1092,11 +1129,14 @@
             "split_mode_restore",
             "split_mode_transition",
             "split_order",
-            "split_state"
+            "split_state",
+            "split_width_eligibility"
           ],
           "runtime_calls": [
             "SPLIT_KEYBOARD_RUNTIME_AFTER_MODE_ENVIRONMENT_CHANGED",
             "SPLIT_KEYBOARD_RUNTIME_APPLY_ACCESS_POINT_STATE",
+            "SPLIT_KEYBOARD_RUNTIME_APPLY_DEVICE_ELIGIBILITY",
+            "SPLIT_KEYBOARD_RUNTIME_APPLY_WIDTH_ELIGIBILITY",
             "SPLIT_KEYBOARD_RUNTIME_INCLUDE_ACCESS_POINT_IN_ORDER",
             "SPLIT_KEYBOARD_RUNTIME_INTERCEPT_SPLIT_ACTION"
           ]
@@ -1210,12 +1250,21 @@
           "required_bindings": [
             "frosted_configure",
             "frosted_hidden",
+            "frosted_nav_apply",
+            "frosted_nav_body",
+            "frosted_nav_color",
+            "frosted_nav_divider",
+            "frosted_nav_header",
+            "frosted_nav_light",
+            "frosted_nav_params_constructor",
             "frosted_shown"
           ],
           "runtime_calls": [
             "FROSTED_GLASS_RUNTIME_ON_INPUT_VIEW_STARTED",
             "FROSTED_GLASS_RUNTIME_AFTER_CONFIGURE_WINDOW",
-            "FROSTED_GLASS_RUNTIME_ON_INPUT_WINDOW_HIDDEN"
+            "FROSTED_GLASS_RUNTIME_ON_INPUT_WINDOW_HIDDEN",
+            "FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_ENTRY",
+            "FROSTED_GLASS_RUNTIME_ON_APPLY_NAV_BAR_EXIT"
           ]
         }
       ]
@@ -1410,6 +1459,36 @@
       ]
     },
     {
+      "feature_id": "keypress_haptics",
+      "public_patch_name": "Keypress Vibration Intensity Control",
+      "feature_marker": "dev.jason.gboardpatches.feature.keypress_haptics",
+      "target_family_ids": [
+        "flag.reader"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/keypresshaptics/GboardKeypressHapticsFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/keypresshaptics/GboardKeypressHapticsFlagValuePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "keypress_haptics.flag",
+          "anchor_family_id": "flag_bool_getter",
+          "phase": "after_stock_result",
+          "order": 1400,
+          "required_bindings": [
+            "flag_bool_getter",
+            "flag_name_field"
+          ],
+          "runtime_calls": [
+            "KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE"
+          ]
+        }
+      ]
+    },
+    {
       "feature_id": "lan_ftp_server",
       "public_patch_name": "FTP Server",
       "feature_marker": "dev.jason.gboardpatches.feature.lan_ftp_server",
@@ -1430,6 +1509,103 @@
           "order": 300,
           "required_bindings": [],
           "runtime_calls": []
+        }
+      ]
+    },
+    {
+      "feature_id": "language_model_versions",
+      "public_patch_name": "Dictionaries & Predictions",
+      "feature_marker": "dev.jason.gboardpatches.feature.language_models",
+      "target_family_ids": [
+        "flag.reader",
+        "language.models"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/languagemodels/GboardLanguageModelFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/languagemodels/GboardLanguageModelFlagValuePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/languagemodels/GboardLanguageModelNativePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/languagemodels/GboardLanguageModelResourcesPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/languagemodels/GboardLanguageModelTargets.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "language_model_versions.flag",
+          "anchor_family_id": "flag_bool_getter",
+          "phase": "after_stock_result",
+          "order": 5,
+          "required_bindings": [
+            "flag_bool_getter",
+            "flag_name_field",
+            "language_models_baked_getter"
+          ],
+          "runtime_calls": [
+            "LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE"
+          ]
+        },
+        {
+          "contribution_id": "language_model_versions.cache",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 1800,
+          "required_bindings": [
+            "language_models_nwp_manager_factory",
+            "language_models_nwp_open",
+            "language_models_pack_metadata",
+            "language_models_pack_parent",
+            "language_models_parent_version"
+          ],
+          "runtime_calls": [
+            "LANGUAGE_MODELS_RUNTIME_RESTRICT_NWP_CACHED_PACK"
+          ]
+        },
+        {
+          "contribution_id": "language_model_versions.hmm",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 1801,
+          "required_bindings": [
+            "language_models_hmm_enroll",
+            "language_models_hmm_pack",
+            "language_models_hmm_provider",
+            "language_models_hmm_version"
+          ],
+          "runtime_calls": [
+            "LANGUAGE_MODELS_RUNTIME_AFTER_HMM_ENROLL"
+          ]
+        },
+        {
+          "contribution_id": "language_model_versions.decoder",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 1802,
+          "required_bindings": [
+            "language_models_decoder_add_engine",
+            "language_models_decoder_dump",
+            "language_models_decoder_load",
+            "language_models_decoder_remove_engine",
+            "language_models_decoder_reset",
+            "language_models_decoder_unload",
+            "language_models_descriptor",
+            "language_models_engine_model_file",
+            "language_models_engine_model_version",
+            "language_models_engine_models",
+            "language_models_engine_type",
+            "language_models_model_country",
+            "language_models_model_file",
+            "language_models_model_language",
+            "language_models_model_type",
+            "language_models_model_version"
+          ],
+          "runtime_calls": [
+            "LANGUAGE_MODELS_RUNTIME_AFTER_LANGUAGE_MODEL_LOAD",
+            "LANGUAGE_MODELS_RUNTIME_AFTER_LANGUAGE_MODEL_UNLOAD",
+            "LANGUAGE_MODELS_RUNTIME_AFTER_ENGINE_ADDED",
+            "LANGUAGE_MODELS_RUNTIME_AFTER_ENGINE_REMOVED",
+            "LANGUAGE_MODELS_RUNTIME_BEFORE_DECODER_RESET"
+          ]
         }
       ]
     },

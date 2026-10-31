@@ -96,7 +96,8 @@ class GboardTilePreferencesManifestCompositionTest {
         const val WEB_TILE =
             "dev.jason.gboardpatches.extension.webclipboard.WebClipboardTileService"
         const val FTP_PATH =
-            "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature"
+            "dev.jason.gboardpatches.extension.settings.GboardMoreSettingsGroupFeature;" +
+                "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature"
         const val WEB_PATH =
             "dev.jason.gboardpatches.extension.clipboard.GboardClipboardSettingsFeature;" +
                 "dev.jason.gboardpatches.extension.clipboard.GboardWebClipboardSettingsFeature"

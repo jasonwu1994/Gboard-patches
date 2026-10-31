@@ -199,7 +199,8 @@ private const val BIND_QUICK_SETTINGS_TILE_PERMISSION =
 private const val TILE_NAVIGATION_PATH_META_DATA =
     "dev.jason.gboardpatches.tile.NAVIGATION_PATH"
 private const val LAN_FTP_NAVIGATION_PATH =
-    "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature"
+    "dev.jason.gboardpatches.extension.settings.GboardMoreSettingsGroupFeature;" +
+        "dev.jason.gboardpatches.extension.lanftp.settings.GboardLanFtpSettingsFeature"
 private const val LAN_FTP_RESOURCE_ROOT = "lan-ftp-res"
 private const val LAN_FTP_FULL_BACKUP_POLICY =
     "@xml/gboard_patches_lan_ftp_backup_rules"

@@ -27,6 +27,23 @@ public final class GboardPatchesSettings {
         return lookupContext.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
     }
 
+    public static Boolean readKeypressHapticsEnabled(Context context) {
+        try {
+            SharedPreferences preferences = preferencesOrNull(context);
+            return preferences == null ? null : dev.jason.gboardpatches.extension.keypresshaptics
+                    .GboardKeypressHapticsSettings.readEnabled(preferences);
+        } catch (Throwable unavailable) { return null; }
+    }
+
+    public static boolean writeKeypressHapticsEnabled(Context context, boolean enabled) {
+        try {
+            SharedPreferences preferences = preferencesOrNull(context);
+            return preferences != null && preferences.edit().putBoolean(
+                    dev.jason.gboardpatches.extension.keypresshaptics.GboardKeypressHapticsSettings
+                            .PREF_KEY_ENABLED, enabled).commit();
+        } catch (Throwable unavailable) { return false; }
+    }
+
     public static void ensureDefaults(Context context) {
         if (context == null) {
             return;

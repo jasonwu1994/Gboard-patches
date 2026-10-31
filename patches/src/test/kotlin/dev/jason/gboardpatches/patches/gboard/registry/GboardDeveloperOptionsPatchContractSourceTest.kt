@@ -53,7 +53,10 @@ class GboardDeveloperOptionsPatchContractSourceTest {
 
         assertTrue(availability.contains("FEATURE_DEVELOPER_OPTIONS"))
         assertTrue(availability.contains("dev.jason.gboardpatches.feature.developer_options"))
-        assertTrue(featureRegistry.contains("new GboardDeveloperOptionsSettingsFeature("))
+        assertTrue(featureRegistry.contains("new GboardMoreSettingsGroupFeature("))
+        assertTrue(readSource(FEATURE_REGISTRY_PATH.replace(
+            "GboardPatchesSettingsFeatureRegistry.java", "GboardMoreSettingsGroupFeature.java"))
+            .contains("new GboardDeveloperOptionsSettingsFeature("))
         assertTrue("Developer options settings feature missing", Files.isRegularFile(featurePath))
 
         val feature = readSource(FEATURE_PATH)

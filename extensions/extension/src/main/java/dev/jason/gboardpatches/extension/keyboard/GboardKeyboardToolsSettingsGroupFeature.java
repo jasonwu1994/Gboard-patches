@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.extension.keyboard;
 
 import android.content.Context;
+import dev.jason.gboardpatches.extension.keypresshaptics.GboardKeypressHapticsSettingsFeature;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +49,8 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         new GboardQuickInsertSettingsFeature(context),
                         new GboardFloatingWebSearchSettingsFeature(context),
                         new GboardCalculatorSettingsFeature(context),
-                        new GboardSwipeDismissSettingsFeature(context)));
+                        new GboardSwipeDismissSettingsFeature(context),
+                        new GboardKeypressHapticsSettingsFeature(context)));
     }
 
     @Override

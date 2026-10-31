@@ -2,9 +2,14 @@ package dev.jason.gboardpatches.patches.gboard.features.splitkeyboard
 
 import dev.jason.gboardpatches.patches.gboard.shared.GboardFieldTarget
 import dev.jason.gboardpatches.patches.gboard.shared.GboardMethodTarget
+import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardVersionBindings
 
 internal object GboardSplitKeyboardTargets {
     const val ORDER_RETURN_TYPE = "Lwns;"
+
+    val splitEligibility get() = GboardVersionBindings.splitEligibility
+    val splitDeviceEligibility get() = GboardVersionBindings.splitDeviceEligibility
+    val splitWidthEligibility get() = GboardVersionBindings.splitWidthEligibility
 
     val accessPointName = GboardFieldTarget(
         classType = "Ltfm;",

@@ -36,6 +36,11 @@ import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifi
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedTogglePopupPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyintraditionalsimplifiedtoggle.gboardZhuyinTraditionalSimplifiedToggleSoftKeyPatch
 
+import dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelCachePatch
+import dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelHmmPatch
+import dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelDecoderPatch
+
 internal class GboardContributionWiringUnit(
     val contributionIds: Set<String>,
     private val dependencySupplier: () -> Array<Patch<*>>,
@@ -45,6 +50,12 @@ internal class GboardContributionWiringUnit(
 
 internal object GboardContributionWiring {
     private val unitsByFeature = mapOf(
+        "language_model_versions" to listOf(
+            unit("language_model_versions.flag") { arrayOf(gboardLanguageModelFlagValuePatch) },
+            unit("language_model_versions.cache") { arrayOf(gboardLanguageModelCachePatch) },
+            unit("language_model_versions.hmm") { arrayOf(gboardLanguageModelHmmPatch) },
+            unit("language_model_versions.decoder") { arrayOf(gboardLanguageModelDecoderPatch) },
+        ),
         "ai_writing_tools" to listOf(
             unit("ai_writing_tools.flag") { arrayOf(gboardAiWritingToolsFlagValuePatch) },
             unit("ai_writing_tools.preference_observer") { arrayOf(gboardAiWritingTools1853PreferenceObserverPatch) },

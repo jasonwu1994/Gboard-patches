@@ -331,6 +331,12 @@ public final class GboardPatchesSettingsActivity extends Activity
                 GboardPatchesSettingsOrchestrator.Event.modalDismissed()));
     }
 
+    private void onKeyboardPreviewDismissed() {
+        onManagedDialogDismissed();
+        var feature = settingsOrchestrator.snapshot().getCurrent();
+        if (feature != null && feature.updatesDuringKeyboardPreview()) refresh();
+    }
+
     @Override
     public void openFeature(GboardPatchesSettingsContract.Feature feature) {
         if (feature == null) {
@@ -1236,7 +1242,12 @@ public final class GboardPatchesSettingsActivity extends Activity
 
     @Override
     public void requestTargetRestart() {
-        requestGboardRestart();
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            runOnUiThread(this::requestTargetRestart);
+            return;
+        }
+        try { requestGboardRestart(); }
+        catch (Throwable unavailable) { handleRestartFailure("Failed to request target restart", unavailable); }
     }
 
     @Override
@@ -1975,7 +1986,7 @@ public final class GboardPatchesSettingsActivity extends Activity
                 this,
                 this::targetSettingsPackages,
                 this::onManagedDialogShown,
-                this::onManagedDialogDismissed,
+                this::onKeyboardPreviewDismissed,
                 palette.accentContainer,
                 palette.onAccentContainer);
         keyboardPreviewController.attachTo(root);
@@ -3118,14 +3129,16 @@ public final class GboardPatchesSettingsActivity extends Activity
                 TextUtils.isEmpty(screen.getHeaderSummary()) ? View.GONE : View.VISIBLE);
         applyPanelStyle(screen.getPanelStyle());
         panelContainer.removeAllViews();
-        for (GboardPatchesSettingsContract.StatusBlock statusBlock : screen.getStatusBlocks()) {
-            panelContainer.addView(createStatusBlockView(statusBlock));
-        }
-
         List<GboardPatchesSettingsContract.Section> sections = screen.getSections();
         GboardPatchesSettingsContract.Row masterToggle =
                 rootScreen ? null : findMasterToggle(sections);
-        if (masterToggle != null) {
+        if (masterToggle != null && screen.isMasterToggleFirst()) {
+            panelContainer.addView(buildMasterSwitchCard(masterToggle, screen.getToolbarTitle()));
+        }
+        for (GboardPatchesSettingsContract.StatusBlock statusBlock : screen.getStatusBlocks()) {
+            panelContainer.addView(createStatusBlockView(statusBlock));
+        }
+        if (masterToggle != null && !screen.isMasterToggleFirst()) {
             panelContainer.addView(buildMasterSwitchCard(masterToggle, screen.getToolbarTitle()));
         }
         for (int index = 0; index < sections.size(); index++) {
@@ -4041,6 +4054,7 @@ public final class GboardPatchesSettingsActivity extends Activity
             } else {
                 applySegmentPosition(rowView, index, count, advanced);
             }
+            if (item instanceof GboardPatchesSettingsContract.SearchRow) applySearchFieldStyle(rowView);
             list.addView(rowView);
         }
         container.addView(list);
@@ -4226,6 +4240,15 @@ public final class GboardPatchesSettingsActivity extends Activity
                         ViewGroup.LayoutParams.WRAP_CONTENT);
         params.topMargin = index == 0 ? 0 : dp(SEGMENT_GAP_DP);
         rowView.setLayoutParams(params);
+    }
+
+    private void applySearchFieldStyle(View rowView) {
+        GradientDrawable field = new GradientDrawable();
+        field.setColor(palette.accentContainer);
+        field.setCornerRadius(dp(28));
+        field.setStroke(dp(1), blendAlpha(palette.accent, 0.6f));
+        rowView.setBackground(new RippleDrawable(
+                ColorStateList.valueOf(blendAlpha(palette.accent, RIPPLE_ACCENT_ALPHA)), field, null));
     }
 
     private Drawable buildSegmentBackground(int index, int count, boolean advanced) {

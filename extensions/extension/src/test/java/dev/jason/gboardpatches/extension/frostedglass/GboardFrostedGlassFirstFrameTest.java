@@ -16,6 +16,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.DrawableWrapper;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.Map;
 import android.widget.FrameLayout;
 import org.junit.Test;
@@ -82,6 +83,7 @@ public final class GboardFrostedGlassFirstFrameTest {
             assertEquals(77, replacement.getAlpha());
             assertSame(composite, f.root.getBackground());
             GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            f.finishHide();
             assertSame(replacement, f.root.getBackground());
             assertEquals(180, replacement.getAlpha());
         }
@@ -144,6 +146,7 @@ public final class GboardFrostedGlassFirstFrameTest {
             field.setAccessible(true);
             ViewTreeObserver.OnPreDrawListener old = (ViewTreeObserver.OnPreDrawListener) field.get(state);
             GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            f.finishHide();
             assertTrue(old.onPreDraw());
             f.draw();
             assertEquals(255, f.theme.getAlpha());
@@ -197,6 +200,7 @@ public final class GboardFrostedGlassFirstFrameTest {
             assertSame(wrapper, ((LayerDrawable) f.root.getBackground()).getDrawable(0));
             assertEquals(20f, GboardFrostedGlassShape.resolve(f.root, wrapper).topLeft, 0f);
             GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            f.finishHide();
             assertSame(wrapper, f.root.getBackground());
             assertEquals(255, f.theme.getAlpha());
         }
@@ -215,6 +219,7 @@ public final class GboardFrostedGlassFirstFrameTest {
             for (int i = 0; i < 20; i++) f.draw();
             assertEquals(77, color.getAlpha());
             GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            f.finishHide();
             assertEquals(0x80123456, color.getColor());
         }
     }
@@ -232,6 +237,53 @@ public final class GboardFrostedGlassFirstFrameTest {
             user.setUserUnlocked(true);
             f.draw();
             assertEquals(77, f.theme.getAlpha());
+        }
+    }
+
+    @Test public void hideKeepsGlassWhileTheKeyboardSlidesOutThenRestoresStock() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.draw();
+            Object composite = f.root.getBackground();
+            GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            // Frames drawn during the hide animation must not flash the opaque theme.
+            f.draw();
+            assertEquals(77, f.theme.getAlpha());
+            assertSame(composite, f.root.getBackground());
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(200));
+            assertEquals(77, f.theme.getAlpha());
+            f.finishHide();
+            assertEquals(255, f.theme.getAlpha());
+            assertSame(f.theme, f.root.getBackground());
+        }
+    }
+
+    @Test public void showDuringHideAnimationKeepsTheSameGlassWithoutRestoring() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.draw();
+            Object composite = f.root.getBackground();
+            int writes = f.theme.writes;
+            GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.finishHide();
+            f.draw();
+            assertSame(composite, f.root.getBackground());
+            assertEquals(77, f.theme.getAlpha());
+            assertEquals("no restore/reapply round trip", writes, f.theme.writes);
+        }
+    }
+
+    @Test public void hidingStopsPerFrameWorkImmediately() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.draw();
+            GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            int reads = GboardFrostedGlassLifecycleDirectBootTest.CountingSettings.reads;
+            f.theme.setAlpha(200);
+            f.draw();
+            assertEquals("a hiding window is not re-styled", 200, f.theme.getAlpha());
+            assertEquals(reads, GboardFrostedGlassLifecycleDirectBootTest.CountingSettings.reads);
         }
     }
 
@@ -260,6 +312,11 @@ public final class GboardFrostedGlassFirstFrameTest {
             theme.setBounds(0, 0, 1000, 600);
             window = dialog.getWindow();
             ime.overrideDialog = dialog;
+        }
+
+        /** The stock theme returns only after the IME hide animation window. */
+        void finishHide() {
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(600));
         }
 
         void draw() {

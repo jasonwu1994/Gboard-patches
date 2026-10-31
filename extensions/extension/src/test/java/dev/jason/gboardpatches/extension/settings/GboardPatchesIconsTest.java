@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config;
 public final class GboardPatchesIconsTest {
     @Test
     public void everyShellIconParsesIntoTheMaterialViewport() {
-        for (int icon = GboardPatchesIcons.BACKUP; icon <= GboardPatchesIcons.TRANSLATE; icon++) {
+        for (int icon = GboardPatchesIcons.BACKUP; icon <= GboardPatchesIcons.KEYBOARD; icon++) {
             String data = GboardPatchesIcons.pathData(icon);
             Assert.assertNotNull("icon " + icon, data);
             Path path = GboardPatchesIcons.PathDataParser.parse(data);

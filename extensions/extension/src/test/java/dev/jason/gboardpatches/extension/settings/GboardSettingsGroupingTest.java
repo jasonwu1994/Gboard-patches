@@ -94,11 +94,11 @@ public final class GboardSettingsGroupingTest {
 
         assertInOrder(registrySource,
                 "new GboardAiVoiceSettingsGroupFeature(context)",
+                "new GboardLanguageModelSettingsFeature(context)",
                 "new GboardKeyboardToolsSettingsGroupFeature(context)",
                 "new GboardKeyboardLayoutSettingsGroupFeature(context)",
                 "new GboardClipboardSettingsFeature()",
-                "new GboardSettingsHomepageSettingsFeature()",
-                "new GboardDeveloperOptionsSettingsFeature(context)");
+                "new GboardMoreSettingsGroupFeature(context)");
         assertInOrder(aiVoiceGroupSource.substring(aiVoiceGroupSource.indexOf("Arrays.asList(")),
                 "new GboardAiWritingToolsSettingsFeature(context)",
                 "new GboardAdvancedVoiceSettingsFeature(context)",
@@ -127,6 +127,14 @@ public final class GboardSettingsGroupingTest {
                 "new GboardRoundedKeyboardSettingsFeature(context)",
                 "new GboardAccessPointCountSettingsFeature(context)");
         Assert.assertFalse(registrySource.contains("GboardKeyboardSettingsGroupFeature"));
+        String more = readSource("src/main/java/dev/jason/gboardpatches/extension/settings/GboardMoreSettingsGroupFeature.java");
+        assertInOrder(more, "new GboardLanFtpSettingsFeature(context)",
+                "new GboardSettingsHomepageSettingsFeature()",
+                "new GboardBackupRestoreSettingsFeature(context)",
+                "new GboardDeveloperOptionsSettingsFeature(context)");
+        Assert.assertFalse(registrySource.contains("new GboardLanFtpSettingsFeature"));
+        Assert.assertFalse(registrySource.contains("new GboardSettingsHomepageSettingsFeature"));
+
     }
 
     @Test

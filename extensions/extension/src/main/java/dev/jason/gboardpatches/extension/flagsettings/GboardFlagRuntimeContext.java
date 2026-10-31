@@ -25,7 +25,7 @@ public final class GboardFlagRuntimeContext {
         return GboardPatchesSettings.isUserUnlocked(context);
     }
 
-    private static Context resolveContext() {
+    public static Context resolveContext() {
         Context cached = applicationContext;
         if (cached != null) {
             return cached;

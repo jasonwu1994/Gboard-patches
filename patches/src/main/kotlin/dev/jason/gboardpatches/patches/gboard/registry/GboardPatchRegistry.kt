@@ -96,6 +96,32 @@ import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhu
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
+@Suppress("unused")
+val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
+    featureId = "language_model_versions",
+    name = "Dictionaries & Predictions",
+    description = "可選擇字典、預測及輸入修正的資源版本\nChoose resource versions for dictionaries, predictions, and input correction.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelResourcesPatch)
+}
+
+@Suppress("unused")
+val gboardKeypressHapticsPatch = gboardPublicResourcePatch(
+    featureId = "keypress_haptics",
+    name = "Keypress Vibration Intensity Control",
+    description = "將按鍵震動由持續時間改為力度控制。\nControl keypress vibration intensity instead of duration.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFlagValuePatch)
+}
+
 private fun gboardPublicResourcePatch(
     featureId: String,
     name: String,
@@ -883,6 +909,8 @@ object GboardPublishedPatchCatalog {
         gboardInlineSuggestionsFlagPatch,
         gboardKeyShapeSelectionFlagPatch,
         gboardAiWritingToolsPatch,
+        gboardLanguageModelVersionsPatch,
+        gboardKeypressHapticsPatch,
         gboardOcrScanTextPatch,
         gboardSettingsHomepagePatch,
         gboardLatinGlobeKeyIgnoreIntervalPatch,
