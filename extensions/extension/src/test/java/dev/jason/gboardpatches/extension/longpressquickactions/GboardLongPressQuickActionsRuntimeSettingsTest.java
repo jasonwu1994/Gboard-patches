@@ -46,6 +46,24 @@ public final class GboardLongPressQuickActionsRuntimeSettingsTest {
     }
 
     @Test
+    public void selectAllSnapshotDefaultsOffAndParentGateIsRequired() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+        Assert.assertFalse(GboardLongPressQuickActionsRuntimeSettings
+                .snapshotFromPreferences(preferences, 1L).selectAllWhenUnselected);
+        preferences.values.put(GboardLongPressQuickActionsSettings.PREF_KEY_SELECT_ALL_WHEN_UNSELECTED, true);
+        Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings
+                .snapshotFromPreferences(preferences, 2L).selectAllWhenUnselected);
+        try {
+            GboardLongPressQuickActionsRuntimeSettings.setOverrideForTest(false, true, true);
+            Assert.assertFalse(GboardLongPressQuickActionsRuntimeSettings.isSelectAllWhenUnselectedEnabled());
+            GboardLongPressQuickActionsRuntimeSettings.setOverrideForTest(true, false, true);
+            Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings.isSelectAllWhenUnselectedEnabled());
+        } finally {
+            GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
+        }
+    }
+
+    @Test
     public void publicAccessorHonorsTestOverride() {
         GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
         try {

@@ -1,12 +1,16 @@
 package dev.jason.gboardpatches.extension.editingaccesspoints;
 
 import android.view.inputmethod.InputConnection;
+import android.inputmethodservice.InputMethodService;
 import java.lang.ref.WeakReference;
+import java.util.function.BooleanSupplier;
+import dev.jason.gboardpatches.extension.core.input.GboardEditorActions;
 
 /** No connection is retained across clicks. All production calls run on the IME main thread. */
 public final class EditorActionSession {
     public interface Editor {
         InputConnection connection();
+        default InputMethodService inputMethodService() { return null; }
     }
 
     private WeakReference<Editor> active = new WeakReference<>(null);
@@ -22,14 +26,11 @@ public final class EditorActionSession {
         active.clear();
     }
 
-    private static boolean canDispatch(InputConnection connection, EditorAction action) {
-        if (connection == null) return false;
-        if (action != EditorAction.COPY && action != EditorAction.CUT) return true;
-        CharSequence selection = connection.getSelectedText(0);
-        return selection != null && selection.length() > 0;
+    public boolean execute(EditorAction action) {
+        return execute(action, false);
     }
 
-    public boolean execute(EditorAction action) {
+    public boolean execute(EditorAction action, boolean selectAllWhenUnselected) {
         Editor editor = active.get();
         long expectedGeneration = generation;
         if (editor == null || action == null) {
@@ -37,15 +38,14 @@ public final class EditorActionSession {
         }
         try {
             InputConnection connection = editor.connection();
-            if (!canDispatch(connection, action)) {
-                return false;
-            }
-            // A selection read can cross an editor callback. Never dispatch into a replaced session.
-            if (generation != expectedGeneration || active.get() != editor
-                    || editor.connection() != connection) {
-                return false;
-            }
-            return connection.performContextMenuAction(action.contextMenuId);
+            BooleanSupplier current = () -> editor.connection() == connection
+                    && generation == expectedGeneration && active.get() == editor;
+            InputMethodService service = editor.inputMethodService();
+            return service == null
+                    ? GboardEditorActions.perform(connection, action.contextMenuId,
+                            selectAllWhenUnselected, current)
+                    : GboardEditorActions.perform(service, action.contextMenuId,
+                            selectAllWhenUnselected, current);
         } catch (Throwable ignored) {
             return false;
         }

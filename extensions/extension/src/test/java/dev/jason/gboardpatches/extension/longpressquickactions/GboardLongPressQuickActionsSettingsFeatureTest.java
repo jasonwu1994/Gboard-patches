@@ -17,13 +17,15 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         GboardPatchesSettingsContract.Screen screen = feature.buildScreenForState(
                 false,
                 true,
+                false,
+                value -> { },
                 value -> { },
                 value -> { });
 
         Assert.assertEquals("Long-Press Editing Shortcuts", screen.getToolbarTitle());
         Assert.assertEquals(2, screen.getSections().size());
         Assert.assertEquals("Feature", screen.getSections().get(0).getTitle());
-        Assert.assertEquals(2, screen.getSections().get(0).getItems().size());
+        Assert.assertEquals(3, screen.getSections().get(0).getItems().size());
         Assert.assertTrue(screen.getSections().get(0).getItems().get(0)
                 instanceof GboardPatchesSettingsContract.ToggleRow);
         GboardPatchesSettingsContract.ToggleRow toggle =
@@ -71,7 +73,9 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         GboardPatchesSettingsContract.Screen screen = testFeature().buildScreenForState(
                 true,
                 true,
+                false,
                 requested::set,
+                value -> { },
                 value -> { });
         GboardPatchesSettingsContract.ToggleRow toggle =
                 (GboardPatchesSettingsContract.ToggleRow)
@@ -88,14 +92,30 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         GboardPatchesSettingsContract.Screen screen = testFeature().buildScreenForState(
                 true,
                 true,
+                false,
                 value -> { },
-                requested::set);
+                requested::set,
+                value -> { });
         GboardPatchesSettingsContract.SwitchRow globeDrag =
                 (GboardPatchesSettingsContract.SwitchRow)
                         screen.getSections().get(0).getItems().get(1);
 
         globeDrag.getToggleAction().accept(false);
 
+        Assert.assertEquals(Boolean.FALSE, requested.get());
+    }
+
+    @Test
+    public void selectAllSwitchHasIndependentStateAndCallback() {
+        AtomicReference<Boolean> requested = new AtomicReference<>();
+        GboardPatchesSettingsContract.Screen screen = testFeature().buildScreenForState(
+                false, true, true, value -> { }, value -> { }, requested::set);
+        GboardPatchesSettingsContract.SwitchRow row =
+                (GboardPatchesSettingsContract.SwitchRow) screen.getSections().get(0).getItems().get(2);
+        Assert.assertEquals("Select all when nothing is selected", row.getTitle());
+        Assert.assertTrue(row.isChecked());
+        Assert.assertFalse(row.isEnabled());
+        row.getToggleAction().accept(false);
         Assert.assertEquals(Boolean.FALSE, requested.get());
     }
 
@@ -118,6 +138,8 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 "Reopen the keyboard or switch layouts to fully apply changes.",
                 "Hold and drag from globe key",
                 "Swipe from the globe key to A/Z/X/C/V/Y for editing actions.",
+                "Select all when nothing is selected",
+                "Copy or cut all text when nothing is selected.",
                 "Feature",
                 "Mappings",
                 new String[] {"Select all", "Undo", "Copy", "Cut", "Paste", "Redo"});

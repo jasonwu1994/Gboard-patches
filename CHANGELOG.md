@@ -1,3 +1,33 @@
+## [4.2.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.1...v4.2.0-dev.2) (2026-10-31)
+
+### ✨ New Features
+
+* **Gboard:** add an option to automatically select all text before copying or cutting when nothing is selected, available through the toolbar, long-press shortcuts, and globe-key drag gestures.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix paste shortcuts from the toolbar, long-press actions, and globe-key drag gestures in terminal input fields such as Termux.
+
+### ✨ 新功能
+
+* **Gboard:** 新增「未選取文字時自動全選」選項，支援透過工具列、長按及地球鍵拖曳快捷操作，全選並複製或剪下文字。
+
+### 🐛 修復
+
+* **Gboard:** 修復工具列、長按及地球鍵拖曳快捷貼上在 Termux 等終端機輸入介面中無法正常運作的問題。
+
+## [4.1.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0...v4.1.1) (2026-10-31)
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix a crash when opening the keyboard on Android 13 and earlier.
+* **Gboard:** fix Android stopping Web Clipboard after 6 hours and a crash when restarting the service.
+
+### 🐛 修復
+
+* **Gboard:** 修復在 Android 13 及更早版本上開啟鍵盤時閃退的問題。
+* **Gboard:** 修復 Web Clipboard 執行 6 小時後被 Android 停止，以及重新啟動服務時閃退的問題。
+
 ## [4.1.1-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0...v4.1.1-dev.1) (2026-10-31)
 
 ### 🐛 Bug Fixes

@@ -19,7 +19,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 private val PRUNE_RUNTIME_CALL = RuntimeCallId.CLIPBOARD_RUNTIME_HANDLE_CUSTOM_PRUNE
 
 internal val gboardClipboardPrunePatch = bytecodePatch(
-    description = "移植 clipboard DB prune 策略"
+    description = "調整 clipboard DB prune 策略"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 

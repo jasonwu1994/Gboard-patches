@@ -5,6 +5,7 @@ import android.inputmethodservice.InputMethodService;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
+import dev.jason.gboardpatches.extension.core.input.GboardEditorActions;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -137,7 +138,8 @@ public final class GboardLongPressQuickActionsRuntime {
                 return false;
             }
             return consumeRecognizedContextMenuAction(
-                    service::getCurrentInputConnection, contextMenuAction.intValue());
+                    service::getCurrentInputConnection, contextMenuAction.intValue(),
+                    GboardLongPressQuickActionsRuntimeSettings.isSelectAllWhenUnselectedEnabled(), service);
         } catch (Throwable throwable) {
             logError("input event handling failed", throwable);
             return false;
@@ -175,40 +177,40 @@ public final class GboardLongPressQuickActionsRuntime {
     }
 
     static boolean attemptContextMenuAction(InputConnection connection, int actionId) {
-        if (!GboardEditingShortcutDispatchGuard.shouldDispatchContextMenuAction(
-                connection, actionId)) {
-            return false;
-        }
-        try {
-            connection.performContextMenuAction(actionId);
-            return true;
-        } catch (Throwable throwable) {
-            logError("editor action failed", throwable);
-            return false;
-        }
+        return attemptContextMenuAction(connection, actionId, false);
     }
 
-    static boolean consumeRecognizedContextMenuAction(
-            InputConnection connection, int actionId) {
+    static boolean attemptContextMenuAction(InputConnection connection, int actionId,
+            boolean selectAllWhenUnselected) {
+        return GboardEditorActions.perform(connection, actionId, selectAllWhenUnselected, () -> true);
+    }
+
+    static boolean consumeRecognizedContextMenuAction(InputConnection connection, int actionId) {
         return consumeRecognizedContextMenuAction(() -> connection, actionId);
     }
 
-    static boolean consumeRecognizedContextMenuAction(
-            InputConnectionSupplier connectionSupplier, int actionId) {
+    static boolean consumeRecognizedContextMenuAction(InputConnectionSupplier supplier, int actionId) {
+        return consumeRecognizedContextMenuAction(supplier, actionId, false);
+    }
+
+    static boolean consumeRecognizedContextMenuAction(InputConnectionSupplier supplier, int actionId,
+            boolean selectAllWhenUnselected) {
+        return consumeRecognizedContextMenuAction(supplier, actionId, selectAllWhenUnselected, null);
+    }
+
+    private static boolean consumeRecognizedContextMenuAction(InputConnectionSupplier supplier,
+            int actionId, boolean selectAllWhenUnselected, InputMethodService service) {
         try {
-            InputConnection connection = connectionSupplier == null
-                    ? null : connectionSupplier.get();
-            if (attemptContextMenuAction(connection, actionId)) {
-                logInfo(ACTION_LOG_COUNT, 30,
-                        "performed contextMenuAction=0x"
-                                + Integer.toHexString(actionId));
-            } else {
-                logInfo(ACTION_LOG_COUNT, 30,
-                        "suppressed unavailable contextMenuAction=0x"
-                                + Integer.toHexString(actionId));
-            }
+            InputConnection connection = supplier == null ? null : supplier.get();
+            boolean dispatched = service == null
+                    ? attemptContextMenuAction(connection, actionId, selectAllWhenUnselected)
+                    : GboardEditorActions.perform(service, actionId, selectAllWhenUnselected,
+                            () -> service.getCurrentInputConnection() == connection);
+            logInfo(ACTION_LOG_COUNT, 30,
+                    (dispatched ? "dispatched" : "suppressed unavailable")
+                            + " editorAction=0x" + Integer.toHexString(actionId));
         } catch (Throwable throwable) {
-            logError("editor connection lookup failed", throwable);
+            logError("editor connection or action failed", throwable);
         }
         return true;
     }

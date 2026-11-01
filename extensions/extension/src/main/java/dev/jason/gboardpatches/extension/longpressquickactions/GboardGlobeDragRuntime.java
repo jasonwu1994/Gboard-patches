@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
+import dev.jason.gboardpatches.extension.core.input.GboardEditorActions;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -383,11 +384,11 @@ public final class GboardGlobeDragRuntime {
         if (shortcut == GboardEditingShortcutPolicy.Shortcut.REDO) {
             return sendControlChord(connection, KeyEvent.KEYCODE_Y);
         }
-        if (!GboardEditingShortcutDispatchGuard.shouldDispatchContextMenuAction(
-                connection, shortcut.contextMenuActionId)) {
-            return false;
-        }
-        return connection.performContextMenuAction(shortcut.contextMenuActionId);
+        boolean selectAllWhenUnselected = (shortcut == GboardEditingShortcutPolicy.Shortcut.COPY
+                || shortcut == GboardEditingShortcutPolicy.Shortcut.CUT)
+                && GboardLongPressQuickActionsRuntimeSettings.isSelectAllWhenUnselectedEnabled();
+        return GboardEditorActions.perform(service, shortcut.contextMenuActionId, selectAllWhenUnselected,
+                () -> serviceReference.get() == service);
     }
 
     private static boolean sendControlChord(InputConnection connection, int keyCode) {

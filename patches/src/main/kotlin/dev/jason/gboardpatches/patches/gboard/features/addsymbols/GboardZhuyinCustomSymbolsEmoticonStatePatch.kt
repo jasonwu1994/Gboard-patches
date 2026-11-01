@@ -19,7 +19,7 @@ private const val HEADER_VIEW_CLASS =
 private const val VIEW_UTIL_CLASS = "Ltmk;"
 
 internal val gboardZhuyinCustomSymbolsEmoticonStatePatch = bytecodePatch(
-    description = "移植 add-symbols 的 emoticon host / state isolation / header 主線。"
+    description = "調整 add-symbols 的 emoticon host / state isolation / header 主線。"
 ) {
     dependsOn(gboardZhuyinCustomSymbolsExtensionPatch)
 

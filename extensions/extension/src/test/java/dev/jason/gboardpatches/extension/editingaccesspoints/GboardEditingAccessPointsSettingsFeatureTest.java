@@ -42,11 +42,11 @@ public class GboardEditingAccessPointsSettingsFeatureTest {
         assertTrue(feature.isAvailable(context));
     }
 
-    @Test public void fiveSwitchesPersistAndPreviewIsAttachedToOverallSwitch() {
+    @Test public void featureSwitchesAndIndependentSelectAllPersist() {
         GboardPatchesSettingsContract.Screen screen = feature.buildScreen(host);
         assertEquals("Feature", screen.getSections().get(0).getTitle());
         assertEquals("Add Select All, Copy, Cut and Paste to the menu.", screen.getHeaderSummary());
-        assertEquals(5, screen.getRows().size());
+        assertEquals(6, screen.getRows().size());
         GboardPatchesSettingsContract.ToggleRow overall =
                 (GboardPatchesSettingsContract.ToggleRow) screen.getRows().get(0);
         assertTrue(overall.isChecked());
@@ -68,12 +68,27 @@ public class GboardEditingAccessPointsSettingsFeatureTest {
         assertTrue(GboardEditingAccessPointsRuntime.enabled(context, EditorAction.CUT));
     }
 
+    @Test public void selectAllDefaultsOffAndKeepsItsOwnPreference() {
+        GboardPatchesSettingsContract.SwitchRow row =
+                (GboardPatchesSettingsContract.SwitchRow) feature.buildScreen(host).getRows().get(5);
+        assertFalse(row.isChecked());
+        assertTrue(row.isEnabled());
+        assertEquals("Select all when nothing is selected", row.getTitle());
+        row.getToggleAction().accept(true);
+        assertTrue(preferences.getBoolean(
+                GboardEditingAccessPointsSettings.SELECT_ALL_WHEN_UNSELECTED, false));
+        assertFalse(preferences.contains("pref_long_press_quick_actions_select_all_when_unselected"));
+        preferences.edit().putBoolean(GboardEditingAccessPointsSettings.ENABLED, false).commit();
+        assertFalse(feature.buildScreen(host).getRows().get(5).isEnabled());
+    }
+
     @Test public void traditionalChineseCopyAndRenderFailureAreSafe() {
         preferences.edit().putString("pref_settings_ui_language", "zh-Hant").commit();
         GboardPatchesSettingsContract.Screen screen = feature.buildScreen(host);
         assertEquals("功能", screen.getSections().get(0).getTitle());
         assertEquals("將全選、複製、剪下與貼上加入選單。", screen.getHeaderSummary());
         assertEquals("強制停止並重新啟動 Gboard 後生效", screen.getRows().get(0).getSummary());
+        assertEquals("未選取時自動全選", screen.getRows().get(5).getTitle());
         assertEquals(1, feature.buildScreen(null).getStatusBlocks().size());
     }
 }

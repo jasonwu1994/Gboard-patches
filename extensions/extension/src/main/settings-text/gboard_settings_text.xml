@@ -1794,6 +1794,14 @@
         <translation locale="en">Feature</translation>
         <translation locale="zh-Hant">功能</translation>
     </string>
+    <string name="gboard_patches_long_press_quick_actions_select_all_title">
+        <translation locale="en">Select all when nothing is selected</translation>
+        <translation locale="zh-Hant">未選取時自動全選</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_select_all_summary">
+        <translation locale="en">When no text is selected, long-press C/X or drag from Globe to C/X to copy or cut all text in the input field.</translation>
+        <translation locale="zh-Hant">未選取文字時，長按 C/X 或從地球鍵拖曳到 C/X，會複製或剪下輸入框內的全部文字。</translation>
+    </string>
     <string name="gboard_patches_long_press_quick_actions_section_mappings">
         <translation locale="en">Mappings</translation>
         <translation locale="zh-Hant">說明</translation>
@@ -3253,6 +3261,14 @@
     <string name="gboard_edit_ap_error">
         <translation locale="en">Editing buttons settings unavailable. Reopen settings and try again.</translation>
         <translation locale="zh-Hant">編輯按鈕設定無法載入，請重新開啟設定再試一次。</translation>
+    </string>
+    <string name="gboard_edit_ap_select_all_unselected_title">
+        <translation locale="en">Select all when nothing is selected</translation>
+        <translation locale="zh-Hant">未選取時自動全選</translation>
+    </string>
+    <string name="gboard_edit_ap_select_all_unselected_summary">
+        <translation locale="en">When no text is selected, the toolbar Copy/Cut buttons copy or cut all text in the input field.</translation>
+        <translation locale="zh-Hant">未選取文字時，工具列的複製/剪下會複製或剪下輸入框內的全部文字。</translation>
     </string>
     <string name="gboard_patches_section_settings">
         <translation locale="en">Settings</translation>
