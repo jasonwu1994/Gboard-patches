@@ -38,19 +38,6 @@ Features designed and built by this project rather than simply unlocking an exis
 </details>
 
 <details>
-  <summary><code>Web Clipboard</code></summary>
-
-  Hosts a phone-powered Web Clipboard portal that lets desktop browsers sync with Gboard over the same LAN, with a pairing code gate and an optional Quick Settings Tile.
-
-  Preview:
-
-  <img alt="Web Clipboard pairing gate" src="assets/features/web-clipboard/01-pairing-gate.png" width="720">
-
-  <img alt="Web Clipboard conversation view" src="assets/features/web-clipboard/02-conversation-view.png" width="720">
-
-</details>
-
-<details>
   <summary><code>Floating Web Search</code></summary>
 
   Open a floating web page directly from Gboard to quickly search for the information you need.
@@ -106,12 +93,6 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 </details>
 
 <details>
-  <summary><code>Simple Calculator</code></summary>
-
-  Adds an optional inline calculator for arithmetic expressions typed in any text field. The result appears in Gboard's suggestion row; tap it to replace the expression, or long-press it to copy the result.
-</details>
-
-<details>
   <summary><code>Swipe Down to Dismiss Keyboard</code></summary>
 
   Swipe down from the suggestions or toolbar to close the keyboard.
@@ -139,12 +120,6 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
   <summary><code>Emojis, stickers & GIFs Tab Order</code></summary>
 
 Customize the bottom tab order in Gboard's Emojis, stickers & GIFs panel with drag-and-drop reordering.
-</details>
-
-<details>
-  <summary><code>Backup &amp; Restore</code></summary>
-
-  Exports all Gboard Patches settings to a portable JSON backup and restores only the modules you select, with per-module and per-key results. It also exports, compares, and restores Gboard's raw PB/XML flag-store files.
 </details>
 
 
