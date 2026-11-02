@@ -1,0 +1,64 @@
+name: Build Morphe patch bundle
+
+on:
+  push:
+    branches:
+      - remove-unwanted-features
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify .mpp bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build and test Morphe patches
+        env:
+          GITHUB_ACTOR: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN }}
+        run: ./gradlew :patches:test :patches:buildAndroid generatePatchesList
+
+      - name: Verify generated Morphe bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(patches/build/libs/*.mpp)
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Expected exactly one .mpp bundle, found ${#files[@]}"
+            printf '%s\n' "${files[@]}"
+            exit 1
+          fi
+          test -s "${files[0]}"
+          echo "Generated bundle: ${files[0]}"
+          ls -lh "${files[0]}"
+
+      - name: Upload Morphe patch bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gboard-Patches-Morphe-mpp
+          path: patches/build/libs/*.mpp
+          if-no-files-found: error
+          retention-days: 30
