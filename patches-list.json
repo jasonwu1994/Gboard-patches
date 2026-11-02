@@ -50,18 +50,6 @@
       "options": []
     },
     {
-      "name": "Backup & Restore",
-      "description": "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\nExport or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.5.4.993608717-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
       "name": "Change emoji size",
       "description": "變更表情符號大小\nChange emoji size.",
       "use": true,
@@ -438,18 +426,6 @@
       "options": []
     },
     {
-      "name": "Simple Calculator",
-      "description": "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\nType an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.5.4.993608717-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
       "name": "Swipe Down to Dismiss Keyboard",
       "description": "從建議列或工具列向下滑動以關閉鍵盤。\nSwipe down from the suggestions or toolbar to close the keyboard.",
       "use": true,
@@ -500,18 +476,6 @@
     {
       "name": "Use Bluetooth Microphone",
       "description": "啟用 語音輸入 -> 使用藍芽麥克風\nEnable Voice typing -> Use Bluetooth microphone.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.5.4.993608717-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
-      "name": "Web Clipboard",
-      "description": "新增手機自架的 Web Clipboard，支援瀏覽器同步、配對碼與快速設定開關\nAdd the phone-hosted Web Clipboard with browser sync, pairing, and a Quick Settings Tile.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
