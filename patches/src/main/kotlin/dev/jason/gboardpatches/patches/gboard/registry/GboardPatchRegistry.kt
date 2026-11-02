@@ -17,10 +17,6 @@ import dev.jason.gboardpatches.patches.gboard.features.accesspointsmenu.gboardAc
 import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardAdvancedVoiceFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.bluetoothmicrophone.gboardBluetoothMicrophoneFlagValuePatch
-import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreFeatureMarkerPatch
-import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreManifestPatch
-import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorFeatureMarkerPatch
-import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.about.gboardAboutPageResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardCustomSymbolsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardFeatureMarkerPatch
@@ -42,10 +38,6 @@ import dev.jason.gboardpatches.patches.gboard.features.customtheme.gboardCustomT
 import dev.jason.gboardpatches.patches.gboard.features.customtheme.gboardCustomThemeOfficialImportPatch
 import dev.jason.gboardpatches.patches.gboard.features.emojisize.gboardEmojiSizeFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.emojisize.gboardEmojiSizeFlagValuePatch
-import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardAssetsPatch
-import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardCapturePatch
-import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardFeatureMarkerPatch
-import dev.jason.gboardpatches.patches.gboard.features.webclipboard.gboardWebClipboardManifestPatch
 import dev.jason.gboardpatches.patches.gboard.features.websearch.gboardFloatingWebSearchFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.websearch.gboardFloatingWebSearchManifestPatch
 import dev.jason.gboardpatches.patches.gboard.features.englishqwerty.gboardEnglishUppercaseToggleFeatureMarkerPatch
@@ -259,22 +251,6 @@ val gboardFloatingWebSearchPatch = gboardPublicResourcePatch(
     )
 }
 
-@Suppress("unused")
-val gboardSimpleCalculatorPatch = gboardPublicResourcePatch(
-    featureId = "simple_calculator",
-    name = "Simple Calculator",
-    description = "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\n" +
-        "Type an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
-    default = true,
-) {
-    compatibleWith(COMPATIBILITY_GBOARD)
-
-    dependsOn(
-        gboardPatchesSettingsPatch,
-        gboardCalculatorFeatureMarkerPatch,
-        gboardCalculatorLifecyclePatch,
-    )
-}
 
 @Suppress("unused")
 val gboardSwipeDismissPatch = gboardPublicResourcePatch(
@@ -570,22 +546,6 @@ val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
     )
 }
 
-@Suppress("unused")
-val gboardBackupRestorePatch = gboardPublicResourcePatch(
-    featureId = "backup_restore",
-    name = "Backup & Restore",
-    description = "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\n" +
-        "Export or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
-    default = true,
-) {
-    compatibleWith(COMPATIBILITY_GBOARD)
-
-    dependsOn(
-        gboardPatchesSettingsPatch,
-        gboardBackupRestoreFeatureMarkerPatch,
-        gboardBackupRestoreManifestPatch,
-    )
-}
 
 @Suppress("unused")
 val gboardSymbolsFooterOrderPatch = gboardPublicResourcePatch(
@@ -640,23 +600,6 @@ val gboardClipboardContentLimitPatch = gboardPublicResourcePatch(
     )
 }
 
-@Suppress("unused")
-val gboardWebClipboardPatch = gboardPublicResourcePatch(
-    featureId = "web_clipboard",
-    name = "Web Clipboard",
-    description = "新增手機自架的 Web Clipboard，支援瀏覽器同步、配對碼與快速設定開關\nAdd the phone-hosted Web Clipboard with browser sync, pairing, and a Quick Settings Tile.",
-    default = true
-) {
-    compatibleWith(COMPATIBILITY_GBOARD)
-
-    dependsOn(
-        gboardPatchesSettingsPatch,
-        gboardWebClipboardFeatureMarkerPatch,
-        gboardWebClipboardManifestPatch,
-        gboardWebClipboardAssetsPatch,
-        gboardWebClipboardCapturePatch
-    )
-}
 
 @Suppress("unused")
 val gboardLanFtpServerPatch = gboardPublicResourcePatch(
