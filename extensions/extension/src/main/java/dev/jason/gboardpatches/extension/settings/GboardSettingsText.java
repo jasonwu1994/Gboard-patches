@@ -37,6 +37,16 @@ public final class GboardSettingsText {
         return requireContext(context).getResources().getQuantityString(resId, quantity, quantity);
     }
 
+    /** The language the settings page shows its text in for {@code context}. */
+    public static String languageTag(Context context) {
+        return resolveLanguageTag(context);
+    }
+
+    /** The packaged, unformatted text of {@code resId} in {@code languageTag}; null if none. */
+    public static String getInLanguage(int resId, String languageTag) {
+        return GboardSettingsTextCatalog.template(resId, normalizeLanguageTag(languageTag));
+    }
+
     static String resolveStableTextForTesting(int resId, String languageTag, Object... args) {
         return resolveStableText(resId, normalizeLanguageTag(languageTag), args);
     }

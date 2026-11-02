@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.patches.gboard.registry
 
+import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.Patch
 import dev.jason.gboardpatches.patches.gboard.features.editingaccesspoints.gboardEditingAccessPointsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.editingaccesspoints.gboardEditingAccessPointsLifecyclePatch
@@ -919,17 +920,16 @@ object GboardPublishedPatchCatalog {
         gboardSignatureBypassPatch,
     ).filterTo(linkedSetOf()) { patch -> patch.name != null }
 
-    @Suppress("DEPRECATION")
     fun publishedInventory(version: String): String {
         val publishedPatches = morpheRegistrations.sortedBy { patch -> patch.name }.map { patch ->
             PublishedPatch(
                 name = patch.name!!,
                 description = patch.description,
-                use = patch.use,
+                use = patch.default,
                 dependencies = patch.dependencies.mapNotNull { dependency -> dependency.name }.sorted(),
-                compatiblePackages = patch.compatiblePackages?.associate { (packageName, versions) ->
-                    packageName to versions
-                },
+                compatiblePackages = patch.compatibility?.mapNotNull { compatibility ->
+                    compatibility.publishedPackageVersions()
+                }?.toMap(),
                 options = patch.options.values.map { option ->
                     PublishedPatch.Option(
                         key = option.key,
@@ -954,6 +954,17 @@ object GboardPublishedPatchCatalog {
         }
 
         return gson.toJson(inventory) + "\n"
+    }
+
+    // Keeps the published package-to-versions shape that patcher 2.x no longer exposes:
+    // stable targets win over experimental ones, and any version-less target means all versions.
+    private fun Compatibility.publishedPackageVersions(): Pair<String, Set<String>?>? {
+        val packageName = packageName ?: return null
+        val listedTargets = targets.filter { target -> !target.isExperimental }.ifEmpty { targets }
+        if (listedTargets.isEmpty() || listedTargets.any { target -> target.version == null }) {
+            return packageName to null
+        }
+        return packageName to listedTargets.mapTo(linkedSetOf()) { target -> target.version!! }
     }
 
     private class PublishedPatch(

@@ -1,3 +1,15 @@
+## [4.2.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.2...v4.2.0-dev.4) (2026-11-02)
+
+### ✨ New Features
+
+* **Gboard:** update morphe-patcher to **v2.1.0**.
+* **Gboard:** add a search button to the Patches settings page to quickly find settings.
+
+### ✨ 新功能
+
+* **Gboard:** 將 morphe-patcher 更新至 **v2.1.0**。
+* **Gboard:** 在 Patches 設定頁面新增搜尋按鈕，方便快速尋找設定項目。
+
 ## [4.2.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.1...v4.2.0-dev.2) (2026-10-31)
 
 ### ✨ New Features

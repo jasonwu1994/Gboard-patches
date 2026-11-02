@@ -15,7 +15,7 @@ class GboardEditingAccessPointsPatchContractTest {
             it.name == "Toolbar Editing Buttons"
         }
         assertSame(gboardEditingAccessPointsPatch, patch)
-        assertTrue(patch.use)
+        assertTrue(patch.default)
         assertTrue(patch.dependencies.contains(gboardEditingAccessPointsLifecyclePatch))
         assertTrue(patch.dependencies.contains(gboardEditingAccessPointsFeatureMarkerPatch))
         assertTrue(patch.dependencies.contains(gboardAccessPointContributions1803Patch))

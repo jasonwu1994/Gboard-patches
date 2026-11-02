@@ -214,6 +214,8 @@ class GboardDeveloperOnlyPatchLoaderIntegrationTest {
             null,
             null,
             null,
+            "--release",
+            BUNDLE_JAVA_RELEASE,
             "-d",
             contractClasses.toString(),
             "-classpath",
@@ -225,6 +227,8 @@ class GboardDeveloperOnlyPatchLoaderIntegrationTest {
             null,
             null,
             null,
+            "--release",
+            BUNDLE_JAVA_RELEASE,
             "-d",
             probeClasses.toString(),
             sources.resolve("PatchLoaderProbe.java").toString(),
@@ -348,6 +352,10 @@ class GboardDeveloperOnlyPatchLoaderIntegrationTest {
         const val EXTERNAL_SIGNATURE =
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         const val EXTERNAL_VERSION = "18.0.3.123456789-release-arm64-v8a"
+
+        // Patcher 2.1 rejects bundles with classes newer than Java 17, the Morphe Manager limit,
+        // so shadows written into the bundle must not follow the test JDK's default target.
+        const val BUNDLE_JAVA_RELEASE = "17"
         val VERSION_BINDINGS_ENTRY =
             GENERATED_PACKAGE.replace('.', '/') + "/GboardVersionBindings.class"
         val REPLACED_CLASSES = setOf(

@@ -220,6 +220,48 @@
         <translation locale="en">Navigate up</translation>
         <translation locale="zh-Hant">返回上一層</translation>
     </string>
+    <string name="gboard_patches_search_title">
+        <translation locale="en">Search settings</translation>
+        <translation locale="zh-Hant">搜尋設定</translation>
+    </string>
+    <string name="gboard_patches_search_hint">
+        <translation locale="en">Search settings</translation>
+        <translation locale="zh-Hant">搜尋設定</translation>
+    </string>
+    <string name="gboard_patches_search_clear">
+        <translation locale="en">Clear search</translation>
+        <translation locale="zh-Hant">清除搜尋</translation>
+    </string>
+    <string name="gboard_patches_search_close">
+        <translation locale="en">Close search</translation>
+        <translation locale="zh-Hant">關閉搜尋</translation>
+    </string>
+    <string name="gboard_patches_search_empty_summary">
+        <translation locale="en">Search feature and setting names.</translation>
+        <translation locale="zh-Hant">輸入功能或設定名稱。</translation>
+    </string>
+    <string name="gboard_patches_search_no_results_title">
+        <translation locale="en">No matching settings</translation>
+        <translation locale="zh-Hant">找不到相符的設定</translation>
+    </string>
+    <string name="gboard_patches_search_no_results_summary">
+        <translation locale="en">Try a shorter or different keyword.</translation>
+        <translation locale="zh-Hant">試試較短或其他關鍵字。</translation>
+    </string>
+    <plurals name="gboard_patches_search_results">
+        <item quantity="one">
+            <translation locale="en">%d result</translation>
+            <translation locale="zh-Hant">%d 個結果</translation>
+        </item>
+        <item quantity="other">
+            <translation locale="en">%d results</translation>
+            <translation locale="zh-Hant">%d 個結果</translation>
+        </item>
+    </plurals>
+    <string name="gboard_patches_search_english_match">
+        <translation locale="en">English: %1$s</translation>
+        <translation locale="zh-Hant">英文相符：%1$s</translation>
+    </string>
     <string name="gboard_patches_restart_action">
         <translation locale="en">Restart Gboard</translation>
         <translation locale="zh-Hant">重新啟動 Gboard</translation>

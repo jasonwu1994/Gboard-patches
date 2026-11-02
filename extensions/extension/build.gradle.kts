@@ -374,9 +374,14 @@ val generateSettingsText = tasks.register("generateSettingsText") {
 }
 
 // Settings assertions use English unless a test explicitly selects another locale.
+// -PupdateSettingsSearchIndex=true lets the snapshot test rewrite the packaged search index.
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
     systemProperty("user.language", "en")
     systemProperty("user.country", "US")
+    systemProperty(
+        "gboard.updateSettingsSearchIndex",
+        providers.gradleProperty("updateSettingsSearchIndex").getOrElse("false")
+    )
 }
 
 val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
