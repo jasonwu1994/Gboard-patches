@@ -8,6 +8,7 @@ import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWrit
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803SmartEditInitPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1853PreferenceObserverPatch
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesSettingsPatch
 import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmission
 import java.nio.charset.StandardCharsets
@@ -43,9 +44,10 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
         assertTrue(source.contains("default = true"))
         assertTrue(source.contains("gboardAiWritingToolsFeatureMarkerPatch"))
         assertTrue(source.contains("gboardAiWritingToolsFlagValuePatch"))
-        assertTrue(source.contains("gboardAiWritingTools1803AutoFixRoutePatch"))
-        assertTrue(source.contains("gboardAiWritingTools1803GenAiRefreshPatch"))
-        assertFalse(contributionWiring.contains("gboardAiWritingToolsFlagValuePatch"))
+        assertFalse(source.contains("gboardAiWritingTools1803AutoFixRoutePatch"))
+        assertFalse(source.contains("gboardAiWritingTools1803GenAiRefreshPatch"))
+        assertTrue(contributionWiring.contains("gboardAiWritingToolsFlagValuePatch"))
+        assertTrue(contributionWiring.contains("gboardAiWritingTools1853PreferenceObserverPatch"))
         assertFalse(contributionWiring.contains("gboardAiWritingToolsSettingsVisibilityPatch"))
         assertFalse(contributionWiring.contains("gboardAiWritingToolsSignalPatch"))
         assertFalse(contributionWiring.contains("gboardAiWritingToolsVoiceCommandPatch"))
@@ -56,9 +58,9 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
     }
 
     @Test
-    fun formal1803AdmissionKeepsOnlyTheTypedFlagContribution() {
+    fun formal1853AdmissionKeepsTypedFlagsAndExactPreferenceObservationOnly() {
         assertEquals(
-            setOf("ai_writing_tools.flag"),
+            setOf("ai_writing_tools.flag", "ai_writing_tools.preference_observer"),
             GboardTargetAdmission.admittedContributionIdsByFeature
                 .getValue("ai_writing_tools"),
         )
@@ -67,14 +69,18 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
                 gboardPatchesSettingsPatch,
                 gboardAiWritingToolsFeatureMarkerPatch,
                 gboardAiWritingToolsFlagValuePatch,
-                gboardAiWritingTools1803AutoFixRoutePatch,
-                gboardAiWritingTools1803AutoFixAcceptancePatch,
-                gboardAiWritingTools1803GenAiInitPatch,
-                gboardAiWritingTools1803GenAiRefreshPatch,
-                gboardAiWritingTools1803SmartEditInitPatch,
+                gboardAiWritingTools1853PreferenceObserverPatch,
             ),
             gboardAiWritingToolsPatch.dependencies.toList(),
         )
+        val retired = setOf(
+            gboardAiWritingTools1803AutoFixRoutePatch,
+            gboardAiWritingTools1803AutoFixAcceptancePatch,
+            gboardAiWritingTools1803GenAiInitPatch,
+            gboardAiWritingTools1803GenAiRefreshPatch,
+            gboardAiWritingTools1803SmartEditInitPatch,
+        )
+        assertTrue(gboardAiWritingToolsPatch.dependencies.none { it in retired })
     }
 
     @Test
@@ -88,7 +94,7 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
         assertTrue(writingTools.get("use").asBoolean)
         assertTrue(writingTools.getAsJsonArray("dependencies").isEmpty)
         assertEquals(
-            listOf("18.0.3.954559732-release-arm64-v8a"),
+            listOf("18.5.4.993608717-release-arm64-v8a"),
             writingTools.getAsJsonObject("compatiblePackages")
                 .getAsJsonArray("com.google.android.inputmethod.latin")
                 .map { version -> version.asString },
@@ -105,6 +111,11 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
         assertTrue(
             generatedBindings.keySet().none { key -> key.startsWith("ai_writing_tools_") },
         )
+        val preference = generatedBindings.getAsJsonObject("writing_official_preference")
+        assertEquals("Lcht;", preference.get("class_type").asString)
+        assertEquals("x", preference.get("method_name").asString)
+        assertEquals(listOf("I", "Z"), preference.getAsJsonArray("parameter_types").map { it.asString })
+        assertEquals("Z", preference.get("return_type").asString)
 
         val contributionWiring = Files.readString(
             repositoryRoot.resolve(

@@ -103,10 +103,10 @@ public final class GboardGlobeDragSessionTest {
         GboardGlobeDragSession session = new GboardGlobeDragSession(
                 8, new Object(), shortcut -> true, GRACE_MS);
         session.claimTarget(target(
-                0x7f0b1ac2, "y", GboardEditingShortcutPolicy.Shortcut.UNDO));
+                0x7f0b1a06, "y", GboardEditingShortcutPolicy.Shortcut.UNDO));
 
         GboardEditingShortcutPolicy.Shortcut resolved = session.resolveTerminalShortcut(target(
-                0x7f0b1ac2, "y", GboardEditingShortcutPolicy.Shortcut.REDO));
+                0x7f0b1a06, "y", GboardEditingShortcutPolicy.Shortcut.REDO));
 
         Assert.assertSame(GboardEditingShortcutPolicy.Shortcut.UNDO, resolved);
     }
@@ -119,13 +119,13 @@ public final class GboardGlobeDragSessionTest {
                 13, new Object(), shortcut -> true, GRACE_MS);
         session.claimTarget(target(
                 claimedMetadata,
-                0x7f0b1ac2,
+                0x7f0b1a06,
                 "y",
                 GboardEditingShortcutPolicy.Shortcut.UNDO));
 
         Assert.assertNull(session.resolveTerminalShortcut(target(
                 terminalMetadata,
-                0x7f0b1ac2,
+                0x7f0b1a06,
                 "y",
                 GboardEditingShortcutPolicy.Shortcut.UNDO)));
     }

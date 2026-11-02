@@ -16,7 +16,7 @@ public final class GboardAdvancedVoiceSettings {
             "pref_advanced_voice_zh_tw_punctuation_enabled";
     public static final String BACKEND_ADVANCED = "advanced";
     public static final String BACKEND_RAMBLER = "rambler";
-    public static final boolean DEFAULT_ENABLED = false;
+    public static final boolean DEFAULT_ENABLED = true;
     public static final String DEFAULT_BACKEND = BACKEND_ADVANCED;
     public static final boolean DEFAULT_ZH_TW_PUNCTUATION_ENABLED = false;
 
@@ -49,7 +49,7 @@ public final class GboardAdvancedVoiceSettings {
         }
         if (changed) {
             if (editor.commit()) {
-                GboardAdvancedVoice1803RuntimeSettings.invalidateCachedSnapshot();
+                GboardAdvancedVoiceRuntimeSettings.invalidateCachedSnapshot();
             }
         }
     }
@@ -93,7 +93,7 @@ public final class GboardAdvancedVoiceSettings {
                 ? BACKEND_RAMBLER : BACKEND_ADVANCED;
         boolean committed = preferences.edit().putString(PREF_KEY_BACKEND, sanitized).commit();
         if (committed) {
-            GboardAdvancedVoice1803RuntimeSettings.invalidateCachedSnapshot();
+            GboardAdvancedVoiceRuntimeSettings.invalidateCachedSnapshot();
         }
         return committed;
     }
@@ -144,7 +144,7 @@ public final class GboardAdvancedVoiceSettings {
         }
         boolean committed = preferences.edit().putBoolean(key, value).commit();
         if (committed) {
-            GboardAdvancedVoice1803RuntimeSettings.invalidateCachedSnapshot();
+            GboardAdvancedVoiceRuntimeSettings.invalidateCachedSnapshot();
         }
         return committed;
     }

@@ -13,20 +13,20 @@ public final class GboardSpacebarLogoSourceContractTest {
     private final Path root = Path.of(".").toAbsolutePath().normalize();
 
     @Test
-    public void versionAdapterOwnsAll1803Symbols() throws Exception {
+    public void versionAdapterOwnsAllSymbols() throws Exception {
         String source = read(root.resolve(
                 "src/main/java/dev/jason/gboardpatches/extension/spacebarlogo/" +
-                        "GboardSpacebarLogo1803Runtime.java"));
+                        "GboardSpacebarLogoAdapter.java"));
 
-        Assert.assertTrue(source.contains("ACTION_TYPE_CLASS = \"pmy\""));
+        Assert.assertTrue(source.contains("ACTION_TYPE_CLASS = \"qae\""));
         Assert.assertTrue(source.contains(
                 "com.google.android.libraries.inputmethod.metadata.ActionDef"));
-        Assert.assertTrue(source.contains("ACTION_ENTRY_CLASS = \"pnu\""));
-        Assert.assertTrue(source.contains("SPACEBAR_VIEW_ID = 0x7f0b0606"));
-        Assert.assertTrue(source.contains("PRIMARY_LABEL_VIEW_ID = 0x7f0b0651"));
-        Assert.assertTrue(source.contains("GOOGLE_G_DRAWABLE_ID = 0x7f08048b"));
-        Assert.assertTrue(source.contains("HEART_DRAWABLE_ID = 0x7f080476"));
-        Assert.assertTrue(source.contains("EMOJI_DRAWABLE_ID = 0x7f0804c3"));
+        Assert.assertTrue(source.contains("ACTION_ENTRY_CLASS = \"qbc\""));
+        Assert.assertTrue(source.contains("SPACEBAR_VIEW_ID = 0x7f0b05b5"));
+        Assert.assertTrue(source.contains("PRIMARY_LABEL_VIEW_ID = 0x7f0b05f5"));
+        Assert.assertTrue(source.contains("GOOGLE_G_DRAWABLE_ID = 0x7f080467"));
+        Assert.assertTrue(source.contains("HEART_DRAWABLE_ID = 0x7f080452"));
+        Assert.assertTrue(source.contains("EMOJI_DRAWABLE_ID = 0x7f0804a0"));
     }
 
     @Test
@@ -71,7 +71,7 @@ public final class GboardSpacebarLogoSourceContractTest {
         Object space = targetMetadataWithKeyCode(62);
         Object enter = targetMetadataWithKeyCode(66);
         Class<?> metadataClass = space.getClass();
-        java.lang.reflect.Method resolver = GboardSpacebarLogo1803Runtime.class
+        java.lang.reflect.Method resolver = GboardSpacebarLogoAdapter.class
                 .getDeclaredMethod("decoder", ClassLoader.class);
         resolver.setAccessible(true);
         Object decoder = resolver.invoke(null, metadataClass.getClassLoader());
@@ -89,10 +89,10 @@ public final class GboardSpacebarLogoSourceContractTest {
         Object mutatedReturnMetadata = targetMetadataWithKeyCode(66);
         Object receiver = new Object();
 
-        GboardSpacebarLogo1803Runtime.class
+        GboardSpacebarLogoAdapter.class
                 .getMethod("beforeSoftKeyBound", Object.class, Object.class)
                 .invoke(null, receiver, incomingSpace);
-        java.lang.reflect.Method resolver = GboardSpacebarLogo1803Runtime.class
+        java.lang.reflect.Method resolver = GboardSpacebarLogoAdapter.class
                 .getDeclaredMethod("resolveSpaceAction", Object.class, Object.class);
         resolver.setAccessible(true);
 
@@ -113,7 +113,7 @@ public final class GboardSpacebarLogoSourceContractTest {
     public void runtimeAndDialogCallbacksFailClosedAtHostBoundaries() throws Exception {
         String adapter = read(root.resolve(
                 "src/main/java/dev/jason/gboardpatches/extension/spacebarlogo/" +
-                        "GboardSpacebarLogo1803Runtime.java"));
+                        "GboardSpacebarLogoAdapter.java"));
         String runtime = read(root.resolve(
                 "src/main/java/dev/jason/gboardpatches/extension/spacebarlogo/" +
                         "GboardSpacebarLogoRuntime.java"));

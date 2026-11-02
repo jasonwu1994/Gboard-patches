@@ -325,7 +325,7 @@ private fun Set<GboardGestureFamilyFeature>.selectedGestureStages():
         .sortedBy(GboardGestureFamilyStage::order)
 
 private fun MutableMethod.requireSupportedGestureStock() {
-    check(GboardVersionBindings.targetVersion == "18.0.3") {
+    check(GboardVersionBindings.targetVersion in setOf("18.0.3", "18.5.4")) {
         "Unsupported Gboard gesture stock contract for ${GboardVersionBindings.targetVersion}"
     }
     requireExact1803GestureStockShape()

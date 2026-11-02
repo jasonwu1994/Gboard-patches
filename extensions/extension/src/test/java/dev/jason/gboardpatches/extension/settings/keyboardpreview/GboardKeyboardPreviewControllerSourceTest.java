@@ -17,7 +17,7 @@ public final class GboardKeyboardPreviewControllerSourceTest {
                 "src/main/java/dev/jason/gboardpatches/extension/settings/keyboardpreview/" +
                         "GboardKeyboardPreviewController.java"));
 
-        Assert.assertTrue(source.contains("TARGET_KEYBOARD_DRAWABLE_ID = 0x7f0804a6"));
+        Assert.assertFalse(source.contains("TARGET_KEYBOARD_DRAWABLE_ID"));
         Assert.assertFalse(source.contains("R.drawable.ic_gboard_patches_keyboard"));
         Assert.assertTrue(source.contains("new KeyboardIconDrawable(iconColor)"));
         Assert.assertTrue(source.contains("canvas.drawRoundRect"));

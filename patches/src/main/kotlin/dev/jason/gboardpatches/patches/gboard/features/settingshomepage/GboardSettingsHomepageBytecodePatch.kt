@@ -175,7 +175,7 @@ private fun validateControlFlow(instructions: List<Instruction>) {
         "$TARGET_DESCRIPTOR must retain getIntent as its first stock instruction"
     }
     check(instructions.count { instruction ->
-        instruction.isMethodReference("Lewe;->onCreate(Landroid/os/Bundle;)V")
+        instruction.isMethodReference("Lfce;->onCreate(Landroid/os/Bundle;)V")
     } == 1) {
         "$TARGET_DESCRIPTOR must retain its exact super onCreate call"
     }

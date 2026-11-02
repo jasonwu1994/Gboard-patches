@@ -107,9 +107,16 @@ public final class GboardClipboardRuntime {
         UI_HOOK_ADAPTER.beforeItemBind(receiver, holderObject, position);
     }
 
+    public static void abortItemBind() { CARD_PREVIEW_FEATURE.afterItemBind(); }
+
     public static void afterItemBind(Object receiver, Object holderObject, int position) {
         UI_HOOK_ADAPTER.afterItemBind(receiver, holderObject, position);
     }
+
+    public static int resolveColumnCount(Object receiver,int stock) {
+        return GboardClipboardGridRuntime.resolve(receiver,stock,SUPPORT);
+    }
+    public static void afterLayout(Object receiver) { GboardClipboardGridRuntime.afterLayout(receiver,SUPPORT); }
 
     public static Integer resolveColumnCountOverride(Object receiver) {
         return COLUMN_COUNT_HOOK_ADAPTER.resolveColumnCountOverride(receiver);

@@ -11,14 +11,14 @@ final class GboardZhuyinSlideRuntimeSupport {
             "com.google.android.libraries.inputmethod.widgets.SoftKeyView";
     private static final String ACTION_SET_CLASS =
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
-    private static final String ACTION_TYPE_CLASS = "pmy";
+    private static final String ACTION_TYPE_CLASS = "qae";
     private static final String ACTION_DEF_CLASS =
             "com.google.android.libraries.inputmethod.metadata.ActionDef";
-    private static final String ACTION_ENTRY_CLASS = "pnu";
-    private static final String ACTION_BUILDER_CLASS = "pmz";
-    private static final String METADATA_BUILDER_CLASS = "ppo";
-    private static final String INTENTION_CLASS = "pnt";
-    private static final String POINTER_TRACKER_CLASS = "pvi";
+    private static final String ACTION_ENTRY_CLASS = "qbc";
+    private static final String ACTION_BUILDER_CLASS = "qaf";
+    private static final String METADATA_BUILDER_CLASS = "qcv";
+    private static final String INTENTION_CLASS = "qbb";
+    private static final String POINTER_TRACKER_CLASS = "qin";
 
     private static final int PLAIN_TEXT_KEYCODE = -0x2719;
 
@@ -36,7 +36,7 @@ final class GboardZhuyinSlideRuntimeSupport {
     private final Field actionEntryPayloadField;
     private final Constructor<?> actionBuilderConstructor;
     private final Field actionBuilderTypeField;
-    private final Field actionBuilderPopupLabelsField;
+    private final Method setPopupLabelsMethod;
     private final Method setSingleActionMethod;
     private final Method buildActionMethod;
     private final Constructor<?> metadataBuilderConstructor;
@@ -62,30 +62,30 @@ final class GboardZhuyinSlideRuntimeSupport {
         Class<?> intentionClass = resolve(classLoader, INTENTION_CLASS);
         Class<?> pointerTrackerClass = resolve(classLoader, POINTER_TRACKER_CLASS);
 
-        softKeyBindMethod = softKeyViewClass.getDeclaredMethod("r", actionSetClass, long.class);
+        softKeyBindMethod = softKeyViewClass.getDeclaredMethod("s", actionSetClass, long.class);
         softKeyMetadataField = softKeyViewClass.getDeclaredField("e");
         pointerCurrentOwnerField = pointerTrackerClass.getDeclaredField("m");
-        actionDefsField = actionSetClass.getDeclaredField("f");
-        keyLabelTextsField = actionSetClass.getDeclaredField("g");
-        keyLabelIdsField = actionSetClass.getDeclaredField("h");
-        exactActionLookupMethod = actionSetClass.getDeclaredMethod("h", actionTypeClass);
-        fallbackActionLookupMethod = actionSetClass.getDeclaredMethod("i", actionTypeClass);
-        actionEntriesField = actionDefClass.getDeclaredField("d");
+        actionDefsField = actionSetClass.getDeclaredField("h");
+        keyLabelTextsField = actionSetClass.getDeclaredField("i");
+        keyLabelIdsField = actionSetClass.getDeclaredField("j");
+        exactActionLookupMethod = actionSetClass.getDeclaredMethod("g", actionTypeClass);
+        fallbackActionLookupMethod = actionSetClass.getDeclaredMethod("h", actionTypeClass);
+        actionEntriesField = actionDefClass.getDeclaredField("f");
         actionEntryKeyCodeField = actionEntryClass.getDeclaredField("c");
         actionEntryIntentionField = actionEntryClass.getDeclaredField("d");
         actionEntryPayloadField = actionEntryClass.getDeclaredField("e");
 
         actionBuilderConstructor = actionBuilderClass.getDeclaredConstructor();
         actionBuilderTypeField = actionBuilderClass.getDeclaredField("a");
-        actionBuilderPopupLabelsField = actionBuilderClass.getDeclaredField("c");
+        setPopupLabelsMethod = actionBuilderClass.getDeclaredMethod("t", String[].class);
         setSingleActionMethod = actionBuilderClass.getDeclaredMethod(
-                "q", int.class, intentionClass, Object.class);
+                "s", int.class, intentionClass, Object.class);
         buildActionMethod = actionBuilderClass.getDeclaredMethod("c");
 
         metadataBuilderConstructor = metadataBuilderClass.getDeclaredConstructor();
-        copyMetadataMethod = metadataBuilderClass.getDeclaredMethod("j", actionSetClass);
+        copyMetadataMethod = metadataBuilderClass.getDeclaredMethod("k", actionSetClass);
         putActionMethod = metadataBuilderClass.getDeclaredMethod("t", actionDefClass);
-        buildMetadataMethod = metadataBuilderClass.getDeclaredMethod("d");
+        buildMetadataMethod = metadataBuilderClass.getDeclaredMethod("b");
 
         currentActionMethod = pointerTrackerClass.getDeclaredMethod("i");
         resolveGestureActionMethod = pointerTrackerClass.getDeclaredMethod(
@@ -106,7 +106,7 @@ final class GboardZhuyinSlideRuntimeSupport {
                 actionEntryPayloadField,
                 actionBuilderConstructor,
                 actionBuilderTypeField,
-                actionBuilderPopupLabelsField,
+                setPopupLabelsMethod,
                 setSingleActionMethod,
                 buildActionMethod,
                 metadataBuilderConstructor,
@@ -168,11 +168,10 @@ final class GboardZhuyinSlideRuntimeSupport {
             return null;
         }
         Object labelsObject = keyLabelTextsField.get(metadata);
-        if (!(labelsObject instanceof CharSequence[])) {
+        if (!(labelsObject instanceof List<?> labels)) {
             return null;
         }
-        CharSequence[] labels = (CharSequence[]) labelsObject;
-        for (CharSequence label : labels) {
+        for (Object label : labels) {
             if (label != null && !label.toString().trim().isEmpty()) {
                 return label.toString();
             }
@@ -185,11 +184,11 @@ final class GboardZhuyinSlideRuntimeSupport {
             return new String[0];
         }
         Object entriesObject = actionEntriesField.get(actionDef);
-        if (!(entriesObject instanceof Object[])) {
+        if (!(entriesObject instanceof List<?>)) {
             return new String[0];
         }
         List<String> tokens = new ArrayList<String>();
-        for (Object entry : (Object[]) entriesObject) {
+        for (Object entry : (List<?>) entriesObject) {
             if (entry == null) {
                 continue;
             }
@@ -243,7 +242,7 @@ final class GboardZhuyinSlideRuntimeSupport {
             throws ReflectiveOperationException {
         Object builder = actionBuilderConstructor.newInstance();
         actionBuilderTypeField.set(builder, actionType);
-        actionBuilderPopupLabelsField.set(builder, new String[] {text});
+        setPopupLabelsMethod.invoke(builder, (Object) new String[] {text});
         setSingleActionMethod.invoke(
                 builder, Integer.valueOf(PLAIN_TEXT_KEYCODE), commitIntention, text);
         return buildActionMethod.invoke(builder);

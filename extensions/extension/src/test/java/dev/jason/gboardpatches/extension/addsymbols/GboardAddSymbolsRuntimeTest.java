@@ -139,16 +139,16 @@ public final class GboardAddSymbolsRuntimeTest {
     }
 
     @Test
-    public void runtimeUsesOnlyGboard1803ReflectionHandles() throws Exception {
+    public void runtimeUsesOnlyGboard1853ReflectionHandles() throws Exception {
         String source = runtimeSource();
         List<String> targetClasses = List.of(
-                "ppa", "oxw", "kr", "vvz", "vvw", "wbb", "izu", "jan", "iyd",
-                "gib", "gip", "gic", "qxa", "ghy", "zhv", "ghw", "yus", "ghu",
-                "nhp", "gie", "gid", "ghs", "ghr", "ghv", "nvk", "nva", "nuy",
-                "jgd");
+                "qch", "pla", "kr", "wnv", "wns", "wsw", "jiu", "jjn", "jhc",
+                "gpk", "gpz", "gpm", "gpl", "gph", "aaaa", "gpf", "zmt", "gpd",
+                "ntv", "gpo", "gpn", "gpb", "gpa", "gpe", "ohx", "ohn", "ohl",
+                "jpv");
         for (String className : targetClasses) {
             Assert.assertTrue(
-                    "Missing Gboard 18.0.3 runtime handle: " + className,
+                    "Missing Gboard 18.5.4 runtime handle: " + className,
                     source.contains("Class.forName(\"" + className + "\", false, classLoader)"));
         }
 
@@ -159,20 +159,20 @@ public final class GboardAddSymbolsRuntimeTest {
                 "frd");
         for (String className : retired1803Classes) {
             Assert.assertFalse(
-                    "Stale Gboard 18.0.3 runtime handle remains active: " + className,
+                    "Stale Gboard 18.5.4 runtime handle remains active: " + className,
                     source.contains("Class.forName(\"" + className + "\", false, classLoader)"));
         }
 
         Assert.assertTrue(source.contains(
-                "keyboardTypeClass.getDeclaredMethod(\"a\", Object.class)"));
+                "Class.forName(\"qaz\", false, classLoader).getDeclaredMethod(\"ag\", Object.class)"));
         Assert.assertTrue(source.contains(
                 "keyboardTypeNameField = keyboardTypeClass.getDeclaredField(\"m\")"));
         Assert.assertTrue(source.contains(
-                "immutableMapBuilderClass.getDeclaredMethod(\"a\", Object.class, Object.class)"));
+                "immutableMapBuilderClass.getDeclaredMethod(\"l\", Map.class)"));
         Assert.assertTrue(source.contains(
                 "immutableMapBuilderClass.getDeclaredMethod(\"m\")"));
         Assert.assertTrue(source.contains(
-                "\"E\", emoticonRecyclerViewClass, String.class"));
+                "\"D\", emoticonRecyclerViewClass, String.class"));
         Assert.assertFalse(source.contains(
                 "\"y\", emoticonRecyclerViewClass, String.class"));
         Assert.assertFalse(source.contains("getMethod(\"ad\", int.class)"));
@@ -203,14 +203,14 @@ public final class GboardAddSymbolsRuntimeTest {
     }
 
     @Test
-    public void customHistoryAcceptsOnlyFormal1803M2ClickCase() {
+    public void customHistoryAcceptsOnlyFormal1853M2ClickCase() {
         Assert.assertTrue(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase(
-                Integer.valueOf(5)));
+                Integer.valueOf(7)));
         Assert.assertFalse(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase(
                 Integer.valueOf(9)));
         Assert.assertFalse(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase(
                 Integer.valueOf(4)));
-        Assert.assertFalse(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase("5"));
+        Assert.assertFalse(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase("7"));
         Assert.assertFalse(GboardAddSymbolsRuntime.isCustomEmoticonHistoryConsumerCase(null));
     }
 

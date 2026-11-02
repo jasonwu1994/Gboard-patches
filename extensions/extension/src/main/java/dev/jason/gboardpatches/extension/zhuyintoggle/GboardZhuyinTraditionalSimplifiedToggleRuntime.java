@@ -96,7 +96,8 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
         try {
             GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(sourceView);
             if (!GboardZhuyinTraditionalSimplifiedTogglePolicy.shouldConsume(
-                    handles.keyId(metadata), handles.actionDefinitionName(actionDef))) {
+                    handles.keyId(metadata), handles.actionDefinitionName(actionDef))
+                    || !handles.isExactPlaceholderAction(actionDef)) {
                 return actionDef;
             }
             Boolean simplifiedEnabled = handles.readSimplifiedEnabled(
@@ -120,7 +121,8 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
         try {
             GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport handles = handles(dispatcher);
             if (!GboardZhuyinTraditionalSimplifiedTogglePolicy.shouldConsume(
-                    handles.keyId(metadata), handles.actionName(action))) {
+                    handles.keyId(metadata), handles.actionName(action))
+                    || !handles.isExactPlaceholderMetadata(metadata)) {
                 return false;
             }
             Context context = handles.dispatcherContext(dispatcher);
@@ -188,7 +190,7 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntime {
             return;
         }
         try {
-            Method resetMethod = inputMethodService.getClass().getMethod("ar", boolean.class);
+            Method resetMethod = inputMethodService.getClass().getMethod("at", boolean.class);
             resetMethod.setAccessible(true);
             resetMethod.invoke(inputMethodService, Boolean.TRUE);
             inputMethodService.onStartInput(editorInfo, true);

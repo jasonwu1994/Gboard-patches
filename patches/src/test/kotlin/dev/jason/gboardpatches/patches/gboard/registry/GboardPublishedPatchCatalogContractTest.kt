@@ -52,7 +52,7 @@ class GboardPublishedPatchCatalogContractTest {
             },
         )
         assertEquals(
-            listOf("18.0.3.954559732-release-arm64-v8a"),
+            listOf("18.5.4.993608717-release-arm64-v8a"),
             inlineSuggestions.getAsJsonObject("compatiblePackages")
                 .getAsJsonArray("com.google.android.inputmethod.latin")
                 .map { version -> version.asString },

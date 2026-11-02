@@ -8,7 +8,7 @@ public final class GboardEditingShortcutPolicy {
     }
 
     public static Shortcut resolveLatinChord(String pressText, int selectedCode,
-            int flowModeTypingPulseCode) {
+            int typingPulseCode) {
         Shortcut shortcut = resolveLatinKey(pressText);
         if (shortcut == null) {
             return null;
@@ -17,7 +17,7 @@ public final class GboardEditingShortcutPolicy {
         return selectedCode == key
                 || selectedCode == Character.toUpperCase(key)
                 || selectedCode == shortcut.androidKeyCode
-                || selectedCode == flowModeTypingPulseCode
+                || selectedCode == typingPulseCode
                 ? shortcut : null;
     }
 

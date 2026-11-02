@@ -16,7 +16,7 @@ class GboardSignatureBypassPatchContractTest {
     private val repositoryRoot = findRepositoryRoot()
 
     @Test
-    fun `public patch stays one exact 1803 registry entry`() {
+    fun `public patch stays one exact 1853 registry entry`() {
         val patch = gboardSignatureBypassPatch
         assertEquals("Add Gboard Signature Bypass", patch.name)
         assertEquals(SIGNATURE_BYPASS_DESCRIPTION, patch.description)
@@ -52,10 +52,12 @@ class GboardSignatureBypassPatchContractTest {
     }
 
     @Test
-    fun `production source uses only exact rpv normal return patch`() {
+    fun `production source uses only canonical1853 sfr normal return patch`() {
         val source = readSource(SIGNATURE_PATCH_PATH)
-        assertTrue(source.contains("Lrpv;"))
-        assertTrue(source.contains("Lrox;->b:Z"))
+        assertTrue(source.contains("Lsfr;"))
+        assertTrue(source.contains("Lses;->b:Z"))
+        assertFalse(source.contains("Lrpv;"))
+        assertFalse(source.contains("Lrox;"))
         assertTrue(source.contains("findGboardSignatureBypassTargetOrThrow"))
         assertTrue(source.contains("applyGboardSignatureBypass"))
         assertFalse(source.contains("Lqvi;"))
@@ -68,10 +70,17 @@ class GboardSignatureBypassPatchContractTest {
     }
 
     @Test
-    fun `signature bypass does not add bindings or flag factory`() {
+    fun `signature bypass uses reviewed1853 exact helper without flag factory`() {
         val profile = JsonParser.parseString(readSource(BINDINGS_PROFILE_PATH)).asJsonObject
-        assertEquals("18.0.3", profile.get("target_version").asString)
+        assertEquals("18.5.4", profile.get("target_version").asString)
         val bindings = profile.getAsJsonObject("bindings")
+        val signature = bindings.getAsJsonObject("signature_check")
+        assertEquals("method", signature.get("kind").asString)
+        assertEquals("Lsfr;", signature.get("class_type").asString)
+        assertEquals("a", signature.get("method_name").asString)
+        assertEquals(listOf("Landroid/content/Context;", "Ljava/lang/String;"),
+            signature.getAsJsonArray("parameter_types").map { it.asString })
+        assertEquals("Z", signature.get("return_type").asString)
         assertFalse(bindings.has("flag_factory"))
     }
 
@@ -90,7 +99,7 @@ class GboardSignatureBypassPatchContractTest {
 
     private companion object {
         const val GBOARD_PACKAGE = "com.google.android.inputmethod.latin"
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val SIGNATURE_BYPASS_DESCRIPTION =
             "攔截 Gboard 的簽章白名單檢查並強制通過\n" +
                 "Bypass Gboard signature whitelist checks and force them to pass."

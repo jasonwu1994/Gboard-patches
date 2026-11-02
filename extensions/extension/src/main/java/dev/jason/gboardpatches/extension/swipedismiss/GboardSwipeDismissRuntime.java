@@ -12,6 +12,8 @@ import android.view.ViewConfiguration;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import dev.jason.gboardpatches.extension.settings.GboardPatchesSettings;
+
 public final class GboardSwipeDismissRuntime {
     private static final Map<View, GboardSwipeDismissGesture> GESTURES = new WeakHashMap<>();
     private static final ThreadLocal<Boolean> CANCELLING = ThreadLocal.withInitial(() -> false);
@@ -29,6 +31,11 @@ public final class GboardSwipeDismissRuntime {
             return false;
         }
         if (!isHeaderHolder(holder) || Boolean.TRUE.equals(CANCELLING.get())) {
+            return false;
+        }
+        // A cached enabled value or an in-flight gesture cannot bypass Direct Boot.
+        if (!GboardPatchesSettings.isUserUnlocked(holder.getContext())) {
+            reset();
             return false;
         }
         GboardSwipeDismissGesture gesture = GESTURES.get(holder);

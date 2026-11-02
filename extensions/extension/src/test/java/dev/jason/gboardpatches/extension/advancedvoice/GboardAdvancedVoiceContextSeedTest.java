@@ -18,7 +18,7 @@ import java.util.Set;
 public final class GboardAdvancedVoiceContextSeedTest {
     @After
     public void tearDown() {
-        GboardAdvancedVoice1803RuntimeSettings.clearEnabledOverrideForTest();
+        GboardAdvancedVoiceRuntimeSettings.clearEnabledOverrideForTest();
     }
 
     @Test
@@ -32,22 +32,22 @@ public final class GboardAdvancedVoiceContextSeedTest {
                         true)
                 .commit();
 
-        GboardAdvancedVoice1803RuntimeSettings.clearEnabledOverrideForTest();
-        GboardAdvancedVoice1803Runtime.seedApplicationContext(context);
+        GboardAdvancedVoiceRuntimeSettings.clearEnabledOverrideForTest();
+        GboardAdvancedVoiceRuntime.seedApplicationContext(context);
 
         Assert.assertEquals(
                 Boolean.TRUE,
-                GboardAdvancedVoice1803Runtime.afterFlagValue(
+                GboardAdvancedVoiceRuntime.afterFlagValue(
                         new FlagReceiver("enable_nga"),
                         Boolean.FALSE));
-        Set<?> locales = (Set<?>) GboardAdvancedVoice1803Runtime
+        Set<?> locales = (Set<?>) GboardAdvancedVoiceRuntime
                 .includeExactZhTwSupportedLocale(Collections.emptySet());
         Assert.assertTrue(locales.contains(Locale.forLanguageTag("zh-TW")));
     }
 
     @Test
     public void nullConstructorContextIsSafe() {
-        GboardAdvancedVoice1803Runtime.seedApplicationContext(null);
+        GboardAdvancedVoiceRuntime.seedApplicationContext(null);
     }
 
     private static final class FlagReceiver {

@@ -375,7 +375,8 @@ public final class GboardTopRowSwipeRuntime {
                             handles.extractKeyLabelTexts(originalMetadata),
                             GboardTopRowSwipeRuntimeSupport.PRIMARY_LABEL_VIEW_ID,
                             topRowItem.label);
-            handles.setKeyLabelTextsMethod.invoke(builder, labelSet.ids, labelSet.texts);
+            handles.setKeyLabelTextsMethod.invoke(builder, labelSet.ids,
+                    java.util.Arrays.asList(labelSet.texts));
             String actionPayload = topRowItem.isJavaScript
                     ? QUICK_JS_PAYLOAD_PREFIX
                     : topRowItem.commitText;

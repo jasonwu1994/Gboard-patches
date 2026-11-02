@@ -256,7 +256,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntimeTest {
         if (shape == TargetShape.INHERITED) {
             definitions.put("latin.globe.parent", parentClassBytes());
         }
-        definitions.put("yaf", targetClassBytes(shape));
+        definitions.put("yrt", targetClassBytes(shape));
         return new CompiledTarget(new TargetClassLoader(
                 GboardLatinGlobeKeyIgnoreIntervalRuntimeTest.class.getClassLoader(),
                 definitions));
@@ -271,7 +271,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntimeTest {
         String superName = shape == TargetShape.INHERITED
                 ? "latin/globe/parent"
                 : "java/lang/Object";
-        writer.visit(Opcodes.V1_8, classAccess, "yaf", null, superName, null);
+        writer.visit(Opcodes.V1_8, classAccess, "yrt", null, superName, null);
 
         if (shape != TargetShape.INHERITED) {
             int fieldAccess = Opcodes.ACC_PUBLIC;
@@ -331,7 +331,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntimeTest {
                     null);
             initializer.visitCode();
             initializer.visitLdcInsn(Float.valueOf(123f));
-            initializer.visitFieldInsn(Opcodes.PUTSTATIC, "yaf", "h", "F");
+            initializer.visitFieldInsn(Opcodes.PUTSTATIC, "yrt", "h", "F");
             initializer.visitInsn(Opcodes.RETURN);
             initializer.visitMaxs(0, 0);
             initializer.visitEnd();
@@ -387,20 +387,20 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntimeTest {
                     false);
             visitor.visitFieldInsn(
                     Opcodes.PUTFIELD,
-                    "yaf",
+                    "yrt",
                     fieldName,
                     "Ljava/lang/Float;");
         } else if (shape == TargetShape.DOUBLE) {
             visitor.visitLdcInsn(Double.valueOf(value));
-            visitor.visitFieldInsn(Opcodes.PUTFIELD, "yaf", fieldName, "D");
+            visitor.visitFieldInsn(Opcodes.PUTFIELD, "yrt", fieldName, "D");
         } else {
             visitor.visitLdcInsn(Float.valueOf((float) value));
-            visitor.visitFieldInsn(Opcodes.PUTFIELD, "yaf", fieldName, "F");
+            visitor.visitFieldInsn(Opcodes.PUTFIELD, "yrt", fieldName, "F");
         }
     }
 
     private static void emitFloatField(MethodVisitor visitor, String fieldName, float value) {
-        emitFloatField(visitor, "yaf", fieldName, value);
+        emitFloatField(visitor, "yrt", fieldName, value);
     }
 
     private static void emitFloatField(MethodVisitor visitor,
@@ -431,7 +431,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntimeTest {
         }
 
         Object newInstance() throws Exception {
-            return loader.loadClass("yaf").getDeclaredConstructor().newInstance();
+            return loader.loadClass("yrt").getDeclaredConstructor().newInstance();
         }
 
         @Override

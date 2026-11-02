@@ -23,12 +23,12 @@ private val POPUP_RUNTIME_CALL =
     RuntimeCallId.ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_PATCH_POPUP_ACTION
 private val POPUP_RUNTIME_ABI = RuntimeAbiCatalog.abi(POPUP_RUNTIME_CALL)
 private val POPUP_RUNTIME_REFERENCE = POPUP_RUNTIME_ABI.reference
-private const val GBOARD_18_0_3_POPUP_STOCK_FINGERPRINT =
-    "03ef5a453ac6c4657b72f805b603ca29708c4307cf69bc029d2a299692f49942"
+private const val GBOARD_18_5_3_POPUP_STOCK_FINGERPRINT =
+    "91b00b861c281f7477cf45c6eec4853968bb4d0ceea598e76da5bc4a21c7c617"
 private val POPUP_TARGET_ACCESS_FLAGS = AccessFlags.PUBLIC.value
 
 internal val gboardZhuyinTraditionalSimplifiedTogglePopupPatch = bytecodePatch(
-    description = "修改 18.0.3 注音繁簡切換 popup action。",
+    description = "修改 18.5.4 注音繁簡切換 popup action。",
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
 
@@ -65,7 +65,7 @@ private data class ZhuyinTogglePopupTransformationPlan(
                 return ZhuyinTogglePopupTransformationPlan(ownerClass, null)
             }
 
-            target.requireExact1803PopupStockFingerprint()
+            target.requireExact1853PopupStockFingerprint()
             val candidate = MutableClass(ownerClass)
             val candidateTarget = GboardVersionBindings.zhuyinTogglePopupAction.resolve(candidate)
             candidateTarget.addInstructions(0, ZHUYIN_TOGGLE_POPUP_DELEGATE)
@@ -110,10 +110,10 @@ private fun MutableMethod.hasAnyPopupRuntimeState(): Boolean =
         instruction.popupRuntimeCallNearMatch()
     }
 
-private fun MutableMethod.requireExact1803PopupStockFingerprint() {
+private fun MutableMethod.requireExact1853PopupStockFingerprint() {
     val actual = gboardStructuralFingerprint()
-    check(actual == GBOARD_18_0_3_POPUP_STOCK_FINGERPRINT) {
-        "18.0.3 popup stock body drift in $definingClass->$name: $actual"
+    check(actual == GBOARD_18_5_3_POPUP_STOCK_FINGERPRINT) {
+        "18.5.4 popup stock body drift in $definingClass->$name: $actual"
     }
 }
 
@@ -126,7 +126,7 @@ private fun MutableMethod.verifyExactPatchedPopupState() {
     check(normalized.implementation!!.instructions.none { instruction ->
         instruction.popupRuntimeCallNearMatch()
     }) { "Extraneous or near-miss popup runtime call after the managed delegate" }
-    normalized.requireExact1803PopupStockFingerprint()
+    normalized.requireExact1853PopupStockFingerprint()
 
     val expected = MutableMethod(normalized)
     expected.addInstructions(0, ZHUYIN_TOGGLE_POPUP_DELEGATE)

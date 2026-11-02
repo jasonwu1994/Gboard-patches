@@ -122,7 +122,7 @@ final class GboardClipboardSyncSettingsSection {
                 "",
                 true,
                 enabled,
-                value -> WebClipboardTileController.applyEnabled(context, value)));
+                value -> applyEnabledWithPermission(host, value)));
 
         List<GboardPatchesSettingsContract.Row> securityRows =
                 new ArrayList<GboardPatchesSettingsContract.Row>();
@@ -756,5 +756,20 @@ final class GboardClipboardSyncSettingsSection {
         public String clientAgentFallback() {
             return "Unknown agent";
         }
+    }
+
+    private static void applyEnabledWithPermission(GboardPatchesSettingsContract.FeatureHost host,boolean enabled) {
+        Context context=host.getContext();
+        if(!enabled || dev.jason.gboardpatches.extension.webclipboard.WebClipboardLocalNetworkPermission.isGranted(context)) {
+            WebClipboardTileController.applyEnabled(context,enabled);
+            GboardPatchesSettingsContract.refresh(host);return;
+        }
+        GboardPatchesSettingsContract.requestRuntimePermission(host,
+                dev.jason.gboardpatches.extension.webclipboard.WebClipboardLocalNetworkPermission.NAME,
+                granted->{
+                    if(granted)WebClipboardTileController.applyEnabled(context,true);
+                    else GboardPatchesSettingsContract.showMessage(host,"Local network permission is required to start Web Clipboard");
+                    GboardPatchesSettingsContract.refresh(host);
+                });
     }
 }

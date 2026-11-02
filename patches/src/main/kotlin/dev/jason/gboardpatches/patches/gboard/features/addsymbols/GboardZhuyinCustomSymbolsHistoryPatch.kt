@@ -13,8 +13,8 @@ import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 
-private const val EMOTICON_ITEM_CLICK_CONSUMER_CLASS = "Liyd;"
-private const val EMOTICON_HISTORY_MANAGER_CLASS = "Lgjl;"
+private const val EMOTICON_ITEM_CLICK_CONSUMER_CLASS = "Ljhc;"
+private const val EMOTICON_HISTORY_MANAGER_CLASS = "Lgqt;"
 private const val EMOTICON_KEYBOARD_CLASS =
     "Lcom/google/android/apps/inputmethod/libs/search/emoticon/EmoticonKeyboardM2;"
 private const val EMOTICON_HISTORY_FIELD = "b"
@@ -73,6 +73,9 @@ internal fun MutableMethod.applyZhuyinCustomSymbolsHistoryDelegate(): MutableMet
         implementation.registerCount,
         parameterRegisterCount = 2,
     )
+    check(historyWrite.registerC != 6 && historyWrite.registerD != 6) {
+        "History redirect scratch v6 aliases an input"
+    }
     addInstructionsWithLabels(
         historyWriteIndex,
         HISTORY_WRITE_DELEGATE.format(historyManagerRegister, symbolRegister),
@@ -82,11 +85,11 @@ internal fun MutableMethod.applyZhuyinCustomSymbolsHistoryDelegate(): MutableMet
 }
 
 private val HISTORY_WRITE_DELEGATE = """
-    move-object/from16 v5, p0
+    move-object/from16 v6, p0
 
     ${RuntimeCallEmitter.invoke(
         RuntimeCallId.ADD_SYMBOLS_RUNTIME_INTERCEPT_HISTORY_WRITE,
-        "v5, %s, %s",
+        "v6, %s, %s",
     )}
 
     move-result p1

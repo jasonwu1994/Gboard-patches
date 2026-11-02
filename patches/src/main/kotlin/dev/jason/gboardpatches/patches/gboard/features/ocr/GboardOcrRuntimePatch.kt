@@ -2,9 +2,9 @@ package dev.jason.gboardpatches.patches.gboard.features.ocr
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
+import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
-import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
 import dev.jason.gboardpatches.patches.gboard.shared.isInvoke
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
@@ -16,6 +16,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitt
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
+
 internal val gboardOcrRuntimePatch = bytecodePatch(
     description = "覆寫 OCR backend、optional module request 與 non-Latin thin recognizer init。",
 ) {
@@ -23,6 +24,7 @@ internal val gboardOcrRuntimePatch = bytecodePatch(
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
     execute {
+        GboardOcrPatchTargets.preflight(this)
         findMutableMethodOrThrow(GboardOcrPatchTargets.configLabel)
             .applyOcrObjectReturnDelegate(RuntimeCallId.OCR_RUNTIME_APPLY_CONFIG_LABEL)
         findMutableMethodOrThrow(GboardOcrPatchTargets.languageHint)
@@ -38,12 +40,12 @@ internal val gboardOcrRuntimePatch = bytecodePatch(
         findMutableMethodOrThrow(GboardOcrPatchTargets.optionalModuleBuilder)
             .applyOcrObjectReturnDelegate(
                 RuntimeCallId.OCR_RUNTIME_APPLY_OPTIONAL_MODULE_REQUEST,
-                castType = "[Lkve;",
+                castType = "[Llfy;",
             )
         findMutableMethodOrThrow(GboardOcrPatchTargets.moduleManagerRequest)
             .applyOcrObjectReturnDelegate(
                 RuntimeCallId.OCR_RUNTIME_APPLY_OPTIONAL_MODULE_REQUEST,
-                castType = "[Lkve;",
+                castType = "[Llfy;",
             )
         findMutableMethodOrThrow(GboardOcrPatchTargets.thinRecognizerInit)
             .applyOcrVoidReturnDelegate(RuntimeCallId.OCR_RUNTIME_AFTER_THIN_INIT)

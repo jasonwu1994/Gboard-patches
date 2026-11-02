@@ -429,6 +429,6 @@ object GboardTargetBuildCompiler {
             "7ce83c1b71f3d572fed04c8d40c5cb10ff75e6d87d9df6fbd53f0468c2905053",
             "f0fd6c5b410f25cb25c3b53346c8972fae30f8ee7411df910480ad6b2d60db83",
         ),
-        versionNames = listOf("18.0.3.954559732-release-arm64-v8a"),
+        versionNames = listOf("18.5.4.993608717-release-arm64-v8a"),
     )
 }

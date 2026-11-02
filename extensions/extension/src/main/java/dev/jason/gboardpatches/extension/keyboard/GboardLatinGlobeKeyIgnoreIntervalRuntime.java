@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class GboardLatinGlobeKeyIgnoreIntervalRuntime {
     private static final String TAG = "GboardPatches";
-    private static final String LOG_PREFIX = "[gboard-latin-globe-18.0.3] ";
-    private static final String TARGET_CLASS_NAME = "yaf";
+    private static final String LOG_PREFIX = "[gboard-latin-globe-18.5.4] ";
+    private static final String TARGET_CLASS_NAME = "yrt";
     private static final String TARGET_FIELD_NAME = "h";
     private static final int MAX_FAILURE_LOGS = 3;
     private static final Map<ClassLoader, WeakReference<Handles>> HANDLES_BY_LOADER =
@@ -60,7 +60,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntime {
                 return runtimeParams;
             }
             handles.globeKeyIgnoreIntervalField.setFloat(runtimeParams, configuredIntervalMs);
-            Log.i(TAG, LOG_PREFIX + "forced LatinIme.O() yaf.h globe key ignore interval to "
+            Log.i(TAG, LOG_PREFIX + "forced LatinIme.N() yrt.h globe key ignore interval to "
                     + settings.intervalMs + "ms");
             return runtimeParams;
         } catch (Throwable failure) {
@@ -191,7 +191,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntime {
             int classModifiers = targetClass.getModifiers();
             if (classModifiers != (Modifier.PUBLIC | Modifier.FINAL)) {
                 throw new IllegalStateException(
-                        "Expected exact public final yaf, modifiers=" + classModifiers);
+                        "Expected exact public final yrt, modifiers=" + classModifiers);
             }
 
             globeKeyIgnoreIntervalField = targetClass.getDeclaredField(TARGET_FIELD_NAME);
@@ -200,7 +200,7 @@ public final class GboardLatinGlobeKeyIgnoreIntervalRuntime {
                     || globeKeyIgnoreIntervalField.getType() != Float.TYPE
                     || fieldModifiers != Modifier.PUBLIC) {
                 throw new IllegalStateException(
-                        "Expected exact declared public primitive-float yaf.h, modifiers="
+                        "Expected exact declared public primitive-float yrt.h, modifiers="
                                 + fieldModifiers
                                 + ", type="
                                 + globeKeyIgnoreIntervalField.getType().getName());

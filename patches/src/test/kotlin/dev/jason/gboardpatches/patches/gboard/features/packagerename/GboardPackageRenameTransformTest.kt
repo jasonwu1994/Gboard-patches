@@ -1,8 +1,10 @@
 package dev.jason.gboardpatches.patches.gboard.features.packagerename
 
+import app.morphe.patcher.resource.PublicXmlManager
 import dev.jason.gboardpatches.patches.gboard.shared.ANDROID_NS
 import dev.jason.gboardpatches.patches.gboard.shared.applyGboardPatchesSettings
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.StringWriter
 import java.nio.charset.StandardCharsets
 import javax.xml.parsers.DocumentBuilderFactory
@@ -14,14 +16,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 
 class GboardPackageRenameTransformTest {
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     @Test
-    fun `application display name changes one attribute and preserves component labels`() {
+    fun `application display name uses a dedicated resource and preserves component labels`() {
         val manifest = loadManifest()
         val application = elements(manifest, "application").single()
         val componentLabelsBefore = componentLabels(manifest)
@@ -37,20 +44,20 @@ class GboardPackageRenameTransformTest {
         assertEquals(null, androidAttribute(latinIme, "label"))
         assertEquals(null, androidAttribute(launcher, "label"))
 
-        applyGboardApplicationDisplayName(manifest, "Gboard Dev")
+        applyGboardApplicationDisplayName(manifest, "Gboard Dev", displayNameResources())
 
-        assertEquals("Gboard Dev", androidAttribute(application, "label"))
+        assertEquals("@string/gboard_patches_app_display_name", androidAttribute(application, "label"))
         assertEquals(componentLabelsBefore, componentLabels(manifest))
     }
 
     @Test
-    fun `application display name replaces label in namespace unaware cli documents`() {
+    fun `application display name uses a resource in namespace unaware cli documents`() {
         val manifest = parse(readFixtureBytes(MANIFEST_FIXTURE), namespaceAware = false)
         val application = elements(manifest, "application").single()
 
-        applyGboardApplicationDisplayName(manifest, "Gboard Dev")
+        applyGboardApplicationDisplayName(manifest, "Gboard Dev", displayNameResources())
 
-        assertEquals("Gboard Dev", androidAttribute(application, "label"))
+        assertEquals("@string/gboard_patches_app_display_name", androidAttribute(application, "label"))
         assertEquals(
             1,
             application.attributes.asList().count { attribute ->
@@ -96,14 +103,205 @@ class GboardPackageRenameTransformTest {
         val before = serialize(manifest)
 
         assertFails<IllegalStateException> {
-            applyGboardApplicationDisplayName(manifest, "Gboard Dev")
+            applyGboardApplicationDisplayName(manifest, "Gboard Dev", displayNameResources())
         }
 
         assertEquals(before, serialize(manifest))
     }
 
     @Test
-    fun `mapping inventory is the exact fifteen target attributes`() {
+    fun `display name is a default-only string without changing native or locale values`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        val locales = listOf(
+            parse("<resources><string name=\"ime_name\">原生鍵盤</string></resources>", true),
+            parse("<resources><string name=\"ime_name\">Native keyboard</string></resources>", true),
+        )
+        val beforeLocales = locales.map(::serialize)
+
+        applyGboardApplicationDisplayName(manifest, "GboardWu", resources, locales)
+
+        val entry = elements(resources, "string").single {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }
+        assertEquals("\"GboardWu\"", entry.textContent)
+        assertEquals("false", entry.getAttribute("translatable"))
+        assertEquals("false", entry.getAttribute("formatted"))
+        assertEquals("Original name", elements(resources, "string").single {
+            it.getAttribute("name") == "ime_name"
+        }.textContent)
+        assertEquals(beforeLocales, locales.map(::serialize))
+        assertEquals("@string/gboard_patches_app_display_name",
+            androidAttribute(elements(manifest, "application").single(), "label"))
+    }
+
+    @Test
+    fun `display name resource is idempotent and can update its owned value`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        applyGboardApplicationDisplayName(manifest, "GboardWu", resources)
+        val once = listOf(serialize(manifest), serialize(resources))
+
+        applyGboardApplicationDisplayName(manifest, "GboardWu", resources)
+        assertEquals(once, listOf(serialize(manifest), serialize(resources)))
+        applyGboardApplicationDisplayName(manifest, "鍵盤 🚀", resources)
+
+        val entries = elements(resources, "string").filter {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }
+        assertEquals(1, entries.size)
+        assertEquals("\"鍵盤 🚀\"", entries.single().textContent)
+    }
+
+    @Test
+    fun `display name preserves literal Android punctuation spaces and Unicode through XML`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        val displayName = "Jason's <&> \"鍵盤\" \\  100% 🚀"
+
+        applyGboardApplicationDisplayName(manifest, displayName, resources)
+
+        val roundTrip = parse(serialize(resources), true)
+        val entry = elements(roundTrip, "string").single {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }
+        assertEquals("\"Jason\\'s <&> \\\"鍵盤\\\" \\\\  100% 🚀\"", entry.textContent)
+        assertEquals("false", entry.getAttribute("formatted"))
+    }
+
+    @Test
+    fun `an occupied default display-name resource is rejected before either DOM changes`() {
+        val manifest = loadManifest()
+        val resources = parse("""
+            <resources><string name="gboard_patches_app_display_name">Foreign</string></resources>
+        """.trimIndent(), true)
+
+        assertDisplayNameRejected(manifest, resources)
+    }
+
+    @Test
+    fun `duplicate display-name definitions are rejected before either DOM changes`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        applyGboardApplicationDisplayName(manifest, "GboardWu", resources)
+        val entry = elements(resources, "string").single {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }
+        resources.documentElement.appendChild(entry.cloneNode(true))
+
+        assertDisplayNameRejected(manifest, resources)
+    }
+
+    @Test
+    fun `localized or other-file display-name values cannot shadow the selected name`() {
+        listOf(
+            """<resources><string name="gboard_patches_app_display_name">Localized</string></resources>""",
+            """<resources><item type="string" name="gboard_patches_app_display_name">@string/ime_name</item></resources>""",
+        ).forEach { collision ->
+            assertDisplayNameRejected(loadManifest(), displayNameResources(), listOf(parse(collision, true)))
+        }
+    }
+
+    @Test
+    fun `patch-owned display-name reference requires its unique correctly marked definition`() {
+        val missingManifest = loadManifest()
+        elements(missingManifest, "application").single().setAttributeNS(
+            ANDROID_NS, "android:label", "@string/gboard_patches_app_display_name",
+        )
+        assertDisplayNameRejected(missingManifest, displayNameResources())
+        listOf("formatted", "translatable").forEach { attribute ->
+            val manifest = loadManifest()
+            val resources = displayNameResources()
+            applyGboardApplicationDisplayName(manifest, "GboardWu", resources)
+            elements(resources, "string").single {
+                it.getAttribute("name") == "gboard_patches_app_display_name"
+            }.setAttribute(attribute, "true")
+            assertDisplayNameRejected(manifest, resources)
+        }
+    }
+
+    @Test
+    fun `malformed default resource root is rejected before manifest changes`() {
+        assertDisplayNameRejected(loadManifest(), parse("<not-resources/>", true))
+    }
+
+    @Test
+    fun `public resource ID metadata is not mistaken for a localized value`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        val publicIds = parse("""
+            <resources><public type="string" name="gboard_patches_app_display_name" id="0x7f140001"/></resources>
+        """.trimIndent(), true)
+        val beforePublic = serialize(publicIds)
+
+        applyGboardApplicationDisplayName(manifest, "GboardWu", resources, listOf(publicIds))
+
+        assertEquals(beforePublic, serialize(publicIds))
+        assertEquals(1, elements(resources, "string").count {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        })
+    }
+
+    private fun displayNameResources(): Document = parse(
+        "<resources><string name=\"ime_name\">Original name</string></resources>", true,
+    )
+
+    private fun assertDisplayNameRejected(
+        manifest: Document,
+        resources: Document,
+        others: List<Document> = emptyList(),
+    ) {
+        val documents = listOf(manifest, resources) + others
+        val before = documents.map(::serialize)
+        assertFails<IllegalStateException> {
+            applyGboardApplicationDisplayName(manifest, "GboardWu", resources, others)
+        }
+        assertEquals(before, documents.map(::serialize))
+    }
+
+    @Test
+    fun `production display-name seam registers one allocated public string ID persistently`() {
+        val publicFile = temporaryFolder.newFile("public.xml")
+        publicFile.writeText("""
+            <resources package="com.google.android.inputmethod.latin" id="0x7f">
+                <public type="string" name="ime_name" id="0x7f140000"/>
+                <public type="string" name="other_name" id="0x7f140010"/>
+                <public type="drawable" name="existing_icon" id="0x7f080003"/>
+            </resources>
+        """.trimIndent())
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+        var originalIds = emptyMap<Pair<String, String>, Int>()
+        PublicXmlManager(publicFile).use { publicIds ->
+            originalIds = publicIds.getDefinedIds().toMap()
+            applyGboardApplicationDisplayName(manifest, "GboardWu", resources, emptyList(), publicIds)
+            applyGboardApplicationDisplayName(manifest, "GboardWu", resources, emptyList(), publicIds)
+        }
+
+        PublicXmlManager(publicFile).use { persisted ->
+            assertTrue("Production must register the new string before resource encoding",
+                persisted.idExists("string", "gboard_patches_app_display_name"))
+            val ids = persisted.getDefinedIds()
+            val newKey = "string" to "gboard_patches_app_display_name"
+            assertEquals(originalIds, ids.filterKeys { it != newKey })
+            assertEquals(originalIds.size + 1, ids.size)
+            assertEquals(0x7f140011, ids.getValue(newKey))
+            assertEquals(ids.size, ids.values.toSet().size)
+        }
+    }
+
+    @Test
+    fun `production display-name values path is encoded by ARSC as string resources`() {
+        val typeParser = Class.forName("com.reandroid.arsc.coder.xml.XmlEncodeUtil")
+            .getMethod("getTypeFromValuesXml", File::class.java)
+        val actualType = typeParser.invoke(null, File(APP_DISPLAY_NAME_RESOURCE_PATH))
+
+        assertEquals("The real ARSC encoder selects its type from the production filename",
+            "string", actualType)
+    }
+
+    @Test
+    fun `mapping inventory is the exact sixteen target attributes`() {
         val actual = GBOARD_PACKAGE_RENAME_MAPPINGS.map { mapping ->
             listOf(
                 mapping.elementName,
@@ -114,7 +312,7 @@ class GboardPackageRenameTransformTest {
         }
 
         assertEquals(EXPECTED_MAPPINGS, actual)
-        assertEquals(15, actual.size)
+        assertEquals(16, actual.size)
     }
 
     @Test
@@ -174,7 +372,7 @@ class GboardPackageRenameTransformTest {
         assertEquals(30, before.getValue("activity").size)
         assertEquals(22, before.getValue("service").size)
         assertEquals(12, before.getValue("receiver").size)
-        assertEquals(8, before.getValue("provider").size)
+        assertEquals(9, before.getValue("provider").size)
         assertEquals(0, manifest.getElementsByTagName("activity-alias").length)
         assertTrue(before.values.flatten().none { name -> name.startsWith(".") })
         assertTrue(before.values.flatten().none { name -> name.contains(SOURCE_PACKAGE) })
@@ -186,7 +384,7 @@ class GboardPackageRenameTransformTest {
     }
 
     @Test
-    fun `declared permissions receiver permission and eight authorities stay paired and exact`() {
+    fun `declared permissions receiver permission and nine authorities stay paired and exact`() {
         val manifest = loadManifest()
 
         applyGboardPackageRename(manifest, loadSettingsDocuments())
@@ -210,6 +408,7 @@ class GboardPackageRenameTransformTest {
                 "$FINAL_PACKAGE.clipboard_content",
                 "$FINAL_PACKAGE.inputactionprovider",
                 "$FINAL_PACKAGE.swissarmyknifefileprovider",
+                "$FINAL_PACKAGE.androidx-startup",
                 "$FINAL_PACKAGE.fileprovider",
                 "$FINAL_PACKAGE.tracing",
                 "$FINAL_PACKAGE.wdb",
@@ -515,7 +714,7 @@ class GboardPackageRenameTransformTest {
         assertEquals(31, components.getValue("activity").size)
         assertEquals(22, components.getValue("service").size)
         assertEquals(12, components.getValue("receiver").size)
-        assertEquals(9, components.getValue("provider").size)
+        assertEquals(10, components.getValue("provider").size)
         assertTrue(components.values.flatten().contains(SETTINGS_ACTIVITY_CLASS))
         assertTrue(components.values.flatten().contains(SETTINGS_PROVIDER_CLASS))
     }
@@ -647,12 +846,12 @@ class GboardPackageRenameTransformTest {
         const val SETTINGS_PROVIDER_CLASS =
             "dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsProvider"
         const val MANIFEST_FIXTURE =
-            "/gboard/18.0.3/package-rename/AndroidManifest.normalized.xml"
-        const val SETTINGS_FIXTURE = "/gboard/18.0.3/package-rename/settings.xml"
+            "/gboard/18.5.3/packagerename/AndroidManifest.xml"
+        const val SETTINGS_FIXTURE = "/gboard/18.5.3/packagerename/settings.xml"
         const val SETTINGS_LEGACY_FIXTURE =
-            "/gboard/18.0.3/package-rename/settings_legacy.xml"
+            "/gboard/18.5.3/packagerename/settings_legacy.xml"
         const val RETAINED_LITERALS_FIXTURE =
-            "/gboard/18.0.3/package-rename/retained-resource-literals.xml"
+            "/gboard/18.5.3/packagerename/retained-resource-literals.xml"
         val COMPONENT_TAGS = listOf("activity", "service", "receiver", "provider")
         val EXPECTED_MAPPINGS = listOf(
             listOf("manifest", "package", SOURCE_PACKAGE, FINAL_PACKAGE),
@@ -704,6 +903,12 @@ class GboardPackageRenameTransformTest {
                 "android:authorities",
                 "$SOURCE_PACKAGE.swissarmyknifefileprovider",
                 "$FINAL_PACKAGE.swissarmyknifefileprovider",
+            ),
+            listOf(
+                "provider",
+                "android:authorities",
+                "$SOURCE_PACKAGE.androidx-startup",
+                "$FINAL_PACKAGE.androidx-startup",
             ),
             listOf(
                 "provider",

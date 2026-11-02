@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.patches.gboard.features.writingtools
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.bytecodePatch
+import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import com.android.tools.smali.dexlib2.Opcode
@@ -11,7 +12,6 @@ import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import dev.jason.gboardpatches.patches.gboard.shared.GboardFlagFamilyFeature
 import dev.jason.gboardpatches.patches.gboard.shared.GboardMethodTarget
-import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.gboardFlagFamilyFeaturePatch
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
 import dev.jason.gboardpatches.patches.gboard.shared.isFieldReference
@@ -21,26 +21,27 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalog
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
+
 internal val gboardAiWritingToolsFlagValuePatch = gboardFlagFamilyFeaturePatch(
     description = "以 18.0.3 typed flag tuple 啟用 Writing Tools 與官方 backend selector。",
     feature = GboardFlagFamilyFeature.AI_WRITING_TOOLS,
 )
 
-private val autoFixRouteBuilder = GboardMethodTarget(
+internal val autoFixRouteBuilder = GboardMethodTarget(
     classType = "Lrzb;",
     name = "v",
     parameterTypes = emptyList(),
     returnType = "Lvvw;",
 )
 
-private val autoFixAmbiguityGate = GboardMethodTarget(
+internal val autoFixAmbiguityGate = GboardMethodTarget(
     classType = "Lgwf;",
     name = "a",
     parameterTypes = listOf("Lgwo;"),
     returnType = "Llyg;",
 )
 
-private val genAiVoiceEditInit = GboardMethodTarget(
+internal val genAiVoiceEditInit = GboardMethodTarget(
     classType = "Lifn;",
     name = "c",
     parameterTypes = listOf(
@@ -50,14 +51,14 @@ private val genAiVoiceEditInit = GboardMethodTarget(
     returnType = "V",
 )
 
-private val smartEditInit = GboardMethodTarget(
+internal val smartEditInit = GboardMethodTarget(
     classType = "Lifn;",
     name = "d",
     parameterTypes = emptyList(),
     returnType = "V",
 )
 
-private val genAiClientRefresh = GboardMethodTarget(
+internal val genAiClientRefresh = GboardMethodTarget(
     classType = "Lcom/google/android/apps/inputmethod/libs/nga/impl/input/NgaInputManager;",
     name = "e",
     parameterTypes = emptyList(),
@@ -130,7 +131,7 @@ internal val gboardAiWritingTools1803GenAiRefreshPatch = bytecodePatch(
     }
 }
 
-private fun MutableMethod.applyAutoFixRoute() {
+internal fun MutableMethod.applyAutoFixRoute() {
     val instructions = implementation?.instructions
         ?: error("No 18.0.3 Writing Tools v2 route builder implementation")
     check(implementation!!.registerCount == 3) {
@@ -168,7 +169,7 @@ private fun MutableMethod.applyAutoFixRoute() {
     )
 }
 
-private fun MutableMethod.applyAutoFixAcceptance() {
+internal fun MutableMethod.applyAutoFixAcceptance() {
     val instructions = implementation?.instructions
         ?: error("No 18.0.3 Writing Tools ambiguity implementation")
     check(implementation!!.registerCount == 6) {
@@ -195,7 +196,7 @@ private fun MutableMethod.applyAutoFixAcceptance() {
     )
 }
 
-private fun MutableMethod.applyGenAiInitClientTypeCompatibility() {
+internal fun MutableMethod.applyGenAiInitClientTypeCompatibility() {
     val instructions = implementation?.instructions
         ?: error("No 18.0.3 GenAI voice-edit init implementation")
     check(implementation!!.registerCount == 7) {
@@ -204,19 +205,12 @@ private fun MutableMethod.applyGenAiInitClientTypeCompatibility() {
 
     val rememberRuntimeReference = RuntimeAbiCatalog.abi(rememberGenAiInitRuntime).reference
     val rememberCalls = instructions.count { it.isMethodReference(rememberRuntimeReference) }
-    if (rememberCalls == 0) {
-        addInstructions(
-            0,
-            RuntimeCallEmitter.invoke(rememberGenAiInitRuntime, "p0, p1, p2"),
-        )
-    } else {
-        check(rememberCalls == 1) { "Duplicate 18.0.3 GenAI init remember delegates" }
-    }
+    check(rememberCalls <= 1) { "Duplicate 18.0.3 GenAI init remember delegates" }
 
     val runtimeReference = RuntimeAbiCatalog.abi(genAiInitClientTypeRuntime).reference
     val existing = instructions.count { it.isMethodReference(runtimeReference) }
     if (existing != 0) {
-        check(existing == 1) { "Duplicate 18.0.3 GenAI init compatibility delegates" }
+        check(existing == 1 && rememberCalls == 1) { "Incomplete or duplicate GenAI init delegates" }
         return
     }
 
@@ -256,9 +250,12 @@ private fun MutableMethod.applyGenAiInitClientTypeCompatibility() {
         """.trimIndent(),
     )
     addInstructions(clientProducerIndices.single() + 1, "move-object v1, v0")
+    if (rememberCalls == 0) {
+        addInstructions(0, RuntimeCallEmitter.invoke(rememberGenAiInitRuntime, "p0, p1, p2"))
+    }
 }
 
-private fun MutableMethod.applyGenAiClientRefreshRetry() {
+internal fun MutableMethod.applyGenAiClientRefreshRetry() {
     val instructions = implementation?.instructions
         ?: error("No 18.0.3 GenAI client refresh implementation")
     check(implementation!!.registerCount == 4) {
@@ -313,7 +310,7 @@ private fun MutableMethod.applyGenAiClientRefreshRetry() {
     addInstructions(0, RuntimeCallEmitter.invoke(beginGenAiRefreshRuntime, "p0"))
 }
 
-private fun MutableMethod.applySmartEditInitClientTypeCompatibility() {
+internal fun MutableMethod.applySmartEditInitClientTypeCompatibility() {
     val instructions = implementation?.instructions
         ?: error("No 18.0.3 SmartEdit init implementation")
     check(implementation!!.registerCount == 19) {

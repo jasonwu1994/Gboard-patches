@@ -2,18 +2,19 @@ package dev.jason.gboardpatches.patches.gboard.features.splitkeyboard
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
+import dev.jason.gboardpatches.patches.gboard.shared.mutableFieldOrThrow
+import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
-import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
 import dev.jason.gboardpatches.patches.gboard.shared.isOpcode
-import dev.jason.gboardpatches.patches.gboard.shared.mutableFieldOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.returnInstructionIndices
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalog
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
+
 
 internal val gboardSplitKeyboardAccessPointPatch = bytecodePatch(
     description = "啟用 split Access Point 狀態並補入 Access Points 排序清單",
@@ -22,10 +23,10 @@ internal val gboardSplitKeyboardAccessPointPatch = bytecodePatch(
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
     execute {
-        mutableFieldOrThrow(GboardSplitKeyboard1803Targets.accessPointName)
-        findMutableMethodOrThrow(GboardSplitKeyboard1803Targets.accessPointState)
+        mutableFieldOrThrow(GboardSplitKeyboardTargets.accessPointName)
+        findMutableMethodOrThrow(GboardSplitKeyboardTargets.accessPointState)
             .applySplitKeyboardAccessPointStateDelegate()
-        findMutableMethodOrThrow(GboardSplitKeyboard1803Targets.accessPointOrder)
+        findMutableMethodOrThrow(GboardSplitKeyboardTargets.accessPointOrder)
             .applySplitKeyboardAccessPointOrderDelegate()
     }
 }
@@ -41,10 +42,19 @@ internal fun MutableMethod.applySplitKeyboardAccessPointStateDelegate() {
         check(existing == 1) { "Duplicate split Access Point state delegate" }
         return
     }
+    check(implementation!!.registerCount >= 4) {
+        "Split state requires the reviewed two local scratch registers"
+    }
     addInstructions(
         0,
         """
-            iget-object v0, p0, ${GboardSplitKeyboard1803Targets.accessPointName.reference}
+            iget-object v0, p0, ${GboardSplitKeyboardTargets.accessPointName.reference}
+
+            instance-of v1, v0, Ljava/lang/String;
+
+            if-eqz v1, :jasondev_split_state_stock
+
+            check-cast v0, Ljava/lang/String;
 
             ${RuntimeCallEmitter.invoke(
                 RuntimeCallId.SPLIT_KEYBOARD_RUNTIME_APPLY_ACCESS_POINT_STATE,
@@ -52,6 +62,9 @@ internal fun MutableMethod.applySplitKeyboardAccessPointStateDelegate() {
             )}
 
             move-result p1
+
+            :jasondev_split_state_stock
+            nop
         """.trimIndent(),
     )
 }
@@ -80,7 +93,7 @@ internal fun MutableMethod.applySplitKeyboardAccessPointOrderDelegate() {
 
             move-result-object v$resultRegister
 
-            check-cast v$resultRegister, ${GboardSplitKeyboard1803Targets.ORDER_RETURN_TYPE}
+            check-cast v$resultRegister, ${GboardSplitKeyboardTargets.ORDER_RETURN_TYPE}
         """.trimIndent(),
     )
 }

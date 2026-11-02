@@ -54,7 +54,7 @@ public final class GboardAiWritingToolsSettingsFeatureTest {
                         + "enable it.",
                 backendRow.getSummary());
         Assert.assertTrue(enabledRow.isChecked());
-        Assert.assertFalse(allKeyboardsRow.isChecked());
+        Assert.assertTrue(allKeyboardsRow.isChecked());
         Assert.assertTrue(allKeyboardsRow.isEnabled());
         Assert.assertTrue(backendRow.isEnabled());
         Assert.assertEquals("GBOARD_SERVER", backendRow.getCurrentValue());

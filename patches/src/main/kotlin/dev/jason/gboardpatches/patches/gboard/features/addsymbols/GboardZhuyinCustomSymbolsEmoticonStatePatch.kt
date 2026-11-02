@@ -13,10 +13,10 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 
 private const val EMOTICON_KEYBOARD_CLASS =
     "Lcom/google/android/apps/inputmethod/libs/search/emoticon/EmoticonKeyboardM2;"
-private const val EMOTICON_HEADER_CALLBACK_CLASS = "Lggm;"
+private const val EMOTICON_HEADER_CALLBACK_CLASS = "Lgnv;"
 private const val HEADER_VIEW_CLASS =
     "Lcom/google/android/apps/inputmethod/libs/expression/header/ConstraintHeaderViewImpl;"
-private const val VIEW_UTIL_CLASS = "Lsvk;"
+private const val VIEW_UTIL_CLASS = "Ltmk;"
 
 internal val gboardZhuyinCustomSymbolsEmoticonStatePatch = bytecodePatch(
     description = "移植 add-symbols 的 emoticon host / state isolation / header 主線。"
@@ -44,10 +44,10 @@ private fun patchConstructor() = with(context) {
         returnType = "V",
         parameterTypes = listOf(
             "Landroid/content/Context;",
-            "Loxv;",
+            "Lpkz;",
             "Lcom/google/android/libraries/inputmethod/metadata/KeyboardDef;",
             "Lcom/google/android/libraries/inputmethod/metadata/ImeDef;",
-            "Lppa;"
+            "Lqch;"
         )
     )
     val returnIndices = mutableMethod.instructionIndices("RETURN_VOID")
@@ -63,7 +63,7 @@ context(context: BytecodePatchContext)
 private fun patchBodyReady() = with(context) {
     val mutableMethod = findMutableMethodOrThrow(
         classType = EMOTICON_KEYBOARD_CLASS,
-        name = "eL",
+        name = "eR",
         returnType = "V",
         parameterTypes = listOf(
             "Lcom/google/android/libraries/inputmethod/widgets/SoftKeyboardView;",
@@ -109,7 +109,7 @@ private fun patchSelectedIndex() = with(context) {
         classType = EMOTICON_KEYBOARD_CLASS,
         name = "k",
         returnType = "I",
-        parameterTypes = listOf("Lvvw;")
+        parameterTypes = listOf("Lwns;")
     )
     mutableMethod.addInstructions(0, SELECTED_INDEX_DELEGATE)
 }
@@ -118,7 +118,7 @@ context(context: BytecodePatchContext)
 private fun patchCategoryChange() = with(context) {
     val mutableMethod = findMutableMethodOrThrow(
         classType = EMOTICON_KEYBOARD_CLASS,
-        name = "F",
+        name = "E",
         returnType = "V",
         parameterTypes = listOf("I", "I")
     )
@@ -129,7 +129,7 @@ context(context: BytecodePatchContext)
 private fun patchCategoryBind() = with(context) {
     val mutableMethod = findMutableMethodOrThrow(
         classType = EMOTICON_KEYBOARD_CLASS,
-        name = "E",
+        name = "D",
         returnType = "V",
         parameterTypes = listOf(
             "Lcom/google/android/apps/inputmethod/libs/search/emoticon/EmoticonRecyclerView;",
@@ -149,7 +149,7 @@ private fun patchHeaderCallback() = with(context) {
     )
     val headerCallbackIndex = mutableMethod.indexOfMethodCallOrThrow(
         definingClass = EMOTICON_KEYBOARD_CLASS,
-        name = "F",
+        name = "E",
         returnType = "V",
         parameterTypes = listOf("I", "I"),
     )
@@ -176,7 +176,7 @@ private fun patchHeaderStartEdgeGuard() = with(context) {
         classType = HEADER_VIEW_CLASS,
         name = "n",
         returnType = "V",
-        parameterTypes = listOf("Lghy;")
+        parameterTypes = listOf("Lgph;")
     )
     mutableMethod.addInstructions(0, HEADER_START_EDGE_GUARD_DELEGATE)
 }
@@ -185,7 +185,7 @@ context(context: BytecodePatchContext)
 private fun patchViewUtilTransformGuard() = with(context) {
     val mutableMethod = findMutableMethodOrThrow(
         classType = VIEW_UTIL_CLASS,
-        name = "i",
+        name = "j",
         returnType = "Landroid/view/View;",
         parameterTypes = listOf(
             "Landroid/graphics/Matrix;",

@@ -26,6 +26,17 @@ public final class GboardAdvancedVoiceSettingsSourceTest {
 
         Assert.assertTrue(keyboardGroup.contains(
                 "new GboardAdvancedVoiceSettingsFeature(context)"));
+        int informationRows = feature.indexOf("informationRows =");
+        int modesDetailRow = feature.indexOf("modesTitle,", informationRows);
+        int payloadGuidance = feature.indexOf("buildPayloadGuidance(", informationRows);
+        Assert.assertTrue("modes detail row must lead the information section",
+                informationRows > 0 && modesDetailRow > informationRows
+                        && payloadGuidance > modesDetailRow);
+        Assert.assertTrue(settingsText.contains(
+                "Voice typing has three modes: Standard, Standard - Advanced features "
+                        + "(colorful microphone), and Rambler."));
+        Assert.assertTrue(settingsText.contains(
+                "語音輸入分為三種：標準、標準-進階功能（彩色麥克風）以及 Rambler。"));
         Assert.assertEquals(2, count(feature,
                 "new GboardPatchesSettingsContract.ToggleRow("));
         Assert.assertEquals(0, count(feature,
@@ -63,7 +74,7 @@ public final class GboardAdvancedVoiceSettingsSourceTest {
         Assert.assertTrue(feature.matches(
                 "(?s).*new GboardPatchesSettingsContract\\.Section\\("
                         + "\\s*null,\\s*githubStarRows\\).*"));
-        Assert.assertTrue(feature.contains("18-0-3-954559732-release-arm64-v8a-2"));
+        Assert.assertTrue(feature.contains("18-5-4-993608717-release-arm64-v8a-2"));
         Assert.assertTrue(availability.contains("FEATURE_ADVANCED_VOICE_TYPING"));
         Assert.assertTrue(availability.contains(
                 "dev.jason.gboardpatches.feature.advanced_voice_typing"));

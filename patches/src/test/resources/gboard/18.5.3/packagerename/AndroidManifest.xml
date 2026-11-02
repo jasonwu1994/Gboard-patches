@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="37" android:compileSdkVersionCodename="DEV" android:requiredSplitTypes="base__density" android:splitTypes="" coreApp="true" package="com.google.android.inputmethod.latin" platformBuildVersionCode="37" platformBuildVersionName="DEV">
+    <original-package android:name="com.android.inputmethod.latin"/>
+    <supports-screens android:anyDensity="true" android:largeScreens="true" android:normalScreens="true" android:smallScreens="true"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WRITE_USER_DICTIONARY"/>
+    <uses-permission android:name="android.permission.GET_PACKAGE_SIZE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
+    <uses-permission-sdk-23 android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission-sdk-23 android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"/>
+    <uses-permission-sdk-23 android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission-sdk-23 android:name="android.permission.INTERACT_ACROSS_PROFILES"/>
+    <uses-permission android:name="com.google.android.setupwizard.READ_DEVICE_ORIGIN_FIRST_PARTY"/>
+    <uses-feature android:name="android.hardware.faketouch" android:required="true"/>
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <uses-feature android:name="android.hardware.wifi" android:required="false"/>
+    <uses-permission-sdk-23 android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-permission-sdk-23 android:maxSdkVersion="32" android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="com.google.android.apps.aicore.service.BIND_SERVICE"/>
+    <uses-permission android:name="android.permission.INJECT_KEY_EVENTS"/>
+    <uses-permission android:name="android.permission.PERSONAL_CONTEXT_PUBLISH_HINTS"/>
+    <uses-permission android:name="android.permission.PERSONAL_CONTEXT_RECEIVE_INSIGHTS"/>
+    <uses-permission android:name="android.permission.PERSONAL_CONTEXT_HOST_INSIGHT_SURFACE"/>
+    <queries>
+        <package android:name="com.google.android.apps.inputmethod.datahound.app"/>
+        <package android:name="com.google.android.inputmethod.keyboarddevutils"/>
+        <package android:name="com.google.android.as"/>
+        <intent>
+            <action android:name="android.view.InputMethod"/>
+        </intent>
+        <package android:name="com.google.android.apps.village.boond"/>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="https"/>
+        </intent>
+        <package android:name="com.google.android.apps.pixel.customizationbundle"/>
+        <package android:name="com.google.android.apps.pixel.creativeassistant"/>
+        <package android:name="com.google.android.googlequicksearchbox"/>
+        <package android:name="com.google.android.apps.bard"/>
+        <package android:name="com.google.android.apps.internal.betterbug"/>
+        <package android:name="com.google.android.marvin.talkback"/>
+        <package android:name="com.google.android.accessibility.talkback"/>
+        <package android:name="com.google.android.as.oss"/>
+        <intent>
+            <action android:name="com.android.photopicker.core.embedded.EmbeddedService.BIND"/>
+        </intent>
+        <package android:name="com.google.android.aicore"/>
+        <intent>
+            <action android:name="androidx.window.extensions.layout.EngagementModeService"/>
+        </intent>
+    </queries>
+    <permission android:knownCerts="@array/APKTOOL_RENAMED_0x7f030082" android:name="com.google.android.inputmethod.latin.pixelbundle.RECEIVER" android:protectionLevel="signature|knownSigner"/>
+    <permission android:name="com.google.android.inputmethod.latin.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+    <application android:allowBackup="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:backupAgent="com.google.android.libraries.inputmethod.backup.BackupAgent" android:crossProfile="true" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="false" android:gwpAsanMode="always" android:icon="@mipmap/ic_app" android:killAfterRestore="false" android:label="@string/ime_name" android:multiArch="false" android:name="com.google.android.apps.inputmethod.latin.HiltLatinApp" android:restoreAnyVersion="true" android:roundIcon="@mipmap/ic_app_round" android:supportsRtl="true" android:theme="@style/APKTOOL_RENAMED_0x7f15002d" android:usesCleartextTraffic="false">
+        <property android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED" android:value="true"/>
+        <profileable android:shell="true"/>
+        <uses-native-library android:name="libedgetpu_util.so" android:required="false"/>
+        <uses-native-library android:name="libedgetpu_client.google.so" android:required="false"/>
+        <meta-data android:name="com.google.android.backup.api_key" android:value="AEdPqrEAAAAIl3fO6Spo7vqdonbORA0gOqfXPTnKWTdG6eHJNA"/>
+        <meta-data android:name="com.google.android.partnersetup.RLZ_BOUNTY_ACCESS_POINT" android:value="y0,yg"/>
+        <service android:directBootAware="true" android:exported="true" android:name="com.android.inputmethod.latin.LatinIME" android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod"/>
+            </intent-filter>
+            <meta-data android:name="android.view.im" android:resource="@xml/method"/>
+        </service>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:enabled="@bool/show_launcher_icon" android:exported="true" android:name="com.google.android.libraries.inputmethod.launcher.LauncherActivity" android:theme="@style/SettingsTheme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <service android:enabled="false" android:exported="false" android:name="com.google.android.libraries.phenotype.registration.PhenotypeMetadataHolderService" android:process="">
+            <intent-filter>
+                <action android:name="com.google.android.libraries.phenotype.registration.PhenotypeMetadataHolderService"/>
+            </intent-filter>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.apps.search.assistant.device" android:resource="@raw/APKTOOL_RENAMED_0x7f130006"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.auth_account_client" android:resource="@raw/APKTOOL_RENAMED_0x7f130007"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.gms.auth_account_client" android:resource="@raw/APKTOOL_RENAMED_0x7f130008"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.learning" android:resource="@raw/APKTOOL_RENAMED_0x7f13000f"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.gms.learning" android:resource="@raw/APKTOOL_RENAMED_0x7f130010"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.clearcut_client" android:resource="@raw/APKTOOL_RENAMED_0x7f130009"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.gms.clearcut_client" android:resource="@raw/APKTOOL_RENAMED_0x7f13000a"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.libraries.consentverifier" android:resource="@raw/APKTOOL_RENAMED_0x7f130035"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.libraries.consentverifier" android:resource="@raw/APKTOOL_RENAMED_0x7f130036"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms" android:resource="@raw/APKTOOL_RENAMED_0x7f13000d"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.droidguardclient" android:resource="@raw/APKTOOL_RENAMED_0x7f13000b"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.gms.droidguardclient" android:resource="@raw/APKTOOL_RENAMED_0x7f13000c"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.gms.icing.mdd" android:resource="@raw/APKTOOL_RENAMED_0x7f13000e"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.setupservices" android:resource="@raw/APKTOOL_RENAMED_0x7f130011"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.gms.usagereporting" android:resource="@raw/APKTOOL_RENAMED_0x7f130012"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.inputmethod.latin" android:resource="@raw/APKTOOL_RENAMED_0x7f13002a"/>
+            <meta-data android:name="com.google.android.gms.phenotype.heterodyne_info.binarypb:com.google.android.libraries.performance.primes" android:resource="@raw/APKTOOL_RENAMED_0x7f130037"/>
+            <meta-data android:name="com.google.android.gms.phenotype.registration.binarypb:com.google.android.libraries.performance.primes" android:resource="@raw/APKTOOL_RENAMED_0x7f130038"/>
+        </service>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.gms.auth_account_client" android:resource="@xml/APKTOOL_RENAMED_0x7f170005"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.gms.learning" android:resource="@xml/APKTOOL_RENAMED_0x7f170009"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.gms.clearcut_client" android:resource="@xml/APKTOOL_RENAMED_0x7f170006"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.libraries.consentverifier" android:resource="@xml/APKTOOL_RENAMED_0x7f17002c"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.gms.droidguardclient" android:resource="@xml/APKTOOL_RENAMED_0x7f170007"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.gms.icing.mdd" android:resource="@xml/APKTOOL_RENAMED_0x7f170008"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.inputmethod.latin" android:resource="@xml/APKTOOL_RENAMED_0x7f170021"/>
+        <meta-data android:name="com.google.android.gms.phenotype.registration.xml:com.google.android.libraries.performance.primes" android:resource="@xml/APKTOOL_RENAMED_0x7f17002d"/>
+        <receiver android:exported="false" android:name="com.google.android.apps.inputmethod.latin.core.ApkUpdatedReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
+        <activity android:clearTaskOnLaunch="true" android:configChanges="keyboardHidden|screenSize" android:exported="false" android:finishOnTaskLaunch="true" android:launchMode="singleTask" android:name="com.google.android.apps.inputmethod.latin.firstrun.LatinFirstRunActivity" android:theme="@style/DayNightTheme.NoActionBar" android:windowSoftInputMode="stateAlwaysHidden">
+            <intent-filter>
+                <action android:name="com.google.android.libraries.inputmethod.launcher.FIRST_RUN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <meta-data android:name="android.content.APP_RESTRICTIONS" android:resource="@xml/APKTOOL_RENAMED_0x7f170001"/>
+        <activity android:configChanges="keyboard|keyboardHidden" android:exported="true" android:label="@string/APKTOOL_RENAMED_0x7f140c9c" android:name="com.google.android.apps.inputmethod.latin.preference.SettingsActivity" android:taskAffinity="com.google.android.apps.inputmethod.latin.preference.SettingsActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150433"/>
+        <provider android:authorities="com.google.android.inputmethod.latin" android:exported="true" android:grantUriPermissions="true" android:multiprocess="false" android:name="com.google.android.apps.inputmethod.latin.preference.SettingsSearchIndexablesProvider" android:permission="android.permission.READ_SEARCH_INDEXABLES">
+            <intent-filter>
+                <action android:name="android.content.action.SEARCH_INDEXABLES_PROVIDER"/>
+            </intent-filter>
+        </provider>
+        <activity android:exported="false" android:name="com.google.android.apps.inputmethod.libs.sharing.SharingLinkReceiveActivity" android:theme="@style/DayNightTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="com.google.android.libraries.inputmethod.launcher.SHARING_LINK"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:name="com.google.android.apps.inputmethod.latin.sharing.LinkReceivingLauncherActivity" android:theme="@style/SettingsTheme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:host="deeplink.com.google.android.inputmethod.latin" android:scheme="https"/>
+            </intent-filter>
+        </activity>
+        <service android:exported="true" android:label="@string/APKTOOL_RENAMED_0x7f140d63" android:name="com.android.inputmethod.latin.spellcheck.AndroidSpellCheckerService" android:permission="android.permission.BIND_TEXT_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.textservice.SpellCheckerService"/>
+            </intent-filter>
+            <meta-data android:name="android.view.textservice.scs" android:resource="@xml/spell_checker"/>
+        </service>
+        <activity android:exported="true" android:label="@string/APKTOOL_RENAMED_0x7f140d6d" android:name="com.google.android.apps.inputmethod.latin.spelling.LatinSpellCheckerSettingsActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150433">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:label="@string/APKTOOL_RENAMED_0x7f1416b4" android:name="com.google.android.apps.inputmethod.latin.stylus.StylusSettingsActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150433"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.learning.internal.training.InAppTrainingService" android:process=":train">
+            <intent-filter>
+                <action android:name="com.google.android.gms.learning.training.START"/>
+            </intent-filter>
+        </service>
+        <provider android:authorities="com.google.android.inputmethod.latin.clipboard_content" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.clipboard.ClipboardContentProvider"/>
+        <service android:exported="false" android:foregroundServiceType="shortService" android:name="com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksForegroundTaskService"/>
+        <service android:exported="false" android:name="com.google.android.apps.inputmethod.libs.dataservice.superpacks.SuperpacksBackgroundJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <activity android:excludeFromRecents="true" android:name="com.google.android.apps.inputmethod.libs.expression.imagefeedback.ui.ImageFeedbackActivity" android:noHistory="true" android:theme="@style/APKTOOL_RENAMED_0x7f150335" android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <receiver android:exported="true" android:name="com.google.android.apps.inputmethod.libs.kcm.InputDeviceReceiver">
+            <intent-filter>
+                <action android:name="android.hardware.input.action.QUERY_KEYBOARD_LAYOUTS"/>
+            </intent-filter>
+            <meta-data android:name="android.hardware.input.metadata.KEYBOARD_LAYOUTS" android:resource="@xml/APKTOOL_RENAMED_0x7f17082f"/>
+        </receiver>
+        <provider android:authorities="com.google.android.inputmethod.latin.inputactionprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.google.android.apps.inputmethod.libs.keyhound.InputActionFileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/input_action_path"/>
+        </provider>
+        <uses-native-library android:name="libOpenCL.so" android:required="false"/>
+        <uses-native-library android:name="libOpenCL-car.so" android:required="false"/>
+        <uses-native-library android:name="libOpenCL-pixel.so" android:required="false"/>
+        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version"/>
+        <activity android:exported="false" android:name="com.google.android.apps.inputmethod.libs.search.sticker.StickerFavoritePacksReorderActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150770"/>
+        <activity android:exported="false" android:name="com.google.android.apps.inputmethod.libs.search.sticker.StickerPacksManagementActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150770"/>
+        <activity android:configChanges="orientation|screenSize" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.swissarmyknife.DecoderStateReportActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150255"/>
+        <activity android:configChanges="orientation|screenSize" android:excludeFromRecents="true" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.swissarmyknife.QualityBugReportActivity" android:theme="@style/APKTOOL_RENAMED_0x7f15051b" android:windowSoftInputMode="stateHidden|adjustResize" preprocess_flags="[swissarmyknife]"/>
+        <provider android:authorities="com.google.android.inputmethod.latin.swissarmyknifefileprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.google.android.apps.inputmethod.libs.swissarmyknife.CrashResistantSwissArmyKnifeFileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/sak_file_provider_paths"/>
+        </provider>
+        <activity android:configChanges="orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:exported="false" android:label="@string/theme_builder_title" android:name="com.google.android.apps.inputmethod.libs.theme.builder.ThemeBuilderActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150a15"/>
+        <activity android:configChanges="orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:exported="false" android:label="@string/theme_editor_title" android:name="com.google.android.apps.inputmethod.libs.theme.builder.ThemeEditorActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150a15"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.trainingcache.examplestoreservice.ExampleStoreServiceMultiplexer" android:process=":train">
+            <intent-filter>
+                <action android:name="com.google.android.gms.learning.EXAMPLE_STORE"/>
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.google.android.gms.learning.EXAMPLE_STORE_V2"/>
+                <data android:scheme="app"/>
+            </intent-filter>
+        </service>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.trainingcache.replaycache.precomputedfeature.speech.examplestoreservice.SpeechPrecomputedFeatureExampleStoreService">
+            <intent-filter android:priority="0">
+                <action android:name="com.google.android.gms.learning.EXAMPLE_STORE_V2"/>
+                <data android:host="*" android:pathPrefix="/speech_precomputed_feature_data" android:scheme="app"/>
+            </intent-filter>
+        </service>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.apps.inputmethod.libs.trainingcache.replaycache.sanitycheckeval.nwpp13n.examplestoreservice.NwpSanityCheckEvalExampleStoreService">
+            <intent-filter android:priority="0">
+                <action android:name="com.google.android.gms.learning.EXAMPLE_STORE_V2"/>
+                <data android:host="*" android:pathPrefix="/nwp_sanity_check_eval_data" android:scheme="app"/>
+            </intent-filter>
+        </service>
+        <activity android:exported="false" android:name="com.google.android.apps.inputmethod.libs.universaldictation.utils.StartActivityForResult" android:theme="@style/Theme.AppCompat.Light.NoActionBar.Translucent"/>
+        <activity android:exported="false" android:name="com.google.android.play.core.common.PlayCoreDialogWrapperActivity" android:stateNotNeeded="true" android:theme="@style/APKTOOL_RENAMED_0x7f150b1f"/>
+        <activity android:enabled="false" android:exported="false" android:launchMode="singleInstance" android:name="com.google.android.play.core.missingsplits.PlayCoreMissingSplitsActivity" android:process=":playcore_missing_splits_activity" android:stateNotNeeded="true"/>
+        <activity android:exported="false" android:name="com.google.android.gms.common.api.GoogleApiActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <service android:enabled="true" android:exported="false" android:name="com.google.android.gms.learning.internal.training.InAppJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <service android:exported="false" android:name="com.google.firebase.components.ComponentDiscoveryService">
+            <meta-data android:name="com.google.firebase.components:com.google.firebase.dynamiclinks.internal.FirebaseDynamicLinkRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+        </service>
+        <receiver android:exported="true" android:name="com.google.android.libraries.appdoctor.AppDoctorReceiver" android:permission="com.google.android.gms.permission.INTERNAL_BROADCAST">
+            <intent-filter>
+                <action android:name="com.google.android.libraries.appdoctor.ACTION_TELE_DOCTOR_FIX"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:enabled="@bool/APKTOOL_RENAMED_0x7f0500b5" android:exported="@bool/APKTOOL_RENAMED_0x7f0500b5" android:name="com.google.android.libraries.inputmethod.accounts.checker.AccountsCapabilitiesChangedReceiver">
+            <intent-filter>
+                <action android:name="com.google.android.gms.auth.ACCOUNT_CAPABILITIES_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <activity android:excludeFromRecents="true" android:exported="false" android:name="com.google.android.libraries.inputmethod.activitytransition.KeyboardActivityResultTrampolineActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150a27"/>
+        <provider android:authorities="com.google.android.inputmethod.latin.androidx-startup" android:directBootAware="true" android:exported="false" android:initOrder="0x7ffffffe" android:name="com.google.android.libraries.inputmethod.startup.MainProcessInitializationProvider">
+            <meta-data android:name="com.google.android.libraries.inputmethod.appdoctor.initializer.AppDoctorInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.appstart.initializer.AppStartTrackerInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.flogger.initializer.FloggerInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.lethe.initializer.CrashProtectorInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.metrics.initializer.MetricsManagerInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.statusmonitors.initializer.DeviceStatusInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.strictmode.initializer.StrictModeInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="com.google.android.libraries.inputmethod.userunlock.initializer.UserUnlockMonitorInitializer" android:value="androidx.startup"/>
+        </provider>
+        <activity android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|density|fontScale" android:exported="false" android:label="BlankActivity" android:name="com.google.android.libraries.inputmethod.blankactivity.BlankActivity" android:theme="@android:style/Theme.Material.Light"/>
+        <activity android:clearTaskOnLaunch="true" android:excludeFromRecents="true" android:exported="false" android:launchMode="singleTask" android:name="com.google.android.libraries.inputmethod.companionwidget.accesspoint.PhysicalKeyboardShortcutsActivity" android:taskAffinity="" android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar"/>
+        <activity android:exported="false" android:label="Feature Split Debug" android:name="com.google.android.libraries.inputmethod.featuresplit.debugactivity.FeatureSplitDebugActivity" android:theme="@style/DayNightTheme.NoActionBar"/>
+        <service android:exported="false" android:name="com.google.android.libraries.inputmethod.featuresplit.metrics.FeatureSplitMultiprocessMetricsService"/>
+        <activity android:exported="false" android:name="com.google.android.libraries.inputmethod.featuresplit.ondemanddownload.ConfirmationActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <provider android:authorities="com.google.android.inputmethod.latin.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.google.android.libraries.inputmethod.fileprovider.CrashResistantFileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_provider_paths"/>
+        </provider>
+        <service android:directBootAware="false" android:enabled="@bool/APKTOOL_RENAMED_0x7f050009" android:exported="false" android:foregroundServiceType="shortService" android:name="androidx.work.impl.foreground.SystemForegroundService"/>
+        <activity android:clearTaskOnLaunch="true" android:excludeFromRecents="true" android:exported="false" android:launchMode="singleTask" android:name="com.google.android.libraries.inputmethod.permissions.PermissionsActivity" android:taskAffinity="" android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar"/>
+        <receiver android:exported="true" android:name="com.google.android.libraries.inputmethod.pixelbundle.PixelBundleBroadcastReceiver" android:permission="com.google.android.inputmethod.latin.pixelbundle.RECEIVER"/>
+        <activity android:clearTaskOnLaunch="true" android:enabled="false" android:excludeFromRecents="true" android:exported="false" android:icon="@mipmap/APKTOOL_RENAMED_0x7f110004" android:label="@string/APKTOOL_RENAMED_0x7f14089f" android:launchMode="singleTask" android:name="com.google.android.libraries.inputmethod.pksimulator.settings.PkSimulatorToggleActivity" android:showWhenLocked="true" android:theme="@style/APKTOOL_RENAMED_0x7f150b1e" android:windowSoftInputMode="stateUnchanged">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.ACCESSIBILITY_SHORTCUT_TARGET"/>
+            </intent-filter>
+            <meta-data android:name="android.accessibilityshortcut.target" android:resource="@xml/APKTOOL_RENAMED_0x7f170ec8"/>
+        </activity>
+        <activity android:enabled="false" android:exported="false" android:name="com.google.android.libraries.inputmethod.pksimulator.settings.PkSimulatorSettingActivity" android:theme="@style/DayNightTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="com.google.android.libraries.inputmethod.pksimulator.intent.action.SETTINGS"/>
+                <category android:name="android.accessibilityservice.SERVICE_SETTINGS"/>
+            </intent-filter>
+        </activity>
+        <provider android:authorities="com.google.android.inputmethod.latin.tracing" android:directBootAware="true" android:exported="false" android:initOrder="0x7fffffff" android:multiprocess="true" android:name="com.google.android.libraries.inputmethod.tracing.ColdStartupTraceContentProvider"/>
+        <service android:exported="false" android:label="LocalComputationResultHandlingService" android:name="com.google.android.libraries.inputmethod.trainingcache.localcomputation.LocalComputationResultHandlingService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.learning.COMPUTATION_RESULT"/>
+                <data android:host="*" android:pathPattern="/NEBULAE_LC-.*" android:scheme="app"/>
+            </intent-filter>
+        </service>
+        <service android:exported="false" android:label="FederatedResultHandlingService" android:name="com.google.android.libraries.inputmethod.trainingcache.trainer.dynamictrainer.FederatedResultHandlingService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.learning.COMPUTATION_RESULT"/>
+                <data android:host="*" android:pathPattern="/FEDERATED_.*" android:scheme="app"/>
+            </intent-filter>
+        </service>
+        <provider android:authorities="com.google.android.inputmethod.latin.wdb" android:exported="true" android:name="com.google.android.libraries.inputmethod.webdebugbridge.WebDebugBridgeContentProvider"/>
+        <activity android:exported="false" android:name="com.google.android.libraries.inputmethod.workprofile.EmptyActivity" android:theme="@style/TransparentActivity"/>
+        <activity android:exported="false" android:name="com.google.android.libraries.inputmethod.workprofile.TrampolineActivity" android:theme="@style/TransparentActivity"/>
+        <receiver android:exported="false" android:name="com.google.android.libraries.inputmethod.workprofile.CanInteractAcrossProfilesBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.content.pm.action.CAN_INTERACT_ACROSS_PROFILES_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <service android:exported="false" android:name="com.google.android.enterprise.connectedapps.CrossProfileConnector_Service"/>
+        <provider android:authorities="com.google.android.inputmethod.latin.mlkitinitprovider" android:exported="false" android:initOrder="99" android:name="com.google.mlkit.common.internal.MlKitInitProvider"/>
+        <service android:directBootAware="true" android:exported="false" android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService">
+            <meta-data android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+            <meta-data android:name="com.google.firebase.components:com.google.mlkit.vision.text.internal.TextRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+        </service>
+        <receiver android:exported="false" android:name="com.google.android.libraries.performance.primes.transmitter.LifeboatReceiver" android:process=":primes_lifeboat"/>
+        <receiver android:directBootAware="false" android:exported="true" android:name="com.google.android.libraries.phenotype.client.stable.AccountRemovedBroadcastReceiver" android:process="">
+            <intent-filter>
+                <action android:name="android.accounts.action.ACCOUNT_REMOVED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:name="com.google.android.libraries.phenotype.client.stable.PhenotypeUpdateBackgroundBroadcastReceiver" android:permission="com.google.android.gms.permission.PHENOTYPE_UPDATE_BROADCAST" android:process="">
+            <intent-filter>
+                <action android:name="com.google.android.gms.phenotype.UPDATE"/>
+            </intent-filter>
+        </receiver>
+        <activity android:exported="true" android:label="@string/preferences_license_title" android:name="com.google.android.libraries.social.licenses.LicenseMenuActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150b27"/>
+        <activity android:exported="false" android:label="@string/preferences_license_title" android:name="com.google.android.libraries.social.licenses.LicenseActivity" android:theme="@style/APKTOOL_RENAMED_0x7f150b27"/>
+        <service android:enabled="false" android:exported="false" android:name="android.net.http.MetaDataHolder">
+            <meta-data android:name="android.net.http.EnableTelemetry" android:value="true"/>
+        </service>
+        <service android:enabled="false" android:exported="false" android:name="androidx.camera.core.impl.MetadataHolderService">
+            <meta-data android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER" android:value="androidx.camera.camera2.Camera2Config$DefaultProvider"/>
+        </service>
+        <service android:directBootAware="true" android:exported="false" android:name="androidx.room.MultiInstanceInvalidationService"/>
+        <uses-library android:name="androidx.window.extensions" android:required="false"/>
+        <uses-library android:name="androidx.window.sidecar" android:required="false"/>
+        <service android:directBootAware="false" android:enabled="@bool/APKTOOL_RENAMED_0x7f05000a" android:exported="true" android:name="androidx.work.impl.background.systemjob.SystemJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="false" android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"/>
+        <receiver android:directBootAware="false" android:enabled="false" android:exported="false" android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS"/>
+            </intent-filter>
+        </receiver>
+        <service android:enabled="false" android:exported="false" android:name="com.google.android.build.data.PropertiesServiceHolder" android:process="">
+            <intent-filter>
+                <action android:name="com.google.android.build.data.Properties"/>
+            </intent-filter>
+            <meta-data android:name="com.google.android.build.data.properties" android:resource="@raw/APKTOOL_RENAMED_0x7f130003"/>
+        </service>
+        <meta-data android:name="com.android.vending.splits.required" android:value="true"/>
+        <meta-data android:name="com.android.stamp.source" android:value="https://play.google.com/store"/>
+        <meta-data android:name="com.android.stamp.type" android:value="STAMP_TYPE_DISTRIBUTION_APK"/>
+        <meta-data android:name="com.android.vending.splits" android:resource="@xml/splits0"/>
+        <meta-data android:name="com.android.vending.derived.apk.id" android:value="5"/>
+    </application>
+</manifest>

@@ -7,7 +7,7 @@ import org.junit.Test
 
 class GboardClipboardTargetSourceContractTest {
     @Test
-    fun `production is target-only exact 1803 with pure runtime reads`() {
+    fun `production is target-only exact 1853 with pure runtime reads`() {
         validate(loadSources())
     }
 
@@ -15,20 +15,20 @@ class GboardClipboardTargetSourceContractTest {
     fun `old token wrong member signature and missing target mutations fail`() {
         val stock = loadSources()
         listOf(
-            stock.mutate("Lfik;", "Leun;"),
-            stock.mutate("Lfjv;", "Levu;"),
-            stock.mutate("Lfjk;", "Levn;"),
+            stock.mutate("Lfpn;", "Leun;"),
+            stock.mutate("Lfqx;", "Levu;"),
+            stock.mutate("Lfqn;", "Levn;"),
             stock.mutate("Lkr;", "Lkl;"),
-            stock.mutate("name = \"l\"", "name = \"k\""),
-            stock.mutate("0x7f1409d3", "0x7f14094c"),
-            stock.mutate("\"fih\"", "\"euk\""),
-            stock.mutate("\"fij\"", "\"eum\""),
-            stock.mutate("receiver.getClass(), \"w\"", "receiver.getClass(), \"y\""),
+            stock.mutate("installClipboard1853GridAdapter(this)", ""),
+            stock.mutate("0x7f14091c", "0x7f14094c"),
+            stock.mutate("\"fpk\"", "\"euk\""),
+            stock.mutate("\"fpm\"", "\"eum\""),
+            stock.mutate("receiver.getClass(), \"z\"", "receiver.getClass(), \"y\""),
             stock.mutate("expectedRecent != currentRecent", "expectedRecent > currentRecent"),
             stock.mutate("name = \"call\"", "name = \"run\""),
             stock.mutate("name = \"g\"", "name = \"call\""),
             stock.mutate("Object dataHandler = receiver;", "Object dataHandler = null;"),
-            stock.mutate("CLIPBOARD_LOADER_CALLABLE_CLASS = \"Lfik;\"", ""),
+            stock.mutate("CLIPBOARD_LOADER_CALLABLE_CLASS = \"Lfpn;\"", ""),
         ).forEachIndexed { index, mutation ->
             assertThrows("mutation $index", IllegalStateException::class.java) {
                 validate(mutation)
@@ -37,7 +37,7 @@ class GboardClipboardTargetSourceContractTest {
     }
 
     private fun validate(sources: Sources) {
-        requireAll(sources.patchOptions, "Lfik;", "Lfjv;", "Lfjk;", "Lkr;")
+        requireAll(sources.patchOptions, "Lfpn;", "Lfqx;", "Lfqn;", "Lkr;")
         requireAll(sources.loaderPatch,
             "CLIPBOARD_LOADER_CALLABLE_CLASS", "name = \"call\"", "emptyList()")
         requireAll(sources.prunePatch,
@@ -49,27 +49,28 @@ class GboardClipboardTargetSourceContractTest {
             "ITEM_BIND_ENTRY", "ITEM_BIND_BEFORE_METHOD_DESCRIPTOR",
             "ITEM_BIND_EXPANDED_REGISTER_COUNT",
             "expandClipboardItemBindRegisters()", "validateExpandedClipboardItemBind()")
-        requireAll(sources.columnPatch, "name = \"l\"", "parameterTypes = emptyList()")
+        requireAll(sources.columnPatch, "installClipboard1853GridAdapter(this)")
         requireAll(sources.runtimeSupport,
-            "CLIPBOARD_LOADER_CALLABLE_CLASS = \"fik\"",
-            "CLIPBOARD_ADAPTER_CLASS = \"fjk\"",
-            "CLIPBOARD_VIEW_HOLDER_CLASS = \"fji\"",
-            "LAST_VISIBLE_TIMESTAMP_PREF_RES_ID = 0x7f1409d3",
-            "receiver.getClass(), \"w\"",
-            "resolveClass(classLoader, \"fil\")",
-            "resolveClass(classLoader, \"fjv\")",
-            "resolveClass(classLoader, \"fih\")",
-            "resolveClass(classLoader, \"fij\")",
-            "resolveClass(classLoader, \"fjo\")",
-            "resolveClass(classLoader, \"qhy\")",
-            "resolveClass(classLoader, \"cdl\")",
+            "CLIPBOARD_LOADER_CALLABLE_CLASS = \"fpn\"",
+            "CLIPBOARD_ADAPTER_CLASS = \"fqn\"",
+            "CLIPBOARD_VIEW_HOLDER_CLASS = \"fql\"",
+            "LAST_VISIBLE_TIMESTAMP_PREF_RES_ID = 0x7f14091c",
+            "receiver.getClass(), \"z\"",
+            "resolveClass(classLoader, \"fpo\")",
+            "resolveClass(classLoader, \"fqx\")",
+            "resolveClass(classLoader, \"fpk\")",
+            "resolveClass(classLoader, \"fpm\")",
+            "resolveClass(classLoader, \"fqr\")",
+            "resolveClass(classLoader, \"qvt\")",
+            "resolveClass(classLoader, \"cht\")",
             "declaredField(dataHandlerClass, \"f\")",
             "declaredField(dataHandlerClass, \"g\")",
             "declaredField(adapterClass, \"e\")",
             "declaredField(adapterClass, \"n\")",
             "declaredField(adapterClass, \"o\")",
-            "declaredField(adapterClass, \"y\")",
-            "declaredField(clipModelClass, \"c\")",
+            "declaredField(adapterClass, \"z\")",
+            "clipModelTextField = declaredField(clipModelClass, \"a\")",
+            "clipModelItemTypeField = declaredField(clipModelClass, \"c\")",
             "clipIsSensitiveMethod = declaredMethod(clipClass, \"m\")",
             "readClipboardShowSensitiveContent(preferences)",
             "declaredMethod(dataHandlerClass, \"t\"",

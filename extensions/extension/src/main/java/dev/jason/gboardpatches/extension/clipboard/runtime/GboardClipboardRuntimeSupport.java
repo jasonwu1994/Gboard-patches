@@ -6,8 +6,11 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -29,9 +32,9 @@ final class GboardClipboardRuntimeSupport {
     static final String TAG = "GboardClipboard";
     static final String LOG_PREFIX = "[gboard-clipboard]";
 
-    static final String CLIPBOARD_LOADER_CALLABLE_CLASS = "fik";
-    static final String CLIPBOARD_ADAPTER_CLASS = "fjk";
-    static final String CLIPBOARD_VIEW_HOLDER_CLASS = "fji";
+    static final String CLIPBOARD_LOADER_CALLABLE_CLASS = "fpn";
+    static final String CLIPBOARD_ADAPTER_CLASS = "fqn";
+    static final String CLIPBOARD_VIEW_HOLDER_CLASS = "fql";
 
     static final long MINUTE_MS = 60_000L;
     static final long INFINITE_TTL_MS = -1L;
@@ -46,7 +49,7 @@ final class GboardClipboardRuntimeSupport {
     static final int STOCK_CLIPBOARD_PRUNE_TRIGGER = 120;
     static final int STOCK_CLIPBOARD_GROUP_LIMIT = 5;
     static final int STOCK_CLIPBOARD_CONTENT_MAX_LINES = 5;
-    static final int LAST_VISIBLE_TIMESTAMP_PREF_RES_ID = 0x7f1409d3;
+    static final int LAST_VISIBLE_TIMESTAMP_PREF_RES_ID = 0x7f14091c;
     static final String[] CURSOR_COUNT_PROJECTION =
             new String[] { "_id", "timestamp", "item_type", "uri" };
     static final String STOCK_SELECTION_RECENT_PINNED_SPECIAL =
@@ -64,6 +67,8 @@ final class GboardClipboardRuntimeSupport {
             Collections.synchronizedMap(new WeakHashMap<ClassLoader, ReflectionHandles>());
     final Map<TextView, CountdownBinding> activeCountdownByTextView =
             Collections.synchronizedMap(new WeakHashMap<TextView, CountdownBinding>());
+    final Map<TextView, WeakReference<CountdownBinding>> detachedCountdownByTextView =
+            Collections.synchronizedMap(new WeakHashMap<>());
     final Map<TextView, Integer> activeMaxLinesOverrideByTextView =
             Collections.synchronizedMap(new WeakHashMap<TextView, Integer>());
     final Map<Object, OrderIndexRefreshState> orderIndexRefreshStateByAdapter =
@@ -212,8 +217,10 @@ final class GboardClipboardRuntimeSupport {
         }
         Field field = clipboardKeyboardContextField;
         if (field == null || !field.getDeclaringClass().isInstance(receiver)) {
-            field = findDeclaredFieldInHierarchy(receiver.getClass(), "w");
-            if (field == null) {
+            field = findDeclaredFieldInHierarchy(receiver.getClass(), "z");
+            if (field == null || field.getType()!=Context.class
+                    || !field.getDeclaringClass().getName().equals(
+                        "com.google.android.libraries.inputmethod.keyboard.impl.AbstractKeyboard")) {
                 return null;
             }
             clipboardKeyboardContextField = field;
@@ -566,10 +573,13 @@ final class GboardClipboardRuntimeSupport {
         }
     }
 
-    static final class CountdownBinding implements Runnable {
+    static final class CountdownBinding implements Runnable,
+            View.OnAttachStateChangeListener, ViewTreeObserver.OnGlobalLayoutListener,
+            ViewTreeObserver.OnPreDrawListener {
         final GboardClipboardUiHookAdapter module;
+        final GboardClipboardRuntimeSupport support;
         final ReflectionHandles handles;
-        final TextView textView;
+        final WeakReference<TextView> textViewReference;
         final String originalText;
         final long clipId;
         final long clipTimestamp;
@@ -578,13 +588,18 @@ final class GboardClipboardRuntimeSupport {
         final long clipboardTtlMs;
         int clipOrder;
         String renderedText;
+        private WeakReference<ViewTreeObserver> observedTree = new WeakReference<>(null);
+        boolean wasVisible;
+        boolean disposed;
 
-        CountdownBinding(GboardClipboardUiHookAdapter module, ReflectionHandles handles,
+        CountdownBinding(GboardClipboardUiHookAdapter module, GboardClipboardRuntimeSupport support,
+                ReflectionHandles handles,
                 TextView textView, String originalText, long clipId, long clipTimestamp,
                 boolean pinned, boolean special, long clipboardTtlMs, int clipOrder) {
             this.module = module;
+            this.support = support;
             this.handles = handles;
-            this.textView = textView;
+            this.textViewReference = new WeakReference<>(textView);
             this.originalText = originalText == null ? "" : originalText;
             this.clipId = clipId;
             this.clipTimestamp = clipTimestamp;
@@ -592,6 +607,85 @@ final class GboardClipboardRuntimeSupport {
             this.special = special;
             this.clipboardTtlMs = clipboardTtlMs;
             this.clipOrder = clipOrder;
+        }
+
+        TextView textView() { return textViewReference.get(); }
+
+        boolean isVisible(TextView view) {
+            return view != null && view.isAttachedToWindow() && view.isShown()
+                    && view.getWindowVisibility() == View.VISIBLE;
+        }
+
+        void watch(TextView view) {
+            view.addOnAttachStateChangeListener(this);
+            if (view.isAttachedToWindow()) observeTree(view);
+            wasVisible = isVisible(view);
+        }
+
+        private void observeTree(TextView view) {
+            stopObservingTree();
+            ViewTreeObserver tree = view.getViewTreeObserver();
+            tree.addOnGlobalLayoutListener(this);
+            // Detect window-only visibility changes without requesting frames or polling.
+            tree.addOnPreDrawListener(this);
+            observedTree = new WeakReference<>(tree);
+        }
+
+        private void stopObservingTree() {
+            ViewTreeObserver tree = observedTree.get();
+            if (tree != null && tree.isAlive()) {
+                tree.removeOnGlobalLayoutListener(this);
+                tree.removeOnPreDrawListener(this);
+            }
+            observedTree.clear();
+        }
+
+        void dispose(TextView view) {
+            disposed = true;
+            view.removeCallbacks(this);
+            view.removeOnAttachStateChangeListener(this);
+            stopObservingTree();
+        }
+
+        @Override public void onViewAttachedToWindow(View view) {
+            if (disposed || !(view instanceof TextView label)) return;
+            CountdownBinding current = support.activeCountdownByTextView.get(label);
+            if (current != null && current != this) {
+                dispose(label);
+                return;
+            }
+            support.detachedCountdownByTextView.remove(label);
+            support.activeCountdownByTextView.put(label, this);
+            observeTree(label);
+            refreshVisibility();
+        }
+
+        @Override public void onViewDetachedFromWindow(View view) {
+            view.removeCallbacks(this);
+            stopObservingTree();
+            wasVisible = false;
+            if (support.activeCountdownByTextView.get(view) == this) {
+                support.detachedCountdownByTextView.put((TextView) view, new WeakReference<>(this));
+                support.activeCountdownByTextView.remove(view);
+            }
+            // Only the view owns this attach listener; both registry paths remain weak.
+        }
+
+        @Override public void onGlobalLayout() { refreshVisibility(); }
+
+        @Override public boolean onPreDraw() {
+            refreshVisibility();
+            return true;
+        }
+
+        private void refreshVisibility() {
+            TextView view = textView();
+            if (disposed || view == null || support.activeCountdownByTextView.get(view) != this) return;
+            boolean visible = isVisible(view);
+            if (visible == wasVisible) return;
+            wasVisible = visible;
+            if (!visible) view.removeCallbacks(this);
+            else module.onCountdownTick(this);
         }
 
         @Override
@@ -643,16 +737,16 @@ final class GboardClipboardRuntimeSupport {
         ReflectionHandles(ClassLoader classLoader) throws Throwable {
             Class<?> loaderCallableClass = resolveClass(classLoader,
                     CLIPBOARD_LOADER_CALLABLE_CLASS);
-            Class<?> loaderClass = resolveClass(classLoader, "fil");
-            Class<?> dataHandlerClass = resolveClass(classLoader, "fjv");
+            Class<?> loaderClass = resolveClass(classLoader, "fpo");
+            Class<?> dataHandlerClass = resolveClass(classLoader, "fqx");
             Class<?> adapterClass = resolveClass(classLoader, CLIPBOARD_ADAPTER_CLASS);
             Class<?> clipItemViewHolderClass = resolveClass(classLoader,
                     CLIPBOARD_VIEW_HOLDER_CLASS);
-            Class<?> clipClass = resolveClass(classLoader, "fih");
-            Class<?> clipModelClass = resolveClass(classLoader, "fij");
-            Class<?> queryUtilsClass = resolveClass(classLoader, "fjo");
-            Class<?> preferencesClass = resolveClass(classLoader, "qhy");
-            Class<?> preferenceBaseClass = resolveClass(classLoader, "cdl");
+            Class<?> clipClass = resolveClass(classLoader, "fpk");
+            Class<?> clipModelClass = resolveClass(classLoader, "fpm");
+            Class<?> queryUtilsClass = resolveClass(classLoader, "fqr");
+            Class<?> preferencesClass = resolveClass(classLoader, "qvt");
+            Class<?> preferenceBaseClass = resolveClass(classLoader, "cht");
 
             loaderCallableOwnerField = declaredField(loaderCallableClass, "a");
             loaderContextField = declaredField(loaderClass, "b");
@@ -662,13 +756,13 @@ final class GboardClipboardRuntimeSupport {
             adapterContextField = declaredField(adapterClass, "e");
             adapterItemsField = declaredField(adapterClass, "n");
             adapterRecentCountField = declaredField(adapterClass, "o");
-            adapterPinnedVisibleCountField = declaredField(adapterClass, "y");
+            adapterPinnedVisibleCountField = declaredField(adapterClass, "z");
             clipItemViewHolderTextField = declaredField(clipItemViewHolderClass, "t");
             clipIdField = declaredField(clipClass, "d");
             clipTimestampField = declaredField(clipClass, "e");
             clipModelField = declaredField(clipClass, "g");
-            clipModelTextField = declaredField(clipModelClass, "c");
-            clipModelItemTypeField = declaredField(clipModelClass, "e");
+            clipModelTextField = declaredField(clipModelClass, "a");
+            clipModelItemTypeField = declaredField(clipModelClass, "c");
             clipIsSensitiveMethod = declaredMethod(clipClass, "m");
             clipIsPinnedMethod = declaredMethod(clipClass, "n");
             clipIsSpecialMethod = declaredMethod(clipClass, "o");

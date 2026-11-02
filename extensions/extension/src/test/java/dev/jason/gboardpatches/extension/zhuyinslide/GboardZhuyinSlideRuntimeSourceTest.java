@@ -11,24 +11,24 @@ import org.junit.Test;
 
 public final class GboardZhuyinSlideRuntimeSourceTest {
     @Test
-    public void reflectionSupportUsesOnlyTheExact1803ActionAndPointerContract()
+    public void reflectionSupportUsesOnlyTheExact1853ActionAndPointerContract()
             throws Exception {
         String source = readSource("GboardZhuyinSlideRuntimeSupport.java");
 
         assertTrue(source.contains("com.google.android.libraries.inputmethod.metadata.SoftKeyDef"));
-        assertTrue(source.contains("ACTION_TYPE_CLASS = \"pmy\""));
+        assertTrue(source.contains("ACTION_TYPE_CLASS = \"qae\""));
         assertTrue(source.contains("com.google.android.libraries.inputmethod.metadata.ActionDef"));
-        assertTrue(source.contains("ACTION_ENTRY_CLASS = \"pnu\""));
-        assertTrue(source.contains("ACTION_BUILDER_CLASS = \"pmz\""));
-        assertTrue(source.contains("METADATA_BUILDER_CLASS = \"ppo\""));
-        assertTrue(source.contains("INTENTION_CLASS = \"pnt\""));
-        assertTrue(source.contains("POINTER_TRACKER_CLASS = \"pvi\""));
-        assertTrue(source.contains("getDeclaredMethod(\"r\", actionSetClass, long.class)"));
-        assertTrue(source.contains("actionSetClass.getDeclaredField(\"f\")"));
-        assertTrue(source.contains("actionSetClass.getDeclaredField(\"g\")"));
+        assertTrue(source.contains("ACTION_ENTRY_CLASS = \"qbc\""));
+        assertTrue(source.contains("ACTION_BUILDER_CLASS = \"qaf\""));
+        assertTrue(source.contains("METADATA_BUILDER_CLASS = \"qcv\""));
+        assertTrue(source.contains("INTENTION_CLASS = \"qbb\""));
+        assertTrue(source.contains("POINTER_TRACKER_CLASS = \"qin\""));
+        assertTrue(source.contains("getDeclaredMethod(\"s\", actionSetClass, long.class)"));
         assertTrue(source.contains("actionSetClass.getDeclaredField(\"h\")"));
+        assertTrue(source.contains("actionSetClass.getDeclaredField(\"i\")"));
+        assertTrue(source.contains("actionSetClass.getDeclaredField(\"h\")"));
+        assertTrue(source.contains("actionSetClass.getDeclaredMethod(\"g\", actionTypeClass)"));
         assertTrue(source.contains("actionSetClass.getDeclaredMethod(\"h\", actionTypeClass)"));
-        assertTrue(source.contains("actionSetClass.getDeclaredMethod(\"i\", actionTypeClass)"));
         assertTrue(source.contains("pointerTrackerClass.getDeclaredField(\"m\")"));
         assertTrue(source.contains("pointerTrackerClass.getDeclaredMethod(\"i\")"));
         assertTrue(source.contains("pointerTrackerClass.getDeclaredMethod(")

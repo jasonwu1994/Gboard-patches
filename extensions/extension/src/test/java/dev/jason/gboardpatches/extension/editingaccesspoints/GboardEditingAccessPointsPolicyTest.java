@@ -10,17 +10,17 @@ import static org.junit.Assert.*;
 public class GboardEditingAccessPointsPolicyTest {
     @Test public void appendPreservesOrderAndDeduplicates() {
         List<String> stock = Arrays.asList("emoji", "web_search", "text_edit_copy", "emoji");
-        List<String> actual = GboardEditingAccessPoints1803Contribution.extend(stock, action -> true);
+        List<String> actual = GboardEditingAccessPointsContribution.extend(stock, action -> true);
         assertEquals(Arrays.asList("emoji", "web_search", "text_edit_copy",
                 "text_edit_select_all", "text_edit_cut", "text_edit_paste"), actual);
-        assertEquals(actual, GboardEditingAccessPoints1803Contribution.extend(actual, action -> true));
+        assertEquals(actual, GboardEditingAccessPointsContribution.extend(actual, action -> true));
     }
 
     @Test public void individualAdmissionDoesNotEnableOtherActions() {
         assertEquals(Collections.singletonList("text_edit_paste"),
-                GboardEditingAccessPoints1803Contribution.extend(Collections.emptyList(),
+                GboardEditingAccessPointsContribution.extend(Collections.emptyList(),
                         action -> action == EditorAction.PASTE));
-        assertTrue(GboardEditingAccessPoints1803Contribution.extend(Collections.emptyList(),
+        assertTrue(GboardEditingAccessPointsContribution.extend(Collections.emptyList(),
                 action -> false).isEmpty());
     }
 
@@ -38,9 +38,9 @@ public class GboardEditingAccessPointsPolicyTest {
     }
 
     @Test public void menuLabelsAreFixedEnglish() {
-        assertEquals("Select All", GboardEditingAccessPoints1803Contribution.label(EditorAction.SELECT_ALL));
-        assertEquals("Copy", GboardEditingAccessPoints1803Contribution.label(EditorAction.COPY));
-        assertEquals("Cut", GboardEditingAccessPoints1803Contribution.label(EditorAction.CUT));
-        assertEquals("Paste", GboardEditingAccessPoints1803Contribution.label(EditorAction.PASTE));
+        assertEquals("Select All", GboardEditingAccessPointsContribution.label(EditorAction.SELECT_ALL));
+        assertEquals("Copy", GboardEditingAccessPointsContribution.label(EditorAction.COPY));
+        assertEquals("Cut", GboardEditingAccessPointsContribution.label(EditorAction.CUT));
+        assertEquals("Paste", GboardEditingAccessPointsContribution.label(EditorAction.PASTE));
     }
 }

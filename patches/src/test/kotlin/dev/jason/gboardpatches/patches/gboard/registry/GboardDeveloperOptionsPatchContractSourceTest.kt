@@ -53,7 +53,10 @@ class GboardDeveloperOptionsPatchContractSourceTest {
 
         assertTrue(availability.contains("FEATURE_DEVELOPER_OPTIONS"))
         assertTrue(availability.contains("dev.jason.gboardpatches.feature.developer_options"))
-        assertTrue(featureRegistry.contains("new GboardDeveloperOptionsSettingsFeature("))
+        assertTrue(featureRegistry.contains("new GboardMoreSettingsGroupFeature("))
+        assertTrue(readSource(FEATURE_REGISTRY_PATH.replace(
+            "GboardPatchesSettingsFeatureRegistry.java", "GboardMoreSettingsGroupFeature.java"))
+            .contains("new GboardDeveloperOptionsSettingsFeature("))
         assertTrue("Developer options settings feature missing", Files.isRegularFile(featurePath))
 
         val feature = readSource(FEATURE_PATH)
@@ -66,10 +69,10 @@ class GboardDeveloperOptionsPatchContractSourceTest {
         assertTrue(
             feature.contains(
                 "GboardPatchesSettingsContract.openTargetSettingsHeader(" +
-                    "host, TARGET_1803_HEADER_KEY_RESOURCE_ID)",
+                    "host, TARGET_HEADER_KEY_RESOURCE_ID)",
             ),
         )
-        assertTrue(feature.contains("0x7f140b4b"))
+        assertTrue(feature.contains("0x7f140a6d"))
         assertFalse(feature.contains("openFeature("))
         assertFalse(feature.contains("DeveloperSettingsFragment"))
         assertFalse(feature.contains(":android:show_fragment"))
@@ -98,11 +101,11 @@ class GboardDeveloperOptionsPatchContractSourceTest {
     }
 
     @Test
-    fun activityUsesCurrentPackageExact1803HeaderNavigationAndGuardsUnverifiedPackages() {
+    fun activityUsesCurrentPackageExact1853HeaderNavigationAndGuardsUnverifiedPackages() {
         val activity = readSource(ACTIVITY_PATH)
 
         assertTrue(activity.contains("ENTER_PREF_HEADER"))
-        assertTrue(activity.contains("18.0.3.954559732-release-arm64-v8a"))
+        assertTrue(activity.contains("18.5.4.993608717-release-arm64-v8a"))
         assertTrue(activity.contains("targetPackageVersionName(packageName)"))
         assertTrue(activity.contains("SUPPORTED_DEVELOPER_OPTIONS_TARGET_VERSION.equals("))
         assertTrue(activity.contains("intent.putExtra(ENTER_PREF_HEADER_EXTRA, headerKeyResourceId)"))

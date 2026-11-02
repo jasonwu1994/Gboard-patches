@@ -26,6 +26,12 @@ Gboard Patches is a public Morphe source for a curated set of Gboard enhancement
 Features designed and built by this project rather than simply unlocking an existing Gboard flag.
 
 <details>
+  <summary><code>Dictionaries &amp; Predictions</code></summary>
+
+  Choose resource versions for dictionaries, predictions, and input correction.
+</details>
+
+<details>
   <summary><code>Clipboard Enhancements</code></summary>
 
   Lets you enhance clipboard retention time, item count limits, preview lines, countdown and creation-time labels, order index, grid columns, and optionally render only the first 1,000 characters on each clipboard card.
@@ -38,9 +44,9 @@ Features designed and built by this project rather than simply unlocking an exis
 
   Preview:
 
-  <img alt="Web Clipboard pairing gate" src="docs/assets/features/web-clipboard/01-pairing-gate.png" width="720">
+  <img alt="Web Clipboard pairing gate" src="assets/features/web-clipboard/01-pairing-gate.png" width="720">
 
-  <img alt="Web Clipboard conversation view" src="docs/assets/features/web-clipboard/02-conversation-view.png" width="720">
+  <img alt="Web Clipboard conversation view" src="assets/features/web-clipboard/02-conversation-view.png" width="720">
 
 </details>
 
@@ -135,6 +141,12 @@ Customize the bottom tab order in Gboard's Emojis, stickers & GIFs panel with dr
 Features already present in Gboard that are exposed by enabling hidden settings, rollout gates, or built-in behavior.
 
 <details>
+  <summary><code>Keypress Vibration Intensity Control</code></summary>
+
+  Control keypress vibration intensity instead of duration.
+</details>
+
+<details>
   <summary><code>AI Writing Tools</code></summary>
 
   Enables the <code>Text correction &gt; Writing tools</code> setting with support for all languages.
@@ -216,12 +228,6 @@ Features already present in Gboard that are exposed by enabling hidden settings,
   <summary><code>Quick Insert</code></summary>
 
 Enables the Quick Insert panel and toolbar access point.
-</details>
-
-<details>
-  <summary><code>Hyperspeed Typing Animation</code></summary>
-
-Shows the animation during sustained fast typing with support for all keyboards.
 </details>
 
 <details>

@@ -1,7 +1,6 @@
 package dev.jason.gboardpatches.patches.gboard.shared
 
 /**
- * Register layout for the admitted 18.0.3 pvi#B pointer-owner method. The target
  * descriptor is supplied by generated bindings;
  * these values describe the independently verified word layout only.
  */

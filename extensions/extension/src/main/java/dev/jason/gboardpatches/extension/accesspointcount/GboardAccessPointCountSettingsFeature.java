@@ -129,14 +129,18 @@ public final class GboardAccessPointCountSettingsFeature
                                         true,
                                         safeSnapshot.enabled,
                                         toggleAction,
-                                        buildEnabledPreview()),
+                                        buildEnabledPreview())
+                                        .setRestartRequired(
+                                                GboardAccessPointCountSettings.PREF_KEY_ENABLED),
                                 new GboardPatchesSettingsContract.SelectorRow(
                                         countTitle,
                                         countSummary,
                                         Integer.toString(safeSnapshot.count),
                                         true,
                                         () -> showCountDialog(
-                                                host, safeSnapshot.count, countWriter))))),
+                                                host, safeSnapshot.count, countWriter))
+                                        .setRestartRequired(
+                                                GboardAccessPointCountSettings.PREF_KEY_COUNT)))),
                 GboardPatchesSettingsContract.RefreshPolicy.none(),
                 GboardPatchesSettingsContract.PanelStyle.FLAT);
     }

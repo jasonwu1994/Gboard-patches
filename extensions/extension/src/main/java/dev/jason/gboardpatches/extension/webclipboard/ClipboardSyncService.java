@@ -48,6 +48,7 @@ public final class ClipboardSyncService extends Service {
 
     private ClipboardManager serviceClipboardManager;
     private ClipboardManager.OnPrimaryClipChangedListener serviceClipboardListener;
+    private boolean foregroundRefused;
     private ClipboardSyncWebPortal webPortal;
     private int currentPortalPort;
     private boolean currentPairingRequired;
@@ -61,7 +62,7 @@ public final class ClipboardSyncService extends Service {
     private final ExecutorService clipboardPublishExecutor = Executors.newSingleThreadExecutor();
 
     public static void startOrUpdate(Context context) {
-        if (context == null) {
+        if (context == null || !WebClipboardLocalNetworkPermission.isGranted(context)) {
             return;
         }
         Context appContext = context.getApplicationContext() != null
@@ -153,7 +154,14 @@ public final class ClipboardSyncService extends Service {
             activeService = this;
             Log.i(TAG, LOG_PREFIX + " service onCreate");
             ensureNotificationChannel();
-            startForeground("Starting Web Clipboard");
+            try {
+                startForeground("Starting Web Clipboard");
+            } catch (RuntimeException failure) {
+                Log.w(TAG, LOG_PREFIX + " foreground start refused; stopping", failure);
+                foregroundRefused = true;
+                stopSelf();
+                return;
+            }
             WebClipboardTileController.markRuntimeActive(this, false);
             registerClipboardListener();
             refreshWebPortal();
@@ -164,10 +172,24 @@ public final class ClipboardSyncService extends Service {
     }
 
     @Override
+    public void onTimeout(int startId, int fgsType) {
+        try {
+            Log.w(TAG, LOG_PREFIX + " foreground service timeout type=" + fgsType + "; stopping");
+            stopWebPortal();
+        } catch (Throwable ignored) {
+        }
+        stopSelf();
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         try {
             String action = intent != null ? intent.getAction() : ACTION_START_OR_UPDATE;
             long commandSeq = START_COMMAND_SEQUENCE.getAndIncrement();
+            if (foregroundRefused) {
+                stopSelf();
+                return START_NOT_STICKY;
+            }
             Log.i(TAG, LOG_PREFIX + " onStartCommand"
                     + " seq=" + commandSeq
                     + ", action=" + action
@@ -256,6 +278,11 @@ public final class ClipboardSyncService extends Service {
                 + ", currentPairingCode=" + summarizePairingCode(currentPairingCode)
                 + ", currentLoopbackToken=" + summarizeLoopbackToken(currentLoopbackIngressToken)
                 + ", needsRestart=" + needsRestart);
+        if (!WebClipboardLocalNetworkPermission.isGranted(this)) {
+            stopWebPortal();
+            WebClipboardTileController.markRuntimeActive(this,false);
+            stopSelf();return;
+        }
         if (!enabled) {
             Log.i(TAG, LOG_PREFIX + " refresh portal stopping because feature disabled");
             stopWebPortal();
@@ -511,7 +538,8 @@ public final class ClipboardSyncService extends Service {
     private void startForeground(String statusText) {
         Notification notification = buildNotification(statusText);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+            startForeground(NOTIFICATION_ID, notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
             return;
         }
         startForeground(NOTIFICATION_ID, notification);

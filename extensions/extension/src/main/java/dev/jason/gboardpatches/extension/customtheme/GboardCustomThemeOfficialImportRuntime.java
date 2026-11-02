@@ -10,7 +10,6 @@ import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettings;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 
-/** 18.0.3 adapter for the plus tile and activity-result path on Gboard's Theme page. */
 public final class GboardCustomThemeOfficialImportRuntime {
     private static final int IMPORT_REQUEST_CODE = 0x67;
     private static final String NEW_THEME_FILE_EXTRA = "intent_extra_key_new_theme_file_name";

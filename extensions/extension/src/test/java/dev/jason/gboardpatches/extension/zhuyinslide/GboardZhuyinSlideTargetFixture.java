@@ -28,7 +28,7 @@ public final class GboardZhuyinSlideTargetFixture {
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
     private static final String METADATA_INTERNAL_NAME =
             "com/google/android/libraries/inputmethod/metadata/SoftKeyDef";
-    private static final String POINTER_TRACKER_NAME = "pvi";
+    private static final String POINTER_TRACKER_NAME = "qin";
     private static final Map<String, String> TARGET_CLASS_NAMES = targetClassNames();
     private static final FixtureClassLoader CLASS_LOADER = new FixtureClassLoader(
             GboardZhuyinSlideTargetFixture.class.getClassLoader(),
@@ -63,7 +63,7 @@ public final class GboardZhuyinSlideTargetFixture {
     }
 
     public static void bind(Object view, Object metadata, long token) throws Exception {
-        SOFT_KEY_VIEW_CLASS.getMethod("r", METADATA_CLASS, long.class)
+        SOFT_KEY_VIEW_CLASS.getMethod("s", METADATA_CLASS, long.class)
                 .invoke(view, metadata, Long.valueOf(token));
     }
 
@@ -90,18 +90,18 @@ public final class GboardZhuyinSlideTargetFixture {
     }
 
     static Object newDispatcher(Context context) throws Exception {
-        Class<?> preferencesClass = loadClass("qhy");
+        Class<?> preferencesClass = loadClass("qvt");
         Object preferences = preferencesClass.getMethod("instance").invoke(null);
-        return loadClass("pvf").getConstructor(Context.class, preferencesClass)
+        return loadClass("qil").getConstructor(Context.class, preferencesClass)
                 .newInstance(context, preferences);
     }
 
     static void resetPreferences() throws Exception {
-        loadClass("qhy").getMethod("reset").invoke(null);
+        loadClass("qvt").getMethod("reset").invoke(null);
     }
 
     static Object action(String actionName) {
-        return enumValue(loadClass("pmy"), actionName);
+        return enumValue(loadClass("qae"), actionName);
     }
 
     public static void setCurrentOwner(Object tracker, Object view) throws Exception {
@@ -110,7 +110,7 @@ public final class GboardZhuyinSlideTargetFixture {
 
     public static void setActions(Object tracker, String currentAction, String resolvedAction)
             throws Exception {
-        Class<?> actionType = loadClass("pmy");
+        Class<?> actionType = loadClass("qae");
         pointerField("currentAction").set(tracker, enumValue(actionType, currentAction));
         pointerField("resolvedAction").set(tracker, enumValue(actionType, resolvedAction));
     }
@@ -120,14 +120,14 @@ public final class GboardZhuyinSlideTargetFixture {
     }
 
     static Object exactAction(Object metadata, String actionName) throws Exception {
-        Class<?> actionType = loadClass("pmy");
-        Method lookup = METADATA_CLASS.getMethod("h", actionType);
+        Class<?> actionType = loadClass("qae");
+        Method lookup = METADATA_CLASS.getMethod("g", actionType);
         return lookup.invoke(metadata, enumValue(actionType, actionName));
     }
 
     static Object actionPayload(Object action) throws Exception {
-        Object[] entries = (Object[]) action.getClass().getField("d").get(action);
-        return entries[0].getClass().getField("e").get(entries[0]);
+        java.util.List<?> entries = (java.util.List<?>) action.getClass().getField("f").get(action);
+        return entries.get(0).getClass().getField("e").get(entries.get(0));
     }
 
     private static Field pointerField(String name) throws Exception {
@@ -169,7 +169,7 @@ public final class GboardZhuyinSlideTargetFixture {
         constructor.visitEnd();
 
         MethodVisitor bind = writer.visitMethod(
-                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "r",
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "s",
                 "(L" + METADATA_INTERNAL_NAME + ";J)Z", null, null);
         bind.visitCode();
         Label bindNormally = new Label();
@@ -250,8 +250,8 @@ public final class GboardZhuyinSlideTargetFixture {
                 POINTER_TRACKER_NAME, null, "java/lang/Object", null);
         writer.visitField(Opcodes.ACC_PUBLIC, "m", "L" + SOFT_KEY_VIEW_INTERNAL_NAME + ";",
                 null, null).visitEnd();
-        writer.visitField(Opcodes.ACC_PUBLIC, "currentAction", "Lpmy;", null, null).visitEnd();
-        writer.visitField(Opcodes.ACC_PUBLIC, "resolvedAction", "Lpmy;", null, null).visitEnd();
+        writer.visitField(Opcodes.ACC_PUBLIC, "currentAction", "Lqae;", null, null).visitEnd();
+        writer.visitField(Opcodes.ACC_PUBLIC, "resolvedAction", "Lqae;", null, null).visitEnd();
         writer.visitField(Opcodes.ACC_PUBLIC, "throwOnResolve", "Z", null, null).visitEnd();
 
         MethodVisitor constructor = writer.visitMethod(
@@ -287,16 +287,16 @@ public final class GboardZhuyinSlideTargetFixture {
         reset.visitEnd();
 
         MethodVisitor current = writer.visitMethod(
-                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "i", "()Lpmy;", null, null);
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "i", "()Lqae;", null, null);
         current.visitCode();
         current.visitVarInsn(Opcodes.ALOAD, 0);
-        current.visitFieldInsn(Opcodes.GETFIELD, POINTER_TRACKER_NAME, "currentAction", "Lpmy;");
+        current.visitFieldInsn(Opcodes.GETFIELD, POINTER_TRACKER_NAME, "currentAction", "Lqae;");
         current.visitInsn(Opcodes.ARETURN);
         current.visitMaxs(0, 0);
         current.visitEnd();
 
         MethodVisitor resolve = writer.visitMethod(
-                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "h", "(FFLpmy;)Lpmy;", null, null);
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, "h", "(FFLqae;)Lqae;", null, null);
         resolve.visitCode();
         Label returnConfigured = new Label();
         resolve.visitVarInsn(Opcodes.ALOAD, 0);
@@ -310,7 +310,7 @@ public final class GboardZhuyinSlideTargetFixture {
         resolve.visitInsn(Opcodes.ATHROW);
         resolve.visitLabel(returnConfigured);
         resolve.visitVarInsn(Opcodes.ALOAD, 0);
-        resolve.visitFieldInsn(Opcodes.GETFIELD, POINTER_TRACKER_NAME, "resolvedAction", "Lpmy;");
+        resolve.visitFieldInsn(Opcodes.GETFIELD, POINTER_TRACKER_NAME, "resolvedAction", "Lqae;");
         Label returnResolved = new Label();
         resolve.visitInsn(Opcodes.DUP);
         resolve.visitJumpInsn(Opcodes.IFNONNULL, returnResolved);
@@ -334,17 +334,15 @@ public final class GboardZhuyinSlideTargetFixture {
     }
 
     private static Map<String, String> targetClassNames() {
-        Map<String, String> names = new LinkedHashMap<String, String>();
-        names.put(METADATA_NAME, "owd");
-        names.put("pmy", "oth");
-        names.put("com.google.android.libraries.inputmethod.metadata.ActionDef", "otk");
-        names.put("pnu", "oud");
-        names.put("pmz", "oti");
-        names.put("ppo", "ovv");
-        names.put("pnt", "ouc");
-        names.put("pvf", "pbj");
-        names.put("qhy", "pnp");
-        names.put("cdl", "cdm");
+        Map<String,String> names = new LinkedHashMap<>();
+        String model="dev.jason.gboardpatches.extension.zhuyinslide.GboardInputModel$";
+        names.put(METADATA_NAME,model+"Metadata");
+        names.put("qae",model+"ActionType");
+        names.put("com.google.android.libraries.inputmethod.metadata.ActionDef",model+"Action");
+        names.put("qbc",model+"Entry");names.put("qaf",model+"ActionBuilder");
+        names.put("qcv",model+"MetadataBuilder");names.put("qbb",model+"Intention");
+        names.put("wns",model+"Wns");names.put("qil",model+"Dispatcher");
+        names.put("qvt",model+"Preferences");names.put("cht",model+"BasePreferences");
         return names;
     }
 
@@ -443,15 +441,7 @@ public final class GboardZhuyinSlideTargetFixture {
         return name;
     }
 
-    private static String mapFieldName(String owner, String name) {
-        if (!"pbj".equals(owner)) {
-            return name;
-        }
-        if ("c".equals(name)) {
-            return "b";
-        }
-        return "d".equals(name) ? "c" : name;
-    }
+    private static String mapFieldName(String owner, String name) { return name; }
 
     private static String mapDescriptor(String value) {
         if (value == null) {

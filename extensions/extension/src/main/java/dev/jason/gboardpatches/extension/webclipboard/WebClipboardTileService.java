@@ -44,7 +44,24 @@ public final class WebClipboardTileService extends TileService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void toggleTile() {
+        if(!WebClipboardPreferences.isEnabled(WebClipboardPreferences.preferences(this))
+                && !WebClipboardLocalNetworkPermission.isGranted(this)) {
+            android.content.Intent settings=new android.content.Intent(this,
+                    dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity.class)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    .putStringArrayListExtra(
+                        dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity.EXTRA_NAVIGATION_PATH,
+                        new java.util.ArrayList<>(java.util.Arrays.asList(
+                            "dev.jason.gboardpatches.extension.clipboard.GboardClipboardSettingsFeature",
+                            "dev.jason.gboardpatches.extension.clipboard.GboardWebClipboardSettingsFeature")));
+            if(Build.VERSION.SDK_INT>=34)startActivityAndCollapse(android.app.PendingIntent.getActivity(
+                    this,0x5743,settings,android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE));
+            else startActivityAndCollapse(settings);
+            android.widget.Toast.makeText(this,"Grant local network permission, then enable Web Clipboard",android.widget.Toast.LENGTH_LONG).show();
+            updateTile(false);return;
+        }
         boolean enabled = WebClipboardTileController.toggle(this);
         updateTile(enabled);
     }

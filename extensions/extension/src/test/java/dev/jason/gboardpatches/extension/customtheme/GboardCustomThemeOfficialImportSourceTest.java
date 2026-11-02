@@ -95,7 +95,7 @@ public final class GboardCustomThemeOfficialImportSourceTest {
     private static String read(String fileName) throws Exception {
         return new String(Files.readAllBytes(Path.of(
                 "src/main/java/dev/jason/gboardpatches/extension/customtheme/" + fileName)),
-                StandardCharsets.UTF_8);
+                StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 
     private static String methodBody(String source, String startMarker, String endMarker) {

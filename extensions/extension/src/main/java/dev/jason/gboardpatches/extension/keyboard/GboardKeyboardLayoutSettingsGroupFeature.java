@@ -12,9 +12,9 @@ import dev.jason.gboardpatches.extension.accesspointsmenu.GboardAccessPointsMenu
 import dev.jason.gboardpatches.extension.closeproactivesuggestions.GboardCloseProactiveSuggestionsSettingsFeature;
 import dev.jason.gboardpatches.extension.customtheme.GboardCustomThemeSettingsFeature;
 import dev.jason.gboardpatches.extension.emojisize.GboardEmojiSizeSettingsFeature;
-import dev.jason.gboardpatches.extension.flowmode.GboardFlowModeSettingsFeature;
 import dev.jason.gboardpatches.extension.roundedkeyboard.GboardRoundedKeyboardSettingsFeature;
 import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
+import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 import dev.jason.gboardpatches.extension.spacebarlogo.GboardSpacebarLogoSettingsFeature;
@@ -41,7 +41,6 @@ public final class GboardKeyboardLayoutSettingsGroupFeature
                         R.string.gboard_patches_group_keyboard_empty_summary),
                 Arrays.asList(
                         new GboardSpacebarLogoSettingsFeature(context),
-                        new GboardFlowModeSettingsFeature(context),
                         new GboardCloseProactiveSuggestionsSettingsFeature(context),
                         new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature(context),
                         new GboardEnglishUppercaseToggleSettingsFeature(context),
@@ -64,6 +63,16 @@ public final class GboardKeyboardLayoutSettingsGroupFeature
     @Override
     public String getEntrySummary() {
         return delegate.getEntrySummary();
+    }
+
+    @Override
+    public int getEntryIcon() {
+        return GboardPatchesIcons.KEYBOARD_FILLED;
+    }
+
+    @Override
+    public String getEntryTone() {
+        return "green";
     }
 
     @Override

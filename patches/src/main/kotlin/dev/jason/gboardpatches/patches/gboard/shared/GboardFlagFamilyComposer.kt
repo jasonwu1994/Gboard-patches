@@ -28,6 +28,11 @@ internal enum class GboardFlagFamilyFeature(
     val runtimeCall: RuntimeCallId,
     val argumentShape: GboardFlagFamilyArgumentShape,
 ) {
+    LANGUAGE_MODELS(
+        5,
+        RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.RECEIVER_AND_RESULT,
+    ),
     DEVICE_INTELLIGENCE(
         10,
         RuntimeCallId.DEVICE_INTELLIGENCE_RUNTIME_APPLY_FLAG_VALUE,
@@ -98,11 +103,6 @@ internal enum class GboardFlagFamilyFeature(
         RuntimeCallId.CLOSE_PROACTIVE_SUGGESTIONS_RUNTIME_APPLY_FLAG_VALUE,
         GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
     ),
-    FLOW_MODE_ANIMATION(
-        1100,
-        RuntimeCallId.FLOW_MODE_RUNTIME_APPLY_FLAG_VALUE,
-        GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
-    ),
     QUICK_INSERT(
         1200,
         RuntimeCallId.QUICK_INSERT_RUNTIME_APPLY_FLAG_VALUE,
@@ -111,6 +111,11 @@ internal enum class GboardFlagFamilyFeature(
     ACCESS_POINT_COUNT(
         1300,
         RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
+    ),
+    KEYPRESS_HAPTICS(
+        1400,
+        RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
         GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
     ),
     ;
@@ -232,6 +237,7 @@ private data class GboardFlagFamilyTransformationPlan(
             receiverPreservationIndex,
             "move-object v$RECEIVER_SCRATCH_REGISTER, p0",
         )
+        method.protectGuardedFlagCalls()
     }
 
     companion object {
@@ -280,6 +286,17 @@ private data class GboardFlagFamilyTransformationPlan(
                 flagNameScratch = FLAG_NAME_SCRATCH_REGISTER.takeIf { needsFlagName },
             )
 
+            if (GboardVersionBindings.targetVersion == "18.5.4") {
+                val snapshots = instructions.filter { instruction ->
+                    val load = instruction as? TwoRegisterInstruction
+                    val field = (instruction as? ReferenceInstruction)?.reference as? FieldReference
+                    instruction.opcode.name.normalized() == "IGET_OBJECT" &&
+                        load?.registerA == 0 && load.registerB == receiverRegister &&
+                        field?.definingClass == "Loki;" && field.name == "f" && field.type == "Lokr;"
+                }
+                check(snapshots.size == 1) { "18.5.4 flag snapshot carrier drift" }
+            }
+
             val resultMaterializationIndex = instructions.indices.singleOrNull { index ->
                 instructions[index].isFormal1803ResultMaterialization(receiverRegister)
             } ?: error("Could not resolve exact 18.0.3 nxw#g result materialization")
@@ -321,7 +338,7 @@ private data class GboardFlagFamilyTransformationPlan(
                         familyCallIndices = familyCallIndices,
                         registers = registers,
                         resultMaterializationIndex = resultMaterializationIndex,
-                    ) -> GboardFlagFamilyTransformationState.PATCHED
+                    ) && method.hasGuardedFlagCalls() -> GboardFlagFamilyTransformationState.PATCHED
                 else -> error(
                     "Malformed or extraneous flag-family transformation before mutation: " +
                         "receiverMoves=$receiverMoves, familyCalls=$familyCallIndices, " +
@@ -342,6 +359,36 @@ private data class GboardFlagFamilyReturnPlan(
     val returnIndex: Int,
     val delegate: String,
 )
+
+/** Ignore an extension linkage/initialization failure without clobbering the three live registers. */
+internal fun MutableMethod.protectGuardedFlagCalls() {
+    val code = checkNotNull(implementation)
+    val calls = code.instructions.indices.filter { index ->
+        code.instructions[index].runtimeCallId() in GUARDED_FLAG_FAMILY_CALLS
+    }
+    calls.forEach { index ->
+        check(code.instructions[index + 1].opcode.name.normalized() == "MOVE_RESULT_OBJECT")
+        val resume = code.newLabelForIndex(index + 2)
+        code.addCatch("Ljava/lang/Throwable;", code.newLabelForIndex(index), resume, resume)
+    }
+}
+
+private fun MutableMethod.hasGuardedFlagCalls(): Boolean {
+    val code = checkNotNull(implementation)
+    val instructions = code.instructions
+    return instructions.indices.filter { index ->
+        instructions[index].runtimeCallId() in GUARDED_FLAG_FAMILY_CALLS
+    }.all { index ->
+        val start = instructions.take(index).sumOf { it.codeUnits }
+        val end = start + instructions.drop(index).take(2).sumOf { it.codeUnits }
+        code.tryBlocks.count { block ->
+            block.startCodeAddress == start && block.codeUnitCount == end - start &&
+                block.exceptionHandlers.singleOrNull()?.let { handler ->
+                    handler.exceptionType == "Ljava/lang/Throwable;" && handler.handlerCodeAddress == end
+                } == true
+        } == 1
+    }
+}
 
 private fun com.android.tools.smali.dexlib2.iface.instruction.Instruction
     .isReceiverPreservationMove(receiverRegister: Int): Boolean {
@@ -470,7 +517,14 @@ private fun com.android.tools.smali.dexlib2.iface.instruction.Instruction
     return opcode.name.normalized() == "IGET_OBJECT" &&
         load.registerA == receiverRegister &&
         load.registerB == FLAG_NAME_SCRATCH_REGISTER &&
-        field.definingClass == "Lnyf;" && field.name == "c" &&
+        field.definingClass == when (GboardVersionBindings.targetVersion) {
+            "18.0.3" -> "Lnyf;"
+            "18.5.4" -> "Lokr;"
+            else -> error("Unsupported Gboard flag stock contract for ${GboardVersionBindings.targetVersion}")
+        } && field.name == when (GboardVersionBindings.targetVersion) {
+            "18.5.4" -> "a"
+            else -> "c"
+        } &&
         field.type == "Ljava/lang/Object;"
 }
 
@@ -523,6 +577,13 @@ private fun MethodReference.matches(abi: RuntimeAbi): Boolean =
 private fun String.normalized(): String = uppercase().replace('-', '_').replace('/', '_')
 
 private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): String = when (call) {
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE, registers,
+    )
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+        registers,
+    )
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
         RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
         registers,
@@ -578,10 +639,6 @@ private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): S
         RuntimeCallId.FEATURE_FLAGS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
         registers,
     )
-    RuntimeCallId.FLOW_MODE_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
-        RuntimeCallId.FLOW_MODE_RUNTIME_APPLY_FLAG_VALUE,
-        registers,
-    )
     RuntimeCallId.GRAMMAR_CHECKER_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
         RuntimeCallId.GRAMMAR_CHECKER_RUNTIME_APPLY_FLAG_VALUE,
         registers,
@@ -616,7 +673,14 @@ private const val FORMAL_18_0_3_RECEIVER_REGISTER = 2
 private const val FORMAL_18_0_3_REGISTER_COUNT = 3
 private const val MAX_MOVE_RESULT_OBJECT_REGISTER = 255
 
+private val GUARDED_FLAG_FAMILY_CALLS = setOf(
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
+)
+
 private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
+    RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
+    RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESSIBILITY_LAYOUT_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINTS_MENU_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
@@ -629,7 +693,6 @@ private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
     RuntimeCallId.DEVICE_INTELLIGENCE_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.EMOJI_SIZE_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
     RuntimeCallId.FEATURE_FLAGS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE,
-    RuntimeCallId.FLOW_MODE_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.GRAMMAR_CHECKER_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.INLINE_SUGGESTIONS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.KEY_SHAPE_SELECTION_RUNTIME_APPLY_FLAG_VALUE,

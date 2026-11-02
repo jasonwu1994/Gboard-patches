@@ -16,7 +16,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalo
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 
-private const val EXPRESSION_CORPUS_MANAGER_CLASS = "Lgri;"
+private const val EXPRESSION_CORPUS_MANAGER_CLASS = "Lgyo;"
 
 internal val gboardZhuyinCustomSymbolsCorpusPatch = bytecodePatch(
     description = "在 expression corpus list 追加自訂 symbol tab。"
@@ -27,7 +27,7 @@ internal val gboardZhuyinCustomSymbolsCorpusPatch = bytecodePatch(
         val mutableMethod = findMutableMethodOrThrow(
             classType = EXPRESSION_CORPUS_MANAGER_CLASS,
             name = "a",
-            returnType = "Lvvw;",
+            returnType = "Lwns;",
             parameterTypes = listOf("Landroid/view/inputmethod/EditorInfo;", "Z")
         )
         mutableMethod.applyZhuyinCustomSymbolsCorpusDelegate()
@@ -38,7 +38,7 @@ internal fun MutableMethod.applyZhuyinCustomSymbolsCorpusDelegate(): MutableMeth
     check(
         definingClass == EXPRESSION_CORPUS_MANAGER_CLASS &&
             name == "a" &&
-            returnType == "Lvvw;" &&
+            returnType == "Lwns;" &&
             parameterTypes == listOf("Landroid/view/inputmethod/EditorInfo;", "Z"),
     ) {
         "Refusing non-target Custom Symbols corpus method " +
@@ -135,7 +135,7 @@ private fun buildCorpusAppendDelegate(register: Int): String = """
 
     move-result-object v$register
 
-    check-cast v$register, Lvvw;
+    check-cast v$register, Lwns;
 """.trimIndent()
 
 private val CUSTOM_SYMBOLS_RUNTIME_DESCRIPTOR = RuntimeAbiCatalog.abi(

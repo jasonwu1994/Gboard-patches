@@ -10,20 +10,20 @@ import org.junit.Test
 
 class GboardZhuyinTraditionalSimplifiedTogglePatchShapeTest {
     @Test
-    fun `softkey gesture and popup use exact generated 1803 descriptors`() {
+    fun `softkey gesture and popup use exact generated 1853 descriptors`() {
         assertEquals(
             "Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;->" +
-                "r(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z",
+                "s(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z",
             GboardVersionBindings.softKeyBind.reference,
         )
         assertEquals(
-            "Lpvf;->f(Lpvi;Lpmy;Lpnu;" +
+            "Lqil;->f(Lqin;Lqae;Lqbc;" +
                 "Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;JZZIZJI)V",
             GboardVersionBindings.gestureDispatch.reference,
         )
-        assertEquals("Lpvf;->n:Lpvd;", GboardVersionBindings.gestureStockDelegateField.reference)
+        assertEquals("Lqil;->n:Lqij;", GboardVersionBindings.gestureStockDelegateField.reference)
         assertEquals(
-            "Lpvd;->h(Lpvi;Lpmy;Lpnu;" +
+            "Lqij;->o(Lqin;Lqae;Lqbc;" +
                 "Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;JZZIZJI)V",
             GboardVersionBindings.gestureStockDispatch.reference,
         )
@@ -31,7 +31,7 @@ class GboardZhuyinTraditionalSimplifiedTogglePatchShapeTest {
             "Lcom/google/android/libraries/inputmethod/popup/BasicPopupView;->" +
                 "b(Lcom/google/android/libraries/inputmethod/widgets/SoftKeyboardView;" +
                 "Landroid/view/View;FFLcom/google/android/libraries/inputmethod/metadata/" +
-                "ActionDef;[IZ)Lpnu;",
+                "ActionDef;[IZ)Lqbc;",
             GboardVersionBindings.zhuyinTogglePopupAction.reference,
         )
     }
@@ -62,11 +62,11 @@ class GboardZhuyinTraditionalSimplifiedTogglePatchShapeTest {
         assertTrue(source.contains("MutableClass(ownerClass)"))
         assertFalse(source.contains("ZHUYIN_TRADITIONAL_SIMPLIFIED_TOGGLE_RUNTIME_MAYBE_TOGGLE"))
         assertFalse(source.contains("jasondevDispatchOrToggle"))
-        assertFalse(source.contains("Lpvd;->h("))
+        assertFalse(source.contains("Lqij;->o("))
     }
 
     @Test
-    fun `popup patches exact 1803 action before stock and has no old z path`() {
+    fun `popup patches exact 1853 action before stock and has no old z path`() {
         val source = readRuntimePatchSource()
 
         assertTrue(source.contains("GboardVersionBindings.zhuyinTogglePopupAction"))

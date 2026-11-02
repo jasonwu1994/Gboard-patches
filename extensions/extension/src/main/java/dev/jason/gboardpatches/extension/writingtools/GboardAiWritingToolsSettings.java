@@ -16,7 +16,7 @@ public final class GboardAiWritingToolsSettings {
     public static final String BACKEND_PRIVATE_INFERENCE_ASTREA =
             "PRIVATE_INFERENCE_ASTREA";
     public static final boolean DEFAULT_ENABLED = true;
-    public static final boolean DEFAULT_ALL_KEYBOARDS = false;
+    public static final boolean DEFAULT_ALL_KEYBOARDS = true;
     public static final String DEFAULT_BACKEND_TYPE = BACKEND_GBOARD_SERVER;
 
     private GboardAiWritingToolsSettings() {
@@ -168,7 +168,7 @@ public final class GboardAiWritingToolsSettings {
                 String backendType) {
             this.featureEnabled = featureEnabled;
             this.allKeyboardsEnabled = featureEnabled && allKeyboardsEnabled;
-            this.backendType = sanitizeBackendType(backendType);
+            this.backendType = backendType;
         }
     }
 }

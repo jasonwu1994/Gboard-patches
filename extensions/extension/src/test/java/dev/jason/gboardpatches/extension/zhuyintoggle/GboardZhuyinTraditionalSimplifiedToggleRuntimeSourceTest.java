@@ -11,26 +11,26 @@ import org.junit.Test;
 
 public final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSourceTest {
     @Test
-    public void reflectionSupportUsesOnlyTheExact1803TargetContract() throws Exception {
+    public void reflectionSupportUsesOnlyTheExact1853TargetContract() throws Exception {
         String source = readSupportSource();
 
         assertTrue(source.contains(
                 "\"com.google.android.libraries.inputmethod.metadata.SoftKeyDef\""));
-        assertTrue(source.contains("private static final String ACTION_TYPE_CLASS = \"pmy\";"));
+        assertTrue(source.contains("private static final String ACTION_TYPE_CLASS = \"qae\";"));
         assertTrue(source.contains(
                 "\"com.google.android.libraries.inputmethod.metadata.ActionDef\""));
-        assertTrue(source.contains("private static final String ACTION_ENTRY_CLASS = \"pnu\";"));
-        assertTrue(source.contains("private static final String ACTION_BUILDER_CLASS = \"pmz\";"));
-        assertTrue(source.contains("private static final String METADATA_BUILDER_CLASS = \"ppo\";"));
-        assertTrue(source.contains("private static final String INTENTION_CLASS = \"pnt\";"));
-        assertTrue(source.contains("private static final String GESTURE_DISPATCHER_CLASS = \"pvf\";"));
-        assertTrue(source.contains("private static final String PREFERENCE_CLASS = \"qhy\";"));
-        assertTrue(source.contains("private static final String PREFERENCE_BASE_CLASS = \"cdl\";"));
-        assertTrue(source.contains("public static final int PREFERENCE_KEY_RES_ID = 0x7f140a1b;"));
-        assertTrue(source.contains("getDeclaredMethod(\"r\", actionSetClass, long.class)"));
+        assertTrue(source.contains("private static final String ACTION_ENTRY_CLASS = \"qbc\";"));
+        assertTrue(source.contains("private static final String ACTION_BUILDER_CLASS = \"qaf\";"));
+        assertTrue(source.contains("private static final String METADATA_BUILDER_CLASS = \"qcv\";"));
+        assertTrue(source.contains("private static final String INTENTION_CLASS = \"qbb\";"));
+        assertTrue(source.contains("private static final String GESTURE_DISPATCHER_CLASS = \"qil\";"));
+        assertTrue(source.contains("private static final String PREFERENCE_CLASS = \"qvt\";"));
+        assertTrue(source.contains("private static final String PREFERENCE_BASE_CLASS = \"cht\";"));
+        assertTrue(source.contains("public static final int PREFERENCE_KEY_RES_ID = 0x7f140966;"));
+        assertTrue(source.contains("getDeclaredMethod(\"s\", actionSetClass, long.class)"));
         assertTrue(source.contains("getDeclaredField(\"e\")"));
         assertTrue(source.contains("getDeclaredField(\"f\")"));
-        assertTrue(source.contains("actionSetClass.getDeclaredField(\"d\")"));
+        assertTrue(source.contains("actionSetClass.getDeclaredField(\"f\")"));
         assertTrue(source.contains("gestureDispatcherClass.getDeclaredField(\"b\")"));
         assertTrue(source.contains("gestureDispatcherClass.getDeclaredField(\"c\")"));
         assertTrue(source.contains("preferenceClass.getDeclaredMethod(\"I\", Context.class)"));
@@ -62,8 +62,8 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSourceTest {
         assertTrue(popupMethod.contains("if (metadata == null)"));
         assertTrue(support.contains("actionBuilderCopyMethod.invoke(builder, actionDef)"));
         assertTrue(support.contains(
-                "actionBuilderEntriesField.set(builder, actionDefEntriesField.get(actionDef))"));
-        assertTrue(support.contains("actionBuilderPopupLabelsField.set("));
+                "actionBuilderClass.getDeclaredMethod(\"i\", actionDefClass)"));
+        assertTrue(support.contains("setPopupLabelsMethod.invoke("));
     }
 
     @Test
@@ -102,10 +102,10 @@ public final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSourceTest {
     }
 
     @Test
-    public void currentInputViewUsesArAndOldSoftKeyboardRefreshPathIsAbsent() throws Exception {
+    public void currentInputViewUsesAtAndOldSoftKeyboardRefreshPathIsAbsent() throws Exception {
         String runtime = readRuntimeSource();
 
-        assertTrue(runtime.contains("getMethod(\"ar\", boolean.class)"));
+        assertTrue(runtime.contains("getMethod(\"at\", boolean.class)"));
         assertFalse(runtime.contains("getMethod(\"aq\", boolean.class)"));
         assertFalse(runtime.contains("getMethod(\"ao\", boolean.class)"));
         assertFalse(runtime.contains("SoftKeyboardView"));

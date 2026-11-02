@@ -10,7 +10,7 @@ class RuntimeCallEmitterTest {
         assertEquals(
             "invoke-static {}, " +
                 "Ldev/jason/gboardpatches/extension/rambler/" +
-                "GboardRambler1803OfficialSelectionRuntime;->enterVoiceSettingsScope()V",
+                "GboardRamblerOfficialSelectionRuntime;->enterVoiceSettingsScope()V",
             RuntimeCallEmitter.invoke(
                 RuntimeCallId.RAMBLER_RUNTIME_ENTER_VOICE_SETTINGS_SCOPE,
                 registers = "",

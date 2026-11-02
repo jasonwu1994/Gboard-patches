@@ -109,7 +109,8 @@ public final class GboardAiWritingToolsSettingsFeature
                     enabledSummary,
                     true,
                     enabled,
-                    value -> GboardAiWritingToolsSettings.writeEnabled(preferences, value)));
+                    value -> GboardAiWritingToolsSettings.writeEnabled(preferences, value))
+                    .setRestartRequired(GboardAiWritingToolsSettings.PREF_KEY_ENABLED));
             behaviorRows.add(new GboardPatchesSettingsContract.ToggleRow(
                     allKeyboardsTitle,
                     allKeyboardsSummary,
@@ -117,7 +118,8 @@ public final class GboardAiWritingToolsSettingsFeature
                     allKeyboardsEnabled,
                     value -> GboardAiWritingToolsSettings.writeAllKeyboardsEnabled(
                             preferences,
-                            value)));
+                            value))
+                    .setRestartRequired(GboardAiWritingToolsSettings.PREF_KEY_ALL_KEYBOARDS));
             behaviorRows.add(new GboardPatchesSettingsContract.SelectorRow(
                     backendTypeTitle,
                     backendTypeSummary,

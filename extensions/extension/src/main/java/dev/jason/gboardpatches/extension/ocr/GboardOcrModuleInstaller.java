@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ final class GboardOcrModuleInstaller {
         void onFailure(Throwable failure);
     }
 
-    private interface TaskCompletion {
+    interface TaskCompletion {
         void onComplete(Object task) throws Throwable;
     }
 
@@ -45,7 +46,7 @@ final class GboardOcrModuleInstaller {
             ClassLoader classLoader = requireClassLoader();
             List<Object> optionalApis = createOptionalApis(engine, classLoader);
             Object client = createClient(context, classLoader);
-            Class<?> statusListenerClass = Class.forName("lbw", false, classLoader);
+            Class<?> statusListenerClass = Class.forName("lmw", false, classLoader);
             AtomicBoolean completed = new AtomicBoolean();
             Object statusListener = Proxy.newProxyInstance(
                     classLoader,
@@ -143,7 +144,7 @@ final class GboardOcrModuleInstaller {
             throw new IllegalStateException("Could not build OCR module request array");
         }
 
-        Class<?> optionalApiClass = Class.forName("yua", false, classLoader);
+        Class<?> optionalApiClass = Class.forName("zmb", false, classLoader);
         Constructor<?> optionalApiConstructor = optionalApiClass.getDeclaredConstructor(
                 requestArray.getClass());
         optionalApiConstructor.setAccessible(true);
@@ -154,7 +155,7 @@ final class GboardOcrModuleInstaller {
     }
 
     private static Object createClient(Context context, ClassLoader classLoader) throws Throwable {
-        Class<?> moduleInstallClientClass = Class.forName("lcm", false, classLoader);
+        Class<?> moduleInstallClientClass = Class.forName("lnn", false, classLoader);
         Constructor<?> clientConstructor = moduleInstallClientClass.getDeclaredConstructor(
                 Context.class);
         clientConstructor.setAccessible(true);
@@ -165,15 +166,15 @@ final class GboardOcrModuleInstaller {
 
     private static Object createInstallTask(Object client, List<Object> optionalApis,
             Object statusListener, ClassLoader classLoader) throws Throwable {
-        Class<?> requestClass = Class.forName("snd", false, classLoader);
-        Class<?> statusListenerClass = Class.forName("lbw", false, classLoader);
+        Class<?> requestClass = Class.forName("srk", false, classLoader);
+        Class<?> statusListenerClass = Class.forName("lmw", false, classLoader);
         Constructor<?> requestConstructor = requestClass.getDeclaredConstructor(
                 List.class,
                 statusListenerClass);
         requestConstructor.setAccessible(true);
         Object installRequest = requestConstructor.newInstance(optionalApis, statusListener);
 
-        Class<?> moduleInstallClientClass = Class.forName("lcm", false, classLoader);
+        Class<?> moduleInstallClientClass = Class.forName("lnn", false, classLoader);
         Method installMethod = moduleInstallClientClass.getDeclaredMethod("c", requestClass);
         installMethod.setAccessible(true);
         Object task = installMethod.invoke(client, installRequest);
@@ -185,7 +186,7 @@ final class GboardOcrModuleInstaller {
 
     private static Object createAvailabilityTask(Object client, List<Object> optionalApis,
             ClassLoader classLoader) throws Throwable {
-        Class<?> optionalApiInterface = Class.forName("kww", false, classLoader);
+        Class<?> optionalApiInterface = Class.forName("lhq", false, classLoader);
         Object optionalApiArray = Array.newInstance(optionalApiInterface, optionalApis.size());
         for (int index = 0; index < optionalApis.size(); index++) {
             Array.set(optionalApiArray, index, optionalApis.get(index));
@@ -210,7 +211,30 @@ final class GboardOcrModuleInstaller {
             throw new IllegalStateException("Task class loader unavailable");
         }
 
-        Class<?> listenerClass = Class.forName("lss", false, classLoader);
+        Class<?> listenerClass = Class.forName("med", false, classLoader);
+        registerCompletionListener(task, listenerClass, completion);
+    }
+
+    static Method resolveCompletionRegistration(Class<?> taskClass, Class<?> listenerClass)
+            throws NoSuchMethodException {
+        if (taskClass == null || listenerClass == null || !listenerClass.isInterface()) {
+            throw new NoSuchMethodException("Expected task class and completion listener interface");
+        }
+        Method method = taskClass.getMethod("l", listenerClass);
+        if (method.getReturnType() != void.class || Modifier.isStatic(method.getModifiers())
+                || !Modifier.isPublic(method.getModifiers())) {
+            throw new NoSuchMethodException("Expected public instance void task completion registration");
+        }
+        method.setAccessible(true);
+        return method;
+    }
+
+    static void registerCompletionListener(Object task, Class<?> listenerClass, TaskCompletion completion)
+            throws Throwable {
+        ClassLoader classLoader = task.getClass().getClassLoader();
+        if (classLoader == null) classLoader = GboardOcrModuleInstaller.class.getClassLoader();
+        if (classLoader == null) throw new IllegalStateException("Task class loader unavailable");
+        Method addCompleteListener = resolveCompletionRegistration(task.getClass(), listenerClass);
         InvocationHandler handler = (proxy, method, arguments) -> {
             if (method.getDeclaringClass() == Object.class) {
                 return handleObjectMethod(proxy, method, arguments);
@@ -229,8 +253,6 @@ final class GboardOcrModuleInstaller {
                 classLoader,
                 new Class<?>[]{listenerClass},
                 handler);
-        Method addCompleteListener = task.getClass().getMethod("l", listenerClass);
-        addCompleteListener.setAccessible(true);
         addCompleteListener.invoke(task, listener);
     }
 

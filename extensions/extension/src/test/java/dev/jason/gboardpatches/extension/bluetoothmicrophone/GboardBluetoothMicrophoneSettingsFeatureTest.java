@@ -9,7 +9,7 @@ import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 
 public final class GboardBluetoothMicrophoneSettingsFeatureTest {
     @Test
-    public void flatScreenShowsOneDefaultOnToggleWithExactCopy() {
+    public void flatScreenShowsPersistedOnToggleWithExactCopy() {
         GboardBluetoothMicrophoneSettingsFeature feature =
                 new GboardBluetoothMicrophoneSettingsFeature(
                         "Use Bluetooth microphone",

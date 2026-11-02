@@ -11,6 +11,11 @@ public final class GboardFrostedGlassSettings {
     public static final String PREF_KEY_BLUR_RADIUS_PX = "pref_frosted_glass_blur_radius_px";
     public static final String PREF_KEY_TRANSPARENCY_MODE = "pref_frosted_glass_transparency_mode";
     public static final String PREF_KEY_CUSTOM_OPACITY = "pref_frosted_glass_custom_opacity";
+    public static final String PREF_KEY_KEY_TRANSPARENCY_MODE = "pref_frosted_glass_key_transparency_mode";
+    public static final String PREF_KEY_KEY_CUSTOM_OPACITY = "pref_frosted_glass_key_custom_opacity";
+    // Keep the seamless navigation bar preference in the Frosted Glass settings page.
+    public static final String PREF_KEY_SEAMLESS_NAV_BAR_ENABLED = "pref_seamless_nav_bar_enabled";
+    public static final boolean DEFAULT_SEAMLESS_NAV_BAR_ENABLED = true;
     private static final String PREF_KEY_HEADER_ALPHA = "pref_frosted_glass_header_alpha";
     private static final String PREF_KEY_BODY_ALPHA = "pref_frosted_glass_body_alpha";
     private static final String PREF_KEY_KEYTOP_ALPHA = "pref_frosted_glass_keytop_alpha";
@@ -72,10 +77,33 @@ public final class GboardFrostedGlassSettings {
     }
 
     public static int readCustomOpacity(SharedPreferences preferences) {
+        return readOpacity(preferences, PREF_KEY_CUSTOM_OPACITY);
+    }
+
+    public static String readKeyTransparencyMode(SharedPreferences preferences) {
+        Object value = preferences == null ? null : preferences.getAll().get(PREF_KEY_KEY_TRANSPARENCY_MODE);
+        return TRANSPARENCY_MODE_CUSTOM.equals(value) ? TRANSPARENCY_MODE_CUSTOM : TRANSPARENCY_MODE_THEME;
+    }
+
+    public static int readKeyCustomOpacity(SharedPreferences preferences) {
+        return readOpacity(preferences, PREF_KEY_KEY_CUSTOM_OPACITY);
+    }
+
+    public static boolean readSeamlessNavBarEnabled(SharedPreferences preferences) {
+        Object value = preferences == null ? null : preferences.getAll().get(PREF_KEY_SEAMLESS_NAV_BAR_ENABLED);
+        if (value instanceof Boolean enabled) return enabled;
+        if (value instanceof String text) {
+            if ("true".equalsIgnoreCase(text)) return true;
+            if ("false".equalsIgnoreCase(text)) return false;
+        }
+        return DEFAULT_SEAMLESS_NAV_BAR_ENABLED;
+    }
+
+    private static int readOpacity(SharedPreferences preferences, String key) {
         if (preferences == null) {
             return DEFAULT_CUSTOM_OPACITY;
         }
-        Object raw = preferences.getAll().get(PREF_KEY_CUSTOM_OPACITY);
+        Object raw = preferences.getAll().get(key);
         try {
             int value = raw instanceof Number number
                     ? number.intValue() : Integer.parseInt(String.valueOf(raw));
@@ -122,14 +150,20 @@ public final class GboardFrostedGlassSettings {
             preferences.edit().putInt(PREF_KEY_CUSTOM_OPACITY,
                     DEFAULT_CUSTOM_OPACITY).apply();
         }
+        if (preferences != null && !preferences.contains(PREF_KEY_KEY_TRANSPARENCY_MODE)) {
+            preferences.edit().putString(PREF_KEY_KEY_TRANSPARENCY_MODE,
+                    TRANSPARENCY_MODE_THEME).apply();
+        }
+        if (preferences != null && !preferences.contains(PREF_KEY_KEY_CUSTOM_OPACITY)) {
+            preferences.edit().putInt(PREF_KEY_KEY_CUSTOM_OPACITY, DEFAULT_CUSTOM_OPACITY).apply();
+        }
     }
 
     public static boolean writeEnabled(Context context, boolean enabled) {
         if (context == null) {
             return false;
         }
-        boolean committed = GboardPatchesSettings.preferences(context)
-                .edit().putBoolean(PREF_KEY_ENABLED, enabled).commit();
+        boolean committed = editor(context).putBoolean(PREF_KEY_ENABLED, enabled).commit();
         if (committed) {
 
         }
@@ -140,8 +174,7 @@ public final class GboardFrostedGlassSettings {
         if (context == null) {
             return false;
         }
-        boolean committed = GboardPatchesSettings.preferences(context)
-                .edit().putString(PREF_KEY_BLUR_RADIUS_PX,
+        boolean committed = editor(context).putString(PREF_KEY_BLUR_RADIUS_PX,
                         Integer.toString(sanitizeBlurStrength(strength))).commit();
         if (committed) {
 
@@ -150,33 +183,56 @@ public final class GboardFrostedGlassSettings {
     }
 
     public static boolean writeTransparencyMode(Context context, String mode) {
+        return writeMode(context, PREF_KEY_TRANSPARENCY_MODE, mode);
+    }
+
+    public static boolean writeKeyTransparencyMode(Context context, String mode) {
+        return writeMode(context, PREF_KEY_KEY_TRANSPARENCY_MODE, mode);
+    }
+
+    private static boolean writeMode(Context context, String key, String mode) {
         if (context == null) {
             return false;
         }
         String value = TRANSPARENCY_MODE_CUSTOM.equals(mode)
                 ? TRANSPARENCY_MODE_CUSTOM : TRANSPARENCY_MODE_THEME;
-        boolean committed = GboardPatchesSettings.preferences(context).edit()
-                .putString(PREF_KEY_TRANSPARENCY_MODE, value).commit();
-        if (committed) {
-
-        }
-        return committed;
+        return editor(context)
+                .putString(key, value).commit();
     }
 
     public static boolean writeCustomOpacity(Context context, int opacity) {
+        return writeOpacity(context, PREF_KEY_CUSTOM_OPACITY, opacity);
+    }
+
+    public static boolean writeKeyCustomOpacity(Context context, int opacity) {
+        return writeOpacity(context, PREF_KEY_KEY_CUSTOM_OPACITY, opacity);
+    }
+
+    private static boolean writeOpacity(Context context, String key, int opacity) {
         if (context == null) {
             return false;
         }
-        boolean committed = GboardPatchesSettings.preferences(context).edit()
-                .putInt(PREF_KEY_CUSTOM_OPACITY, sanitizeOpacity(opacity))
-                .putString(PREF_KEY_HEADER_ALPHA, Integer.toString(alphaByte(opacity)))
-                .putString(PREF_KEY_BODY_ALPHA, Integer.toString(alphaByte(opacity)))
-                .putString(PREF_KEY_KEYTOP_ALPHA, Integer.toString(alphaByte(opacity)))
-                .commit();
-        if (committed) {
-
+        SharedPreferences.Editor editor = editor(context)
+                .putInt(key, sanitizeOpacity(opacity));
+        if (PREF_KEY_CUSTOM_OPACITY.equals(key)) {
+            editor.putString(PREF_KEY_HEADER_ALPHA, Integer.toString(alphaByte(opacity)))
+                    .putString(PREF_KEY_BODY_ALPHA, Integer.toString(alphaByte(opacity)))
+                    .putString(PREF_KEY_KEYTOP_ALPHA, Integer.toString(alphaByte(opacity)));
         }
-        return committed;
+        return editor.commit();
+    }
+
+    public static boolean writeSeamlessNavBarEnabled(Context context, boolean enabled) {
+        if (context == null) {
+            return false;
+        }
+        return editor(context)
+                .putBoolean(PREF_KEY_SEAMLESS_NAV_BAR_ENABLED, enabled).commit();
+    }
+
+    /** The settings page's single write path; runtime reads use the guarded runtime store. */
+    private static SharedPreferences.Editor editor(Context context) {
+        return GboardPatchesSettings.preferences(context).edit();
     }
 
     private static int alphaByte(int opacity) {

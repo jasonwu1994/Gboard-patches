@@ -50,6 +50,7 @@ public final class WebClipboardTileController {
         if (context == null) {
             return enabled;
         }
+        if (enabled && !WebClipboardLocalNetworkPermission.isGranted(context)) return false;
         try {
             Context appContext = context.getApplicationContext() != null
                     ? context.getApplicationContext()

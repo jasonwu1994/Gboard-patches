@@ -31,7 +31,7 @@ class GboardManualIncognitoPatchContractTest {
             patch.dependencies.toList(),
         )
         assertEquals(
-            "18.0.3.954559732-release-arm64-v8a",
+            "18.5.4.993608717-release-arm64-v8a",
             patch.compatibility!!.single().targets.single().version,
         )
     }

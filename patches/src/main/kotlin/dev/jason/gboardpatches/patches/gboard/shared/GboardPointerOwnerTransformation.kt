@@ -123,7 +123,7 @@ private fun Collection<GboardPointerOwnerFeatureSpec>.validatePointerOwnerSpecs(
 }
 
 private fun MutableMethod.requireSupportedPointerOwnerStock() {
-    check(GboardVersionBindings.targetVersion == "18.0.3") {
+    check(GboardVersionBindings.targetVersion in setOf("18.0.3", "18.5.4")) {
         "Unsupported Gboard pointer-owner stock contract for ${GboardVersionBindings.targetVersion}"
     }
     requireExact1803PointerOwnerStockShape()
@@ -186,7 +186,7 @@ private enum class PointerLifecycleRole(val label: String) {
 private fun MutableMethod.requireSupportedPointerLifecycleStock(
     role: PointerLifecycleRole,
 ) {
-    check(GboardVersionBindings.targetVersion == "18.0.3") {
+    check(GboardVersionBindings.targetVersion in setOf("18.0.3", "18.5.4")) {
         "Unsupported Gboard ${role.label} stock contract for ${GboardVersionBindings.targetVersion}"
     }
     requireExact1803PointerLifecycleShape(role)
@@ -201,7 +201,10 @@ private fun MutableMethod.requireExact1803PointerLifecycleShape(role: PointerLif
     when (role) {
         PointerLifecycleRole.FINISH -> {
             val dispatches = instructions.mapNotNull { it.methodReference() }.count { reference ->
-                reference.definingClass == "Lpvj;" && reference.name == "f" &&
+                reference.definingClass == when (GboardVersionBindings.targetVersion) {
+                    "18.5.4" -> "Lqio;"
+                    else -> "Lpvj;"
+                } && reference.name == "f" &&
                     reference.parameterTypes == GboardVersionBindings.gestureDispatch.parameterTypes &&
                     reference.returnType == GboardVersionBindings.gestureDispatch.returnType
             }
@@ -209,9 +212,27 @@ private fun MutableMethod.requireExact1803PointerLifecycleShape(role: PointerLif
                 "18.0.3 pointer finish dispatch shape drift in $definingClass->$name"
             }
         }
-        PointerLifecycleRole.CANCEL -> check(
-            parameterTypes == listOf("J") && returnInstructionIndices().isNotEmpty()
-        ) { "18.0.3 pointer cancel shape drift in $definingClass->$name" }
+        PointerLifecycleRole.CANCEL -> {
+            check(parameterTypes == listOf("J") && returnInstructionIndices().isNotEmpty()) {
+                "Pointer cancel shape drift in $definingClass->$name"
+            }
+            if (GboardVersionBindings.targetVersion == "18.5.4") {
+                val first = instructions.firstOrNull() as? TwoRegisterInstruction
+                check(implementation!!.registerCount == 4 && instructions.size == 8 &&
+                    instructions[0].opcode == Opcode.IGET_OBJECT &&
+                    first?.registerA == 0 && first.registerB == 1 &&
+                    instructions[0].isFieldReference("Lqin;->q:Lqsl;") &&
+                    instructions[1].opcode == Opcode.IF_EQZ &&
+                    instructions[2].isMethodReference("Lqsl;->a(J)V") &&
+                    instructions[3].isFieldReference("Lqin;->r:Lqio;") &&
+                    instructions[4].isMethodReference("Lqio;->k()V") &&
+                    instructions[5].isLiteralWrite(2, 0) &&
+                    instructions[6].isFieldReference("Lqin;->O:Z") &&
+                    instructions[7].opcode == Opcode.RETURN_VOID) {
+                    "18.5.4 cancel timestamp/delegate/reset sequence drift"
+                }
+            }
+        }
         PointerLifecycleRole.RESET -> {
             val cancelIndex = instructions.indexOfFirst { instruction ->
                 instruction.methodReference()?.let(GboardVersionBindings.pointerCancel::matches) == true
@@ -538,7 +559,7 @@ private fun GboardPointerOwnerTransformationContext.verifyCompleteTransformation
 }
 
 private fun MutableMethod.requireExactPatchedPointerOwnerFingerprint() {
-    check(GboardVersionBindings.targetVersion == "18.0.3") {
+    check(GboardVersionBindings.targetVersion in setOf("18.0.3", "18.5.4")) {
         "Unsupported patched pointer-owner contract for ${GboardVersionBindings.targetVersion}"
     }
     // Exact descriptors, semantic stock checks, selected call order, and
@@ -860,14 +881,20 @@ private val ENGLISH_HELPER_METHODS by lazy { setOf(
         listOf(SOFT_KEY_VIEW_TYPE, "F", "F"),
         "Z",
         AccessFlags.PRIVATE.value or AccessFlags.FINAL.value,
-        "376f69ad84e0010204d729ce09f4092848775e875721797b3f6528723cc8b770",
+        when (GboardVersionBindings.targetVersion) {
+            "18.5.4" -> "9ef19d4d34512bd19e259d766bc6c82c358a55410564691f84a6602c37f4aecc"
+            else -> "376f69ad84e0010204d729ce09f4092848775e875721797b3f6528723cc8b770"
+        },
     ),
     HelperDescriptor(
         "jasondevClearEnglishAnchor",
         emptyList(),
         "V",
         AccessFlags.PRIVATE.value or AccessFlags.FINAL.value,
-        "4e12d6280912adf42d09797a759925f47bba89c612b5b3ae4d15b6b2895afd8d",
+        when (GboardVersionBindings.targetVersion) {
+            "18.5.4" -> "72efbe3504490610a371883613263f90d684fe901ea27b9bcf6d3a3fa9691e45"
+            else -> "4e12d6280912adf42d09797a759925f47bba89c612b5b3ae4d15b6b2895afd8d"
+        },
     ),
 ) }
 private val ENGLISH_HELPER_METHOD_NAMES by lazy {

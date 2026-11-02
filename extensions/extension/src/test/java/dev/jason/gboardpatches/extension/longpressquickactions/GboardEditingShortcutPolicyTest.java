@@ -4,15 +4,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public final class GboardEditingShortcutPolicyTest {
-    private static final int FLOW_MODE_TYPING_PULSE = -10043;
+    private static final int TYPING_PULSE = -10043;
 
     @Test
     public void latinChordMappingMatchesLongPressEditingShortcuts() {
         assertShortcut("a", 'a', GboardEditingShortcutPolicy.Shortcut.SELECT_ALL);
         assertShortcut("Z", 'Z', GboardEditingShortcutPolicy.Shortcut.UNDO);
-        assertShortcut("x", FLOW_MODE_TYPING_PULSE,
+        assertShortcut("x", TYPING_PULSE,
                 GboardEditingShortcutPolicy.Shortcut.CUT);
-        assertShortcut("C", FLOW_MODE_TYPING_PULSE,
+        assertShortcut("C", TYPING_PULSE,
                 GboardEditingShortcutPolicy.Shortcut.COPY);
         assertShortcut("v", 'v', GboardEditingShortcutPolicy.Shortcut.PASTE);
         assertShortcut("Y", 'Y', GboardEditingShortcutPolicy.Shortcut.REDO);
@@ -21,13 +21,13 @@ public final class GboardEditingShortcutPolicyTest {
     @Test
     public void latinChordMappingIsClosedByDefault() {
         Assert.assertNull(GboardEditingShortcutPolicy.resolveLatinChord(
-                "e", 'e', FLOW_MODE_TYPING_PULSE));
+                "e", 'e', TYPING_PULSE));
         Assert.assertNull(GboardEditingShortcutPolicy.resolveLatinChord(
-                "a", 'e', FLOW_MODE_TYPING_PULSE));
+                "a", 'e', TYPING_PULSE));
         Assert.assertNull(GboardEditingShortcutPolicy.resolveLatinChord(
-                "@", FLOW_MODE_TYPING_PULSE, FLOW_MODE_TYPING_PULSE));
+                "@", TYPING_PULSE, TYPING_PULSE));
         Assert.assertNull(GboardEditingShortcutPolicy.resolveLatinChord(
-                null, 'a', FLOW_MODE_TYPING_PULSE));
+                null, 'a', TYPING_PULSE));
     }
 
     @Test
@@ -49,6 +49,6 @@ public final class GboardEditingShortcutPolicyTest {
     private static void assertShortcut(String pressText, int selectedCode,
             GboardEditingShortcutPolicy.Shortcut expected) {
         Assert.assertSame(expected, GboardEditingShortcutPolicy.resolveLatinChord(
-                pressText, selectedCode, FLOW_MODE_TYPING_PULSE));
+                pressText, selectedCode, TYPING_PULSE));
     }
 }

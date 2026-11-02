@@ -197,7 +197,7 @@
         },
         "migration_scope": {
           "type": "string",
-          "enum": ["version-sensitive", "generic"]
+          "enum": ["version-sensitive", "generic", "version-neutral-extension"]
         },
         "consumer_files": {
           "type": "array",

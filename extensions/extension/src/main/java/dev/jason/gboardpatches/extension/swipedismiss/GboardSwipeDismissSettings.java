@@ -13,12 +13,8 @@ public final class GboardSwipeDismissSettings {
     }
 
     public static boolean readEnabled(Context context) {
-        if (context == null) {
-            return false;
-        }
-        SharedPreferences preferences = GboardPatchesSettings.preferences(context);
-        ensureDefault(preferences);
-        return readEnabled(preferences);
+        return GboardPatchesSettings.readRuntimeSetting(context,
+                GboardSwipeDismissSettings::readEnabled, DEFAULT_ENABLED);
     }
 
     public static Boolean readEnabledOrNull(SharedPreferences preferences) {
@@ -58,8 +54,12 @@ public final class GboardSwipeDismissSettings {
         if (context == null) {
             return false;
         }
-        return GboardPatchesSettings.preferences(context).edit()
-                .putBoolean(PREF_KEY_ENABLED, enabled)
-                .commit();
+        SharedPreferences preferences = GboardPatchesSettings.preferencesOrNull(context);
+        if (preferences == null) return false;
+        try {
+            return preferences.edit().putBoolean(PREF_KEY_ENABLED, enabled).commit();
+        } catch (RuntimeException unavailable) {
+            return false;
+        }
     }
 }

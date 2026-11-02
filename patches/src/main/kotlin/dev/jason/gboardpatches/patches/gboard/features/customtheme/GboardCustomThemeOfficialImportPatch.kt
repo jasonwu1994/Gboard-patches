@@ -39,7 +39,7 @@ internal val gboardCustomThemeOfficialImportPatch = bytecodePatch(
 
 context(context: app.morphe.patcher.patch.BytecodePatchContext)
 private fun validateCustomThemeTargetContract(): Pair<MutableMethod, MutableMethod> = with(context) {
-    check(GboardVersionBindings.targetVersion == "18.0.3") {
+    check(GboardVersionBindings.targetVersion == "18.5.4") {
         "Unsupported Custom Theme stock contract for ${GboardVersionBindings.targetVersion}"
     }
     val publicFinal = AccessFlags.PUBLIC.value or AccessFlags.FINAL.value
@@ -58,11 +58,11 @@ private fun validateCustomThemeTargetContract(): Pair<MutableMethod, MutableMeth
     }
     plusHandler.requireStockFingerprintUnlessPatched(
         RuntimeCallId.CUSTOM_THEME_RUNTIME_INTERCEPT_PLUS,
-        CUSTOM_THEME_PLUS_1803_FINGERPRINT,
+        CUSTOM_THEME_PLUS_1853_FINGERPRINT,
     )
     resultHandler.requireStockFingerprintUnlessPatched(
         RuntimeCallId.CUSTOM_THEME_RUNTIME_HANDLE_ACTIVITY_RESULT,
-        CUSTOM_THEME_RESULT_1803_FINGERPRINT,
+        CUSTOM_THEME_RESULT_1853_FINGERPRINT,
     )
     findMutableMethodOrThrow(GboardVersionBindings.customThemeValidator).let { method ->
         check(method.accessFlags == publicStatic && method.implementation != null) {
@@ -92,15 +92,15 @@ internal fun MutableMethod.requireStockFingerprintUnlessPatched(
     if (implementation!!.instructions.any { it.isMethodReference(runtimeReference) }) return
     val actual = gboardStructuralFingerprint()
     check(actual == expected) {
-        "Unexpected 18.0.3 Custom Theme fingerprint for $definingClass->$name: " +
+        "Unexpected18.5.4 Custom Theme fingerprint for $definingClass->$name: " +
             "$actual != $expected"
     }
 }
 
-internal const val CUSTOM_THEME_PLUS_1803_FINGERPRINT =
-    "c93fe4d484e830e3d10dc1fda0aaf3d9467152757907723ba141bf9ae77d47aa"
-internal const val CUSTOM_THEME_RESULT_1803_FINGERPRINT =
-    "9e1594b994de881acd8e2f42ec66db00a08bcd73a397c32f849d46b2625c8d6e"
+internal const val CUSTOM_THEME_PLUS_1853_FINGERPRINT =
+    "60fcd2fd947ffaf1a478edc562a295ab292acb4f3ed1519551459ada44033370"
+internal const val CUSTOM_THEME_RESULT_1853_FINGERPRINT =
+    "e64cedb293a76233836aa0779d5f9a81156b3a41c7f77e78f830e1ee24901f48"
 
 private fun MutableMethod.applyCustomThemeGuard(
     call: RuntimeCallId,

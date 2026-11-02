@@ -1,9 +1,9 @@
 package dev.jason.gboardpatches.extension.writingtools;
 
 public final class GboardAiWritingToolsOfficialPreferences {
-    public static final int PROOFREAD_PREF_KEY = 0x7f1409e7;
-    public static final int WRITING_TOOLS_PREF_KEY = 0x7f140b0f;
-    public static final int WRITING_TOOLS_CATEGORY_KEY = 0x7f140d0b;
+    public static final int PROOFREAD_PREF_KEY = 0x7f1409b3;
+    public static final int WRITING_TOOLS_PREF_KEY = 0x7f140abd;
+    public static final int WRITING_TOOLS_CATEGORY_KEY = 0x7f140cb1;
 
     private static final Object LOCK = new Object();
     private static volatile Snapshot observedSnapshot = new Snapshot(null, null);

@@ -14,11 +14,11 @@ import org.junit.Test
 class GboardCalculatorPatchContractTest {
     @Test
     fun targetSpecificDetailsStayInTheDedicatedTargetAndDelegateFiles() {
-        val target = source("GboardCalculator1803Targets.kt")
+        val target = source("GboardCalculatorTargets.kt")
         val lifecycle = source("GboardCalculatorLifecyclePatch.kt")
 
-        assertTrue(target.contains("classType = \"Loup;\""))
-        assertTrue(target.contains("name = \"j\""))
+        assertTrue(target.contains("classType = \"Lphr;\""))
+        assertTrue(target.contains("name = \"i\""))
         assertTrue(target.contains("name = \"onStartInputView\""))
         assertTrue(target.contains("name = \"onUpdateSelection\""))
         assertTrue(target.contains("name = \"onWindowHidden\""))
@@ -31,7 +31,7 @@ class GboardCalculatorPatchContractTest {
         Files.list(portableRoot).use { files ->
             files.filter { Files.isRegularFile(it) }.forEach { file ->
                 val contents = Files.readString(file, StandardCharsets.UTF_8)
-                assertFalse(file.toString(), contents.contains("Loup;"))
+                assertFalse(file.toString(), contents.contains("Lphr;"))
                 assertFalse(file.toString(), contents.contains("onUpdateSelection"))
             }
         }

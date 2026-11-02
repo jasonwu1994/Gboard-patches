@@ -14,7 +14,8 @@ public final class GboardPatchesRestartSourceTest {
                 + "GboardPatchesSettingsActivity.java");
 
         Assert.assertTrue(activity.contains("buildRestartButton()"));
-        Assert.assertTrue(activity.contains("paint.setColor(palette.accent)"));
+        Assert.assertTrue(activity.contains(
+                "paint.setColor(restartPendingCount > 0 ? palette.restartPending : palette.accent)"));
         Assert.assertTrue(activity.contains(
                 "new LinearLayout.LayoutParams(dp(48), dp(48))"));
         Assert.assertTrue(activity.contains("setTooltipText(restartLabel)"));

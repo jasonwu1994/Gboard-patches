@@ -8,12 +8,18 @@ import android.view.ViewParent;
 import android.widget.LinearLayout;
 
 import java.util.Arrays;
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime;
 
 @SuppressWarnings("unused")
 public final class GboardZhuyinBottomRowWeightRuntime {
     private static final String TAG = "GboardZhuyinBottomRow";
+    private static final String SOFT_KEY_VIEW_CLASS =
+            "com.google.android.libraries.inputmethod.widgets.SoftKeyView";
     private static final String SOFT_KEYBOARD_VIEW_CLASS =
             "com.google.android.libraries.inputmethod.widgets.SoftKeyboardView";
     private static final long SETTINGS_CACHE_WINDOW_MS = 250L;
@@ -30,6 +36,8 @@ public final class GboardZhuyinBottomRowWeightRuntime {
     private static final int NORMAL_GLOBE_CLUSTER_CHILD_COUNT = 2;
     private static final int NORMAL_SPACE_CLUSTER_CHILD_COUNT = 2;
 
+    private static final Map<View, AppliedWeight> APPLIED_WEIGHTS = new WeakHashMap<>();
+
     private static final Object SETTINGS_LOCK = new Object();
     private static volatile SettingsSnapshot cachedSettingsSnapshot;
 
@@ -43,6 +51,7 @@ public final class GboardZhuyinBottomRowWeightRuntime {
         try {
             SettingsSnapshot settings = settingsSnapshot(softKeyView);
             if (settings == null || !settings.enabled) {
+                restoreOwnedWeights(softKeyView);
                 return;
             }
             ClassLoader classLoader = receiver.getClass().getClassLoader();
@@ -142,6 +151,7 @@ public final class GboardZhuyinBottomRowWeightRuntime {
             footer = findFooterCandidateFromKeyboardRoot(softKeyView);
         }
         if (footer == null) {
+            restoreOwnedWeights(softKeyView);
             return null;
         }
         if (!Arrays.equals(NORMAL_EXPECTED_SLOT_NAMES, footer.slotNames)) {
@@ -150,8 +160,15 @@ public final class GboardZhuyinBottomRowWeightRuntime {
         String commaLabel = bestVisibleLabel(handles, footer.slotViews[1]);
         String spaceLabel = bestVisibleLabel(handles, footer.slotViews[3]);
         String a06Label = bestVisibleLabel(handles, footer.slotViews[4]);
-        if (!shouldApplyZhuyinFooter(footer.slotNames, receiverBehavior, commaLabel, spaceLabel,
-                a06Label)) {
+        KeyboardBodyKind bodyKind = inspectKeyboardBody(
+                findKeyboardRoot(softKeyView), footer.footer, handles);
+        if (bodyKind == KeyboardBodyKind.LATIN) {
+            restoreOwnedWeights(softKeyView);
+            return null;
+        }
+        if (bodyKind != KeyboardBodyKind.ZHUYIN
+                && !shouldApplyZhuyinFooter(footer.slotNames, receiverBehavior, commaLabel,
+                        spaceLabel, a06Label)) {
             return null;
         }
         return footer;
@@ -167,6 +184,55 @@ public final class GboardZhuyinBottomRowWeightRuntime {
                 && receiverBehavior.legacyKeyboardKind
                 == GboardZhuyinBottomRowWeightRuntimeSupport.LegacyKeyboardKind.ZHUYIN
                 || isNormalZhuyinFooter(slotNames, commaLabel, spaceLabel, a06Label);
+    }
+
+    private enum KeyboardBodyKind { UNKNOWN, LATIN, ZHUYIN }
+
+    /** Control keys and their composing labels cannot establish the body's language. */
+    private static KeyboardBodyKind inspectKeyboardBody(View view, View footer,
+            GboardZhuyinBottomRowWeightRuntimeSupport.ReflectionHandles handles) throws Throwable {
+        if (view == null || view == footer) {
+            return KeyboardBodyKind.UNKNOWN;
+        }
+        if (SOFT_KEY_VIEW_CLASS.equals(view.getClass().getName())
+                || "SoftKeyView".equals(view.getClass().getSimpleName())) {
+            Object metadata = resolveKeyMetadataForInterop(handles.softKeyMetadataField.get(view));
+            if (metadata == null) {
+                return KeyboardBodyKind.UNKNOWN;
+            }
+            GboardZhuyinBottomRowWeightRuntimeSupport.KeyBehavior behavior =
+                    GboardZhuyinBottomRowWeightRuntimeSupport.inspectKeyBehavior(handles, metadata);
+            if (behavior == null) {
+                return KeyboardBodyKind.UNKNOWN;
+            }
+            if (behavior.legacyKeyboardKind == GboardZhuyinBottomRowWeightRuntimeSupport.LegacyKeyboardKind.ZHUYIN) {
+                return KeyboardBodyKind.ZHUYIN;
+            }
+            return isLatinLetter(behavior.primaryLabel) || isLatinLetter(behavior.pressText)
+                    ? KeyboardBodyKind.LATIN : KeyboardBodyKind.UNKNOWN;
+        }
+        KeyboardBodyKind result = KeyboardBodyKind.UNKNOWN;
+        if (view instanceof ViewGroup group) {
+            for (int index = 0; index < group.getChildCount(); index++) {
+                KeyboardBodyKind child = inspectKeyboardBody(
+                        group.getChildAt(index), footer, handles);
+                if (child == KeyboardBodyKind.ZHUYIN) {
+                    return child;
+                }
+                if (child == KeyboardBodyKind.LATIN) {
+                    result = child;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static boolean isLatinLetter(String value) {
+        if (value == null || value.length() != 1) {
+            return false;
+        }
+        char letter = value.charAt(0);
+        return (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
     }
 
     private static FooterCandidate findFooterCandidate(View softKeyView) {
@@ -343,12 +409,54 @@ public final class GboardZhuyinBottomRowWeightRuntime {
             WeightTarget weightTarget = weightTargets[index];
             LinearLayout.LayoutParams params = paramsByTarget[index];
             if (Float.compare(params.weight, weightTarget.weight) != 0) {
+                rememberWeight(weightTarget.view, params, weightTarget.weight, footer.footer);
                 params.weight = weightTarget.weight;
                 weightTarget.view.setLayoutParams(params);
                 changed = true;
             }
         }
         return changed;
+    }
+
+    private static void rememberWeight(View view, LinearLayout.LayoutParams params,
+            float applied, ViewGroup footer) {
+        synchronized (APPLIED_WEIGHTS) {
+            AppliedWeight previous = APPLIED_WEIGHTS.get(view);
+            float baseline = previous != null && previous.stillOwns(view, params)
+                    ? previous.baseline : params.weight;
+            ViewGroup keyboard = findKeyboardRoot(view);
+            APPLIED_WEIGHTS.put(view, new AppliedWeight(view, params, baseline, applied,
+                    keyboard == null ? footer : keyboard));
+        }
+    }
+
+    static void restoreOwnedWeights(View softKeyView) {
+        ViewGroup scope = findKeyboardRoot(softKeyView);
+        if (scope == null && softKeyView != null) {
+            FooterCandidate footer = findFooterCandidate(softKeyView);
+            scope = footer == null ? null : footer.footer;
+        }
+        if (scope == null) {
+            return;
+        }
+        synchronized (APPLIED_WEIGHTS) {
+            Iterator<Map.Entry<View, AppliedWeight>> iterator = APPLIED_WEIGHTS.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<View, AppliedWeight> entry = iterator.next();
+                AppliedWeight applied = entry.getValue();
+                if (applied.scope.get() != scope) {
+                    continue;
+                }
+                View view = entry.getKey();
+                ViewGroup.LayoutParams raw = view.getLayoutParams();
+                iterator.remove();
+                if (raw instanceof LinearLayout.LayoutParams params
+                        && applied.stillOwns(view, params)) {
+                    params.weight = applied.baseline;
+                    view.setLayoutParams(params);
+                }
+            }
+        }
     }
 
     private static LinearLayout.LayoutParams[] resolveLinearLayoutParams(
@@ -426,6 +534,27 @@ public final class GboardZhuyinBottomRowWeightRuntime {
         WeightTarget(View view, float weight) {
             this.view = view;
             this.weight = weight;
+        }
+    }
+    private static final class AppliedWeight {
+        final WeakReference<LinearLayout.LayoutParams> params;
+        final WeakReference<ViewParent> parent;
+        final WeakReference<ViewGroup> scope;
+        final float baseline;
+        final float applied;
+
+        AppliedWeight(View view, LinearLayout.LayoutParams params, float baseline,
+                float applied, ViewGroup scope) {
+            this.params = new WeakReference<>(params);
+            this.parent = new WeakReference<>(view.getParent());
+            this.scope = new WeakReference<>(scope);
+            this.baseline = baseline;
+            this.applied = applied;
+        }
+
+        boolean stillOwns(View view, LinearLayout.LayoutParams current) {
+            return params.get() == current && parent.get() == view.getParent()
+                    && Float.compare(current.weight, applied) == 0;
         }
     }
 }

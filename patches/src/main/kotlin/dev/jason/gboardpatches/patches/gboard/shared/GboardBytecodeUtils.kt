@@ -18,6 +18,9 @@ import com.android.tools.smali.dexlib2.immutable.ImmutableMethodParameter
 
 internal fun BytecodePatchContext.mutableClass(type: String) = mutableClassDefBy(type)
 
+internal fun BytecodePatchContext.mutableClassOrNull(type: String): MutableClass? =
+    runCatching { mutableClassDefByOrNull(type) }.getOrNull()
+
 internal fun BytecodePatchContext.addFieldIfMissing(
     classType: String,
     fieldName: String,
@@ -63,13 +66,33 @@ internal fun BytecodePatchContext.findMutableMethodOrThrow(
     } ?: error("Could not find $classType->$name(${parameterTypes.joinToString("")})$returnType")
 }
 
+internal fun BytecodePatchContext.findMutableMethodOrNull(
+    classType: String,
+    name: String,
+    returnType: String,
+    parameterTypes: List<String>,
+): MutableMethod? = runCatching {
+    val mutableClass = mutableClassDefByOrNull(classType) ?: return null
+    mutableClass.methods.firstOrNull {
+        it.name == name && it.returnType == returnType && it.parameterTypes == parameterTypes
+    }
+}.getOrNull()
+
 internal fun BytecodePatchContext.findMutableMethodOrThrow(
     binding: GboardMethodTarget,
 ): MutableMethod = binding.resolve(this)
 
+internal fun BytecodePatchContext.findMutableMethodOrNull(
+    binding: GboardMethodTarget,
+): MutableMethod? = binding.resolveOrNull(this)
+
 internal fun BytecodePatchContext.mutableFieldOrThrow(
     binding: GboardFieldTarget,
 ): MutableField = binding.resolve(this)
+
+internal fun BytecodePatchContext.mutableFieldOrNull(
+    binding: GboardFieldTarget,
+): MutableField? = binding.resolveOrNull(this)
 
 internal fun BytecodePatchContext.addHelperMethodIfMissing(
     classType: String,
@@ -116,8 +139,55 @@ internal fun MutableClass.addHelperMethodIfMissing(
             MutableMethodImplementation(registerCount)
         ).toMutable().apply {
             addInstructions(0, body.trimIndent())
+            retainHelperExceptionMetadata(body.trimIndent())
         }
     )
+}
+
+private fun MutableMethod.retainHelperExceptionMetadata(body: String) {
+    val lines = body.lineSequence().map { it.substringBefore('#').trim() }.toList()
+    val catchLines = lines.filter { it.startsWith(".catch") }
+    if (catchLines.isEmpty()) return
+    val pattern = Regex(
+        """^\.catch(?:(all)|\s+(L[^;]+;))\s+\{(:[^\s}]+)\s+\.\.\s+(:[^\s}]+)\}\s+(:[^\s]+)$""",
+    )
+    val catches = catchLines.map { line ->
+        checkNotNull(pattern.matchEntire(line)) { "Unsupported helper catch directive: $line" }
+    }
+    val labels = mutableMapOf<String, Int>()
+    var instructionCount = 0
+    lines.forEach { line ->
+        when {
+            line.isEmpty() -> Unit
+            line.startsWith(':') -> {
+                check(labels.put(line, instructionCount) == null) { "Duplicate helper label: $line" }
+            }
+            line.startsWith('.') -> check(
+                !line.startsWith(".packed-switch") && !line.startsWith(".sparse-switch") &&
+                    !line.startsWith(".array-data"),
+            ) { "Catch-bearing helper payloads require full-method assembly" }
+            else -> instructionCount++
+        }
+    }
+    val code = checkNotNull(implementation)
+    check(instructionCount == code.instructions.size) {
+        "Helper catch label/instruction layout drift: $definingClass->$name"
+    }
+    check(code.tryBlocks.isEmpty()) { "Helper assembler already supplied exception metadata" }
+    catches.forEach { match ->
+        fun index(group: Int): Int = checkNotNull(labels[match.groupValues[group]]) {
+            "Undefined helper catch label: ${match.groupValues[group]}"
+        }
+        val start = index(3)
+        val end = index(4)
+        val handler = index(5)
+        check(start < end && end <= instructionCount && handler < instructionCount) {
+            "Invalid helper exception range: $definingClass->$name"
+        }
+        val exceptionType = match.groupValues[2].takeIf(String::isNotEmpty)
+        code.addCatch(exceptionType, code.newLabelForIndex(start), code.newLabelForIndex(end),
+            code.newLabelForIndex(handler))
+    }
 }
 
 internal fun MutableMethod.indexOfFirstMethodCall(

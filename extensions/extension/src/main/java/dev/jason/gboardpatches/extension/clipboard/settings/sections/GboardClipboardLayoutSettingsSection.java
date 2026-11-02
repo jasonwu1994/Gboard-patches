@@ -192,6 +192,7 @@ final class GboardClipboardLayoutSettingsSection {
                         context,
                         R.string.gboard_patches_pref_content_max_lines),
                 "",
+                GboardPatchesSettingsContract.PreviewLayout.STACKED,
                 new GboardPatchesSettingsContract.PreviewImage(
                         "settings-previews/clipboard/preview_lines_default_5.png",
                         GboardSettingsText.get(

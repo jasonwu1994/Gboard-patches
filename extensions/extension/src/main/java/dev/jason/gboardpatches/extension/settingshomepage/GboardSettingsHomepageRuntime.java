@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class GboardSettingsHomepageRuntime {
     private static final String TAG = "GboardPatches";
-    private static final String POLICY_CLASS_NAME = "dog";
+    private static final String POLICY_CLASS_NAME = "dto";
     private static final String POLICY_FIELD_NAME = "a";
     private static final int POLICY_STATE_AUTO = 1;
     private static final int POLICY_STATE_NEW = 2;
@@ -42,7 +42,7 @@ public final class GboardSettingsHomepageRuntime {
             }
             policyField = resolvePolicyField(classLoader);
         } catch (Throwable throwable) {
-            logFailure("Failed to bind exact dog.a settings homepage policy field", throwable);
+            logFailure("Failed to bind exact dto.a settings homepage policy field", throwable);
             return;
         }
 
@@ -111,7 +111,7 @@ public final class GboardSettingsHomepageRuntime {
                 || policyClass.getClassLoader() != expectedClassLoader
                 || policyClass.getModifiers() != expectedClassModifiers) {
             throw new IllegalStateException(
-                    "dog must be the exact public final class from the receiver ClassLoader");
+                    "dto must be the exact public final class from the receiver ClassLoader");
         }
 
         int expectedFieldModifiers = Modifier.PRIVATE | Modifier.STATIC;
@@ -120,7 +120,7 @@ public final class GboardSettingsHomepageRuntime {
                 || policyField.getType() != Integer.TYPE
                 || policyField.getModifiers() != expectedFieldModifiers) {
             throw new IllegalStateException(
-                    "dog.a must be the exact declared private static primitive-int field");
+                    "dto.a must be the exact declared private static primitive-int field");
         }
     }
 
@@ -145,7 +145,7 @@ public final class GboardSettingsHomepageRuntime {
         try {
             Log.i(
                     TAG,
-                    "[gboard-settings-homepage-18.0.3] policy state=" + state
+                    "[gboard-settings-homepage-18.5.4] policy state=" + state
                             + " changed=" + changed);
         } catch (Throwable ignored) {
             // Logging must never affect the settings Activity entry contract.
@@ -156,7 +156,7 @@ public final class GboardSettingsHomepageRuntime {
         if (FAILURE_LOG_COUNT.getAndIncrement() >= LOG_LIMIT) {
             return;
         }
-        String tagged = "[gboard-settings-homepage-18.0.3] " + message;
+        String tagged = "[gboard-settings-homepage-18.5.4] " + message;
         try {
             if (throwable != null) {
                 Log.w(TAG, tagged, throwable);

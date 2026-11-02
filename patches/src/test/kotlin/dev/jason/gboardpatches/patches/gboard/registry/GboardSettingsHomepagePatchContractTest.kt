@@ -113,7 +113,7 @@ class GboardSettingsHomepagePatchContractTest {
     private fun String.countExact(value: String): Int = split(value).size - 1
 
     private companion object {
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val REGISTRY_PATH =
             "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/" +
                 "GboardPatchRegistry.kt"

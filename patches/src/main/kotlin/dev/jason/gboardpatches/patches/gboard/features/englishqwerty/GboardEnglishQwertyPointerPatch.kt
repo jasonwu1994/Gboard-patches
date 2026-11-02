@@ -40,7 +40,7 @@ private val gboardEnglishQwertyPointerSpec = GboardPointerOwnerFeatureSpec(
 )
 
 internal val gboardEnglishQwertyPointerPatch = gboardPointerOwnerFeaturePatch(
-    description = "在 18.0.3 pvi reset 前固定 English 上滑起始 key 並抑制 retarget。",
+    description = "在 18.5.4 qin reset 前固定 English 上滑起始 key 並抑制 retarget。",
     spec = gboardEnglishQwertyPointerSpec,
 )
 
@@ -187,19 +187,19 @@ private val SHOULD_SUPPRESS_ENGLISH_RETARGET_BODY by lazy { """
 
     if-eqz v2, :cond_return_false
 
-    invoke-virtual {p0}, $pointerTrackerClass->i()Lpmy;
+    invoke-virtual {p0}, $pointerTrackerClass->i()Lqae;
 
     move-result-object v2
 
-    invoke-virtual {p0, p2, p3, v2}, $pointerTrackerClass->h(FFLpmy;)Lpmy;
+    invoke-virtual {p0, p2, p3, v2}, $pointerTrackerClass->h(FFLqae;)Lqae;
 
     move-result-object v2
 
-    sget-object v3, Lpmy;->c:Lpmy;
+    sget-object v3, Lqae;->c:Lqae;
 
     if-ne v2, v3, :cond_return_false
 
-    invoke-virtual {v1, v2}, Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;->h(Lpmy;)Lcom/google/android/libraries/inputmethod/metadata/ActionDef;
+    invoke-virtual {v1, v2}, Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;->g(Lqae;)Lcom/google/android/libraries/inputmethod/metadata/ActionDef;
 
     move-result-object v1
 

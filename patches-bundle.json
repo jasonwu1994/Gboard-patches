@@ -1,7 +1,7 @@
 {
-    "created_at":  "2026-09-22T06:27:05",
-    "description":  "### ✨ New Features\n\n* **Gboard:** add the `Toolbar Editing Buttons` patch, which adds Select all, Copy, Cut, and Paste actions to the toolbar menu.\n* **Gboard:** add the `Custom Theme` patch, supporting custom ZIP theme imports and a selection of beautiful themes from Rboard's official repository.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix an issue where `Custom Symbols` history entries were incorrectly saved to `Emoticon` history.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Toolbar Editing Buttons` Patch，將「全選」、「複製」、「剪下」與「貼上」操作加入工具列選單。\n* **Gboard:** 新增 `Custom Theme` Patch，支援匯入自訂 ZIP 主題，也能從 Rboard 官方儲存庫匯入精美主題。\n\n### 🐛 修復\n\n* **Gboard:** 修復 `Custom Symbols` 歷史記錄誤寫入 `Emoticon` 歷史記錄的問題。",
-    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v3.11.0/patches-3.11.0.mpp",
-    "signature_download_url":  "",
-    "version":  "3.11.0"
+  "created_at": "2026-10-31T19:21:18",
+  "description": "### 🐛 Bug Fixes\n\n* **Gboard:** fix a crash when opening the keyboard on Android 13 and earlier.\n* **Gboard:** fix Android stopping Web Clipboard after 6 hours and a crash when restarting the service.\n\n### 🐛 修復\n\n* **Gboard:** 修復在 Android 13 及更早版本上開啟鍵盤時閃退的問題。\n* **Gboard:** 修復 Web Clipboard 執行 6 小時後被 Android 停止，以及重新啟動服務時閃退的問題。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.1.1/patches-4.1.1.mpp",
+  "signature_download_url": "",
+  "version": "4.1.1"
 }

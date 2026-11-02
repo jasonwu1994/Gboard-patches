@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import dev.jason.gboardpatches.extension.R;
-
 public final class GboardFeatureGroup implements GboardPatchesSettingsContract.Feature {
     private static final String TAG = "GboardPatches";
 
@@ -79,23 +77,33 @@ public final class GboardFeatureGroup implements GboardPatchesSettingsContract.F
             List<GboardPatchesSettingsContract.Row> rows =
                     new ArrayList<GboardPatchesSettingsContract.Row>();
             for (GboardPatchesSettingsContract.Feature child : visibleChildren) {
-                rows.add(new GboardPatchesSettingsContract.NavigationRow(
-                        child.getEntryTitle(),
-                        child.getEntrySummary(),
-                        true,
-                        () -> GboardPatchesSettingsContract.openFeature(host, child)));
+                GboardPatchesSettingsContract.NavigationRow row =
+                        new GboardPatchesSettingsContract.NavigationRow(
+                                child.getEntryTitle(),
+                                child.getEntrySummary(),
+                                true,
+                                () -> child.openRootEntry(host));
+                GboardFeatureEntryState state = GboardFeatureEntryState.inspect(child, host);
+                if (state.getMasterToggle() != null) {
+                    row.setDecoration(new GboardPatchesSettingsContract.RowDecoration()
+                            .entryToggle(state.getMasterToggle()));
+                }
+                rows.add(row);
             }
             return new GboardPatchesSettingsContract.Screen(
                     entryTitle,
                     headerBadge,
                     entryTitle,
-                    headerSummary,
+                    pageSummary(),
                     Collections.emptyList(),
                     Collections.singletonList(new GboardPatchesSettingsContract.Section(
-                            GboardSettingsText.get(host.getContext(),
-                                    R.string.gboard_patches_section_features),
+                            null,
                             rows)));
         }
+    }
+
+    private String pageSummary() {
+        return headerSummary == null || headerSummary.isEmpty() ? entrySummary : headerSummary;
     }
 
     private List<GboardPatchesSettingsContract.Feature> availableChildren(Context context) {

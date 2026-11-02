@@ -21,7 +21,7 @@ public final class GboardAiWritingToolsSettingsTest {
                 Boolean.TRUE,
                 preferences.values.get(GboardAiWritingToolsSettings.PREF_KEY_ENABLED));
         Assert.assertEquals(
-                Boolean.FALSE,
+                Boolean.TRUE,
                 preferences.values.get(GboardAiWritingToolsSettings.PREF_KEY_ALL_KEYBOARDS));
         Assert.assertEquals(
                 GboardAiWritingToolsSettings.BACKEND_GBOARD_SERVER,

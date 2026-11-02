@@ -14,7 +14,7 @@ class GboardCompatibilitySourceTest {
     private val repositoryRoot = findRepositoryRoot()
 
     @Test
-    fun defaultCompatibilityPreservesExactGboard1803Identity() {
+    fun defaultCompatibilityPreservesExactGboard1854Identity() {
         val constants = readSource(CONSTANTS_PATH)
 
         assertEquals(GBOARD_PACKAGE, COMPATIBILITY_GBOARD.packageName)
@@ -28,7 +28,7 @@ class GboardCompatibilitySourceTest {
     }
 
     @Test
-    fun allThirtyFivePublishedPatchesUseTheSharedCompatibility() {
+    fun allPublishedPatchesUseTheSharedCompatibility() {
         val registry = readSource(REGISTRY_PATH)
         val activeRegistry = registry.replace(Regex("(?s)/\\*.*?\\*/"), "")
         val publicPatchBlocks = activeRegistry.split("@Suppress(\"unused\")")
@@ -73,7 +73,7 @@ class GboardCompatibilitySourceTest {
     }
 
     private companion object {
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val GBOARD_PACKAGE = "com.google.android.inputmethod.latin"
         val EXPECTED_SIGNATURES = setOf(
             "7ce83c1b71f3d572fed04c8d40c5cb10ff75e6d87d9df6fbd53f0468c2905053",

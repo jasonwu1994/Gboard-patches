@@ -6,12 +6,13 @@ import java.util.Collections;
 
 import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
+import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 
 public final class GboardDeveloperOptionsSettingsFeature
         implements GboardPatchesSettingsContract.Feature {
-    private static final int TARGET_1803_HEADER_KEY_RESOURCE_ID = 0x7f140b4b;
+    private static final int TARGET_HEADER_KEY_RESOURCE_ID = 0x7f140a6d;
 
     private final String entryTitle;
     private final String entrySummary;
@@ -42,6 +43,16 @@ public final class GboardDeveloperOptionsSettingsFeature
     }
 
     @Override
+    public int getEntryIcon() {
+        return GboardPatchesIcons.CODE;
+    }
+
+    @Override
+    public String getEntryTone() {
+        return "red";
+    }
+
+    @Override
     public boolean isAvailable(Context context) {
         return GboardPatchesFeatureAvailability.hasFeature(
                 context,
@@ -50,7 +61,7 @@ public final class GboardDeveloperOptionsSettingsFeature
 
     @Override
     public void openRootEntry(GboardPatchesSettingsContract.FeatureHost host) {
-        GboardPatchesSettingsContract.openTargetSettingsHeader(host, TARGET_1803_HEADER_KEY_RESOURCE_ID);
+        GboardPatchesSettingsContract.openTargetSettingsHeader(host, TARGET_HEADER_KEY_RESOURCE_ID);
     }
 
     @Override

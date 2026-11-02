@@ -161,7 +161,6 @@ public final class GboardSpacebarLogoRuntime {
         try {
             Log.w(TAG, message, throwable);
         } catch (Throwable ignored) {
-            // Logging is diagnostic only and must not affect the host app.
         }
     }
 

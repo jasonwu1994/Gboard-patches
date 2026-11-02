@@ -57,7 +57,6 @@ import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardInline
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardInlineSuggestionsFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardKeyShapeSelectionFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.featureflags.gboardKeyShapeSelectionFlagValuePatch
-import dev.jason.gboardpatches.patches.gboard.features.flowmode.gboardFlowModeFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.lanftp.gboardLanFtpFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.lanftp.gboardLanFtpManifestPatch
 import dev.jason.gboardpatches.patches.gboard.features.latinglobe.gboardLatinGlobeKeyIgnoreIntervalBytecodePatch
@@ -73,6 +72,8 @@ import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboa
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.roundedkeyboard.gboardRoundedKeyboardFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.frostedglass.gboardFrostedGlassFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.frostedglass.gboardFrostedGlassLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.settingshomepage.gboardSettingsHomepageBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.settingshomepage.gboardSettingsHomepageFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.signaturebypass.gboardSignatureBypassBytecodePatch
@@ -82,13 +83,10 @@ import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplit
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissBytecodePatch
+import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFeatureMarkerPatch
-import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803AutoFixAcceptancePatch
-import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803AutoFixRoutePatch
-import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803GenAiInitPatch
-import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803GenAiRefreshPatch
-import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1803SmartEditInitPatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesSettingsPatch
@@ -97,6 +95,32 @@ import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmis
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
+
+@Suppress("unused")
+val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
+    featureId = "language_model_versions",
+    name = "Dictionaries & Predictions",
+    description = "可選擇字典、預測及輸入修正的資源版本\nChoose resource versions for dictionaries, predictions, and input correction.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.languagemodels.gboardLanguageModelResourcesPatch)
+}
+
+@Suppress("unused")
+val gboardKeypressHapticsPatch = gboardPublicResourcePatch(
+    featureId = "keypress_haptics",
+    name = "Keypress Vibration Intensity Control",
+    description = "將按鍵震動由持續時間改為力度控制。\nControl keypress vibration intensity instead of duration.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+    dependsOn(gboardPatchesSettingsPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFeatureMarkerPatch,
+        dev.jason.gboardpatches.patches.gboard.features.keypresshaptics.gboardKeypressHapticsFlagValuePatch)
+}
 
 private fun gboardPublicResourcePatch(
     featureId: String,
@@ -253,6 +277,23 @@ val gboardSimpleCalculatorPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardSwipeDismissPatch = gboardPublicResourcePatch(
+    featureId = "swipe_down_to_dismiss_keyboard",
+    name = "Swipe Down to Dismiss Keyboard",
+    description = "從建議列或工具列向下滑動以關閉鍵盤。\n" +
+        "Swipe down from the suggestions or toolbar to close the keyboard.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardSwipeDismissFeatureMarkerPatch,
+        gboardSwipeDismissBytecodePatch,
+    )
+}
+
+@Suppress("unused")
 val gboardAdvancedVoiceTypingPatch = gboardPublicResourcePatch(
     featureId = "advanced_voice_typing",
     name = "Advanced Voice Typing",
@@ -385,6 +426,23 @@ val gboardRoundedKeyboardPanelPatch = gboardPublicResourcePatch(
 }
 
 @Suppress("unused")
+val gboardFrostedGlassPatch = gboardPublicResourcePatch(
+    featureId = "frosted_glass",
+    name = "Frosted Glass",
+    description = "為鍵盤加入即時背景模糊與自訂主題透明度。\n" +
+        "Add live background blur and custom-theme opacity to the keyboard.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardFrostedGlassFeatureMarkerPatch,
+        gboardFrostedGlassLifecyclePatch,
+    )
+}
+
+@Suppress("unused")
 val gboardAccessPointCountPatch = gboardPublicResourcePatch(
     featureId = "access_point_count",
     name = "Top Toolbar Item Count",
@@ -415,22 +473,6 @@ val gboardCloseProactiveSuggestionsPatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardCloseProactiveSuggestionsFeatureMarkerPatch,
         gboardCloseProactiveSuggestionsFlagValuePatch,
-    )
-}
-
-@Suppress("unused")
-val gboardFlowModeAnimationPatch = gboardPublicResourcePatch(
-    featureId = "flow_mode_animation",
-    name = "Hyperspeed Typing Animation",
-    description = "持續快速輸入時顯示動畫，並支援所有鍵盤\n" +
-        "Show the animation during sustained fast typing with support for all keyboards.",
-    default = true,
-) {
-    compatibleWith(COMPATIBILITY_GBOARD)
-
-    dependsOn(
-        gboardPatchesSettingsPatch,
-        gboardFlowModeFeatureMarkerPatch,
     )
 }
 
@@ -710,11 +752,6 @@ val gboardAiWritingToolsPatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardAiWritingToolsFeatureMarkerPatch,
         gboardAiWritingToolsFlagValuePatch,
-        gboardAiWritingTools1803AutoFixRoutePatch,
-        gboardAiWritingTools1803AutoFixAcceptancePatch,
-        gboardAiWritingTools1803GenAiInitPatch,
-        gboardAiWritingTools1803GenAiRefreshPatch,
-        gboardAiWritingTools1803SmartEditInitPatch,
     )
 }
 
@@ -815,12 +852,7 @@ val gboardPackageRenamePatch = gboardPublicResourcePatch(
     )
 
     finalize {
-        document("AndroidManifest.xml").use { manifestDocument ->
-            applyGboardApplicationDisplayName(
-                manifestDocument = manifestDocument,
-                displayName = checkNotNull(appDisplayName.value),
-            )
-        }
+        applyGboardApplicationDisplayName(displayName = checkNotNull(appDisplayName.value))
     }
 }
 
@@ -848,6 +880,7 @@ object GboardPublishedPatchCatalog {
         gboardFloatingWebSearchPatch,
         gboardEditingAccessPointsPatch,
         gboardSimpleCalculatorPatch,
+        gboardSwipeDismissPatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardEmojiSizePatch,
@@ -856,9 +889,9 @@ object GboardPublishedPatchCatalog {
         gboardSplitKeyboardPatch,
         gboardAccessibilityLayoutPatch,
         gboardRoundedKeyboardPanelPatch,
+        gboardFrostedGlassPatch,
         gboardAccessPointCountPatch,
         gboardCloseProactiveSuggestionsPatch,
-        gboardFlowModeAnimationPatch,
         gboardCustomThemePatch,
         gboardQuickInsertPatch,
         gboardZhuyinQuickTraditionalSimplifiedTogglePatch,
@@ -876,6 +909,8 @@ object GboardPublishedPatchCatalog {
         gboardInlineSuggestionsFlagPatch,
         gboardKeyShapeSelectionFlagPatch,
         gboardAiWritingToolsPatch,
+        gboardLanguageModelVersionsPatch,
+        gboardKeypressHapticsPatch,
         gboardOcrScanTextPatch,
         gboardSettingsHomepagePatch,
         gboardLatinGlobeKeyIgnoreIntervalPatch,

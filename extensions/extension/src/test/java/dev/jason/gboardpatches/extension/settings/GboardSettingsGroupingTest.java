@@ -37,7 +37,7 @@ public final class GboardSettingsGroupingTest {
         Assert.assertEquals(1, sections.size());
 
         Object section = sections.get(0);
-        Assert.assertEquals("Features", reflectString(section, "getTitle"));
+        Assert.assertNull(reflectString(section, "getTitle"));
         List<?> items = reflectList(section, "getItems");
         Assert.assertEquals(1, items.size());
 
@@ -94,11 +94,11 @@ public final class GboardSettingsGroupingTest {
 
         assertInOrder(registrySource,
                 "new GboardAiVoiceSettingsGroupFeature(context)",
+                "new GboardLanguageModelSettingsFeature(context)",
                 "new GboardKeyboardToolsSettingsGroupFeature(context)",
                 "new GboardKeyboardLayoutSettingsGroupFeature(context)",
                 "new GboardClipboardSettingsFeature()",
-                "new GboardSettingsHomepageSettingsFeature()",
-                "new GboardDeveloperOptionsSettingsFeature(context)");
+                "new GboardMoreSettingsGroupFeature(context)");
         assertInOrder(aiVoiceGroupSource.substring(aiVoiceGroupSource.indexOf("Arrays.asList(")),
                 "new GboardAiWritingToolsSettingsFeature(context)",
                 "new GboardAdvancedVoiceSettingsFeature(context)",
@@ -113,7 +113,6 @@ public final class GboardSettingsGroupingTest {
                 "new GboardFloatingWebSearchSettingsFeature(context)");
         assertInOrder(layoutGroupSource.substring(layoutGroupSource.indexOf("Arrays.asList(")),
                 "new GboardSpacebarLogoSettingsFeature(context)",
-                "new GboardFlowModeSettingsFeature(context)",
                 "new GboardCloseProactiveSuggestionsSettingsFeature(context)",
                 "new GboardLatinGlobeKeyIgnoreIntervalSettingsFeature(context)",
                 "new GboardEnglishUppercaseToggleSettingsFeature(context)",
@@ -126,6 +125,14 @@ public final class GboardSettingsGroupingTest {
                 "new GboardRoundedKeyboardSettingsFeature(context)",
                 "new GboardAccessPointCountSettingsFeature(context)");
         Assert.assertFalse(registrySource.contains("GboardKeyboardSettingsGroupFeature"));
+        String more = readSource("src/main/java/dev/jason/gboardpatches/extension/settings/GboardMoreSettingsGroupFeature.java");
+        assertInOrder(more, "new GboardLanFtpSettingsFeature(context)",
+                "new GboardSettingsHomepageSettingsFeature()",
+                "new GboardBackupRestoreSettingsFeature(context)",
+                "new GboardDeveloperOptionsSettingsFeature(context)");
+        Assert.assertFalse(registrySource.contains("new GboardLanFtpSettingsFeature"));
+        Assert.assertFalse(registrySource.contains("new GboardSettingsHomepageSettingsFeature"));
+
     }
 
     @Test
@@ -140,7 +147,7 @@ public final class GboardSettingsGroupingTest {
                 "dev.jason.gboardpatches.feature.bluetooth_microphone"));
         Assert.assertTrue(availabilitySource.contains(
                 "dev.jason.gboardpatches.feature.close_proactive_suggestions"));
-        Assert.assertTrue(availabilitySource.contains(
+        Assert.assertFalse(availabilitySource.contains(
                 "dev.jason.gboardpatches.feature.flow_mode_animation"));
         Assert.assertTrue(availabilitySource.contains(
                 "dev.jason.gboardpatches.feature.quick_insert"));
@@ -181,7 +188,7 @@ public final class GboardSettingsGroupingTest {
     }
 
     @Test
-    public void rootScreenSeparatesPreferenceFeatureAndAboutSections() throws Exception {
+    public void rootScreenOrdersFeaturePreferenceAndAboutSections() throws Exception {
         RecordingHost host = new RecordingHost();
         FakeFeature symbolFooterFeature = new FakeFeature(
                 "Emojis, stickers & GIFs Tab Order",
@@ -210,8 +217,8 @@ public final class GboardSettingsGroupingTest {
         List<?> rootSections = reflectList(rootScreen, "getSections");
         Assert.assertEquals(3, rootSections.size());
         Assert.assertEquals("Features", reflectString(rootSections.get(0), "getTitle"));
-        Assert.assertEquals("About", reflectString(rootSections.get(1), "getTitle"));
-        Assert.assertEquals("Preferences", reflectString(rootSections.get(2), "getTitle"));
+        Assert.assertEquals("Preferences", reflectString(rootSections.get(1), "getTitle"));
+        Assert.assertEquals("About", reflectString(rootSections.get(2), "getTitle"));
 
         Object keyboardRow = findItem(rootScreen, "Keyboard");
         Assert.assertEquals("NavigationRow", keyboardRow.getClass().getSimpleName());

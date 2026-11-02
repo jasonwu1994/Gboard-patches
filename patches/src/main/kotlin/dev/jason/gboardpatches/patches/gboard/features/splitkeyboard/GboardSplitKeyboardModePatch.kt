@@ -3,9 +3,9 @@ package dev.jason.gboardpatches.patches.gboard.features.splitkeyboard
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.bytecodePatch
+import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
-import dev.jason.gboardpatches.patches.gboard.shared.findMutableMethodOrThrow
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesExtensionCarrierPatch
 import dev.jason.gboardpatches.patches.gboard.shared.isMethodReference
 import dev.jason.gboardpatches.patches.gboard.shared.isOpcode
@@ -15,6 +15,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitt
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
 
+
 internal val gboardSplitKeyboardModePatch = bytecodePatch(
     description = "加入自動分離生命週期與目前已分離時的還原動作橋接",
 ) {
@@ -22,11 +23,18 @@ internal val gboardSplitKeyboardModePatch = bytecodePatch(
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
     execute {
-        findMutableMethodOrThrow(GboardSplitKeyboard1803Targets.modeAttach)
+        val eligibility = findMutableMethodOrThrow(GboardSplitKeyboardTargets.splitEligibility)
+        val rewritten = eligibility.applySplitKeyboardEligibilityOverrides()
+        if (rewritten !== eligibility) {
+            val owner = GboardSplitKeyboardTargets.splitEligibility.ownerClass(this)
+            check(owner.methods.remove(eligibility)) { "Native Split eligibility method disappeared" }
+            check(owner.methods.add(rewritten)) { "Duplicate Split eligibility method" }
+        }
+        findMutableMethodOrThrow(GboardSplitKeyboardTargets.modeAttach)
             .applySplitKeyboardModeLifecycleDelegate()
-        findMutableMethodOrThrow(GboardSplitKeyboard1803Targets.modeEnvironmentReload)
+        findMutableMethodOrThrow(GboardSplitKeyboardTargets.modeEnvironmentReload)
             .applySplitKeyboardModeLifecycleDelegate()
-        findMutableMethodOrThrow(GboardSplitKeyboard1803Targets.splitAction)
+        findMutableMethodOrThrow(GboardSplitKeyboardTargets.splitAction)
             .applySplitKeyboardActionInterceptor()
     }
 }

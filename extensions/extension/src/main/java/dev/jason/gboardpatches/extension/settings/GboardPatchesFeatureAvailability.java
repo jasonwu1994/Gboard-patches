@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.util.Log;
 
 public final class GboardPatchesFeatureAvailability {
+    public static final String FEATURE_KEYPRESS_HAPTICS =
+            "dev.jason.gboardpatches.feature.keypress_haptics";
     public static final String FEATURE_EDITING_ACCESS_POINTS =
             "dev.jason.gboardpatches.feature.editing_access_points";
     public static final String FEATURE_CLIPBOARD_ENHANCEMENTS =
@@ -71,8 +73,6 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.spacebar_logo";
     public static final String FEATURE_CLOSE_PROACTIVE_SUGGESTIONS =
             "dev.jason.gboardpatches.feature.close_proactive_suggestions";
-    public static final String FEATURE_FLOW_MODE_ANIMATION =
-            "dev.jason.gboardpatches.feature.flow_mode_animation";
     public static final String FEATURE_QUICK_INSERT =
             "dev.jason.gboardpatches.feature.quick_insert";
     public static final String FEATURE_ACCESS_POINT_COUNT =
@@ -83,6 +83,12 @@ public final class GboardPatchesFeatureAvailability {
             "dev.jason.gboardpatches.feature.simple_calculator";
     public static final String FEATURE_CUSTOM_THEME =
             "dev.jason.gboardpatches.feature.custom_theme";
+    public static final String FEATURE_FROSTED_GLASS =
+            "dev.jason.gboardpatches.feature.frosted_glass";
+    public static final String FEATURE_SWIPE_DISMISS =
+            "dev.jason.gboardpatches.feature.swipe_dismiss";
+
+    public static final String FEATURE_LANGUAGE_MODELS = "dev.jason.gboardpatches.feature.language_models";
 
     private static final String TAG = "GboardPatches";
 

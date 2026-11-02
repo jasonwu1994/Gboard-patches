@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class GboardTopRowSwipeRuntimeSupport {
-    static final int PRIMARY_LABEL_VIEW_ID = 0x7f0b0651;
+    static final int PRIMARY_LABEL_VIEW_ID = 0x7f0b05f5;
     static final int PLAIN_TEXT_KEYCODE = -0x2719;
     static final String[] TOP_ROW_SLOT_VIEW_NAMES = {
             "E01", "E02", "E03", "E04", "E05",
@@ -31,17 +31,17 @@ public final class GboardTopRowSwipeRuntimeSupport {
 
     private static final String SOFT_KEY_VIEW_CLASS =
             "com.google.android.libraries.inputmethod.widgets.SoftKeyView";
-    private static final String ACTION_TYPE_CLASS = "pmy";
+    private static final String ACTION_TYPE_CLASS = "qae";
     private static final String ACTION_SET_CLASS =
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
     private static final String ACTION_DEF_CLASS =
             "com.google.android.libraries.inputmethod.metadata.ActionDef";
-    private static final String ACTION_DATA_CLASS = "pnu";
-    private static final String ACTION_DEF_BUILDER_CLASS = "pmz";
-    private static final String ACTION_SET_BUILDER_CLASS = "ppo";
-    private static final String INTENTION_CLASS = "pnt";
-    private static final String POINTER_TRACKER_CLASS = "pvi";
-    private static final String GESTURE_DISPATCHER_CLASS = "pvf";
+    private static final String ACTION_DATA_CLASS = "qbc";
+    private static final String ACTION_DEF_BUILDER_CLASS = "qaf";
+    private static final String ACTION_SET_BUILDER_CLASS = "qcv";
+    private static final String INTENTION_CLASS = "qbb";
+    private static final String POINTER_TRACKER_CLASS = "qin";
+    private static final String GESTURE_DISPATCHER_CLASS = "qil";
 
     private static final String ACTION_NAME_PRESS = "PRESS";
     private static final String ACTION_NAME_LONG_PRESS = "LONG_PRESS";
@@ -359,7 +359,7 @@ public final class GboardTopRowSwipeRuntimeSupport {
         final Field actionPayloadField;
         final Constructor<?> actionBuilderConstructor;
         final Field actionTypeField;
-        final Field popupLabelField;
+        final Method setPopupLabelsMethod;
         final Method setSingleActionMethod;
         final Method buildActionMethod;
         final Constructor<?> keyMetadataBuilderConstructor;
@@ -392,26 +392,26 @@ public final class GboardTopRowSwipeRuntimeSupport {
             softKeyBindTokenField = softKeyViewClass.getDeclaredField("f");
             softKeyBindTokenField.setAccessible(true);
 
-            bindSoftKeyMethod = softKeyViewClass.getDeclaredMethod("r", actionSetClass,
+            bindSoftKeyMethod = softKeyViewClass.getDeclaredMethod("s", actionSetClass,
                     long.class);
             bindSoftKeyMethod.setAccessible(true);
 
-            actionDefsField = actionSetClass.getDeclaredField("f");
+            actionDefsField = actionSetClass.getDeclaredField("h");
             actionDefsField.setAccessible(true);
 
-            keyLabelTextsField = actionSetClass.getDeclaredField("g");
+            keyLabelTextsField = actionSetClass.getDeclaredField("i");
             keyLabelTextsField.setAccessible(true);
 
-            keyLabelIdsField = actionSetClass.getDeclaredField("h");
+            keyLabelIdsField = actionSetClass.getDeclaredField("j");
             keyLabelIdsField.setAccessible(true);
 
-            exactActionLookupMethod = actionSetClass.getDeclaredMethod("h", actionTypeClass);
+            exactActionLookupMethod = actionSetClass.getDeclaredMethod("g", actionTypeClass);
             exactActionLookupMethod.setAccessible(true);
 
-            actionDefTypeField = actionDefClass.getDeclaredField("c");
+            actionDefTypeField = actionDefClass.getDeclaredField("e");
             actionDefTypeField.setAccessible(true);
 
-            actionEntriesField = actionDefClass.getDeclaredField("d");
+            actionEntriesField = actionDefClass.getDeclaredField("f");
             actionEntriesField.setAccessible(true);
 
             Class<?> actionDataClass = resolveClass(classLoader, ACTION_DATA_CLASS);
@@ -424,10 +424,10 @@ public final class GboardTopRowSwipeRuntimeSupport {
             actionTypeField = actionDefBuilderClass.getDeclaredField("a");
             actionTypeField.setAccessible(true);
 
-            popupLabelField = actionDefBuilderClass.getDeclaredField("c");
-            popupLabelField.setAccessible(true);
+            setPopupLabelsMethod = actionDefBuilderClass.getDeclaredMethod("t", String[].class);
+            setPopupLabelsMethod.setAccessible(true);
 
-            setSingleActionMethod = actionDefBuilderClass.getDeclaredMethod("q", int.class,
+            setSingleActionMethod = actionDefBuilderClass.getDeclaredMethod("s", int.class,
                     intentionClass, Object.class);
             setSingleActionMethod.setAccessible(true);
 
@@ -437,17 +437,17 @@ public final class GboardTopRowSwipeRuntimeSupport {
             keyMetadataBuilderConstructor = actionSetBuilderClass.getDeclaredConstructor();
             keyMetadataBuilderConstructor.setAccessible(true);
 
-            copyKeyMetadataMethod = actionSetBuilderClass.getDeclaredMethod("j", actionSetClass);
+            copyKeyMetadataMethod = actionSetBuilderClass.getDeclaredMethod("k", actionSetClass);
             copyKeyMetadataMethod.setAccessible(true);
 
-            buildKeyMetadataMethod = actionSetBuilderClass.getDeclaredMethod("d");
+            buildKeyMetadataMethod = actionSetBuilderClass.getDeclaredMethod("b");
             buildKeyMetadataMethod.setAccessible(true);
 
             putActionMethod = actionSetBuilderClass.getDeclaredMethod("t", actionDefClass);
             putActionMethod.setAccessible(true);
 
-            setKeyLabelTextsMethod = actionSetBuilderClass.getDeclaredMethod("v", int[].class,
-                    CharSequence[].class);
+            setKeyLabelTextsMethod = actionSetBuilderClass.getDeclaredMethod("w", int[].class,
+                    List.class);
             setKeyLabelTextsMethod.setAccessible(true);
 
             gestureDispatcherContextField = gestureDispatcherClass.getDeclaredField("b");
@@ -483,7 +483,7 @@ public final class GboardTopRowSwipeRuntimeSupport {
                 return new String[0];
             }
             Object actionsObject = actionEntriesField.get(actionDef);
-            if (!(actionsObject instanceof Object[] actionEntries) || actionEntries.length == 0) {
+            if (!(actionsObject instanceof List<?> actionEntries) || actionEntries.isEmpty()) {
                 return new String[0];
             }
             List<String> tokens = new ArrayList<String>();
@@ -499,7 +499,7 @@ public final class GboardTopRowSwipeRuntimeSupport {
                     }
                 }
             }
-            return tokens.toArray(String[]::new);
+            return tokens.toArray(new String[0]);
         }
 
         String extractSinglePayloadToken(Object actionDef) throws Throwable {
@@ -521,10 +521,10 @@ public final class GboardTopRowSwipeRuntimeSupport {
                 return null;
             }
             Object labelsObject = keyLabelTextsField.get(keyMetadata);
-            if (!(labelsObject instanceof CharSequence[] labels)) {
+            if (!(labelsObject instanceof List<?> labels)) {
                 return null;
             }
-            for (CharSequence label : labels) {
+            for (Object label : labels) {
                 if (label == null) {
                     continue;
                 }
@@ -549,7 +549,8 @@ public final class GboardTopRowSwipeRuntimeSupport {
                 return new CharSequence[0];
             }
             Object textsObject = keyLabelTextsField.get(keyMetadata);
-            return textsObject instanceof CharSequence[] texts ? texts : new CharSequence[0];
+            return textsObject instanceof List<?> texts
+                    ? texts.toArray(new CharSequence[0]) : new CharSequence[0];
         }
 
         Context extractGestureDispatcherContext(Object gestureDispatcher) throws Throwable {
@@ -564,7 +565,7 @@ public final class GboardTopRowSwipeRuntimeSupport {
                 throws Throwable {
             Object builder = actionBuilderConstructor.newInstance();
             actionTypeField.set(builder, actionType);
-            popupLabelField.set(builder, new String[] { popupLabel });
+            setPopupLabelsMethod.invoke(builder, (Object) new String[] { popupLabel });
             setSingleActionMethod.invoke(builder, PLAIN_TEXT_KEYCODE, commitIntention, text);
             Object built = buildActionMethod.invoke(builder);
             if (built == null) {

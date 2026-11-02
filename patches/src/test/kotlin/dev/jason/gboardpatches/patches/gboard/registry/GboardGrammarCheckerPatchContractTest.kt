@@ -339,7 +339,7 @@ class GboardGrammarCheckerPatchContractTest {
         const val GBOARD_PACKAGE = "com.google.android.inputmethod.latin"
         const val GRAMMAR_FLAG = "enable_grammar_checker"
         const val GRAMMAR_MARKER = "dev.jason.gboardpatches.feature.grammar_checker"
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val GRAMMAR_MARKER_PATH =
             "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/" +
                 "featureflags/GboardGrammarCheckerFeatureMarkerPatch.kt"

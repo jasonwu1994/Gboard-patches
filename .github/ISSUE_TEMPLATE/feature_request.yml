@@ -1,0 +1,17 @@
+name: Feature Request
+description: Suggest an improvement or a new feature for Gboard Patches.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue titles must be written in English. English and 繁體中文 are welcome in the issue body. Please suggest one feature per issue.
+  - type: textarea
+    id: requested-behavior
+    attributes:
+      label: Describe the solution you'd like
+      description: Explain how you would use the feature and the result you expect.
+      placeholder: I would like to ... so that ...
+    validations:
+      required: true

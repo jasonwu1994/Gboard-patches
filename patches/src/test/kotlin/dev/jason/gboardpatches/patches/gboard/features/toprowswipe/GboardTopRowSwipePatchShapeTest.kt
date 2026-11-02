@@ -46,7 +46,7 @@ class GboardTopRowSwipePatchShapeTest {
     @Test
     fun `target r fixture keeps result register intact at return tracking site`() {
         val targetLikeFixture = """
-            .method public final r(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z
+            .method public final s(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z
                 .locals 3
                 iput-object p1, p0, Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;->e:Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;
                 move p3, p2
@@ -83,31 +83,31 @@ class GboardTopRowSwipePatchShapeTest {
 
     @Test
     fun `generated bindings drive all five exported top row anchors`() {
-        assertEquals("Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;->r(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z", GboardVersionBindings.softKeyBind.reference)
-        assertEquals("Lpvi;->B(Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;FFJI)V", GboardVersionBindings.pointerOwner.reference)
-        assertEquals("Lpvi;->s(J)V", GboardVersionBindings.pointerCancel.reference)
-        assertEquals("Lpvi;->C()V", GboardVersionBindings.pointerReset.reference)
-        assertEquals("Lpvf;->f(Lpvi;Lpmy;Lpnu;Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;JZZIZJI)V", GboardVersionBindings.gestureDispatch.reference)
+        assertEquals("Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;->s(Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;J)Z", GboardVersionBindings.softKeyBind.reference)
+        assertEquals("Lqin;->B(Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;FFJI)V", GboardVersionBindings.pointerOwner.reference)
+        assertEquals("Lqin;->s(J)V", GboardVersionBindings.pointerCancel.reference)
+        assertEquals("Lqin;->C()V", GboardVersionBindings.pointerReset.reference)
+        assertEquals("Lqil;->f(Lqin;Lqae;Lqbc;Lcom/google/android/libraries/inputmethod/metadata/SoftKeyDef;JZZIZJI)V", GboardVersionBindings.gestureDispatch.reference)
     }
 
     @Test
-    fun `target pvi owner fixture proves injected register shape after ac`() {
+    fun `target qin owner fixture proves injected register shape after ac`() {
         val targetLikeFixture = """
             .locals 14
             move/from16 v0, p2
             move/from16 v1, p3
             move-wide/from16 v11, p4
-            iget v2, p0, Lpvi;->a:I
-            iget-object v3, p0, Lpvi;->m:Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;
+            iget v2, p0, Lqin;->a:I
+            iget-object v3, p0, Lqin;->m:Lcom/google/android/libraries/inputmethod/widgets/SoftKeyView;
             move/from16 v13, p6
-            invoke-virtual {p0, v11, v12, v13}, Lpvi;->r(JI)V
-            invoke-direct {p0}, Lpvi;->ac()V
+            invoke-virtual {p0, v11, v12, v13}, Lqin;->r(JI)V
+            invoke-direct {p0}, Lqin;->ac()V
         """.trimIndent()
 
         assertTrue(targetLikeFixture.contains("move/from16 v0, p2"))
         assertTrue(targetLikeFixture.contains("move/from16 v1, p3"))
-        assertTrue(targetLikeFixture.contains("iget-object v3, p0, Lpvi;->m:"))
-        assertTrue(targetLikeFixture.indexOf("Lpvi;->r(JI)V") < targetLikeFixture.indexOf("Lpvi;->ac()V"))
+        assertTrue(targetLikeFixture.contains("iget-object v3, p0, Lqin;->m:"))
+        assertTrue(targetLikeFixture.indexOf("Lqin;->r(JI)V") < targetLikeFixture.indexOf("Lqin;->ac()V"))
         assertTrue(
             TOP_ROW_SWIPE_POINTER_DELEGATE.contains(
                 "invoke-static {p0, p1, v3, v0, v1}, $TOP_ROW_SWIPE_RUNTIME_CLASS->maybeArmAndResolveTopRowOwner"

@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,16 +16,16 @@ public final class GboardAddSymbolsSoftKeyRuntime {
     private static final String TAG = "GboardAddSymbols";
     private static final String ACTION_SET_CLASS =
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
-    private static final String ACTION_TYPE_CLASS = "pmy";
+    private static final String ACTION_TYPE_CLASS = "qae";
     private static final String ACTION_DEF_CLASS =
             "com.google.android.libraries.inputmethod.metadata.ActionDef";
-    private static final String ACTION_ENTRY_CLASS = "pnu";
-    private static final String ACTION_BUILDER_CLASS = "pmz";
-    private static final String METADATA_BUILDER_CLASS = "ppo";
-    private static final String INTENTION_CLASS = "pnt";
-    private static final String KEYBOARD_TYPE_CLASS = "ppa";
+    private static final String ACTION_ENTRY_CLASS = "qbc";
+    private static final String ACTION_BUILDER_CLASS = "qaf";
+    private static final String METADATA_BUILDER_CLASS = "qcv";
+    private static final String INTENTION_CLASS = "qbb";
+    private static final String KEYBOARD_TYPE_CLASS = "qch";
 
-    private static final int POPUP_LAYOUT_ATTRIBUTE_RES_ID = 0x7f040296;
+    private static final int POPUP_LAYOUT_ATTRIBUTE_RES_ID = 0x7f04027f;
     private static final int SWITCH_KEYBOARD_KEYCODE = -0x2714;
     private static final int SWITCH_TO_ONE_HANDED_MODE_KEYCODE = -0x2749;
     private static final int OPEN_EXTENSION_KEYCODE = -0x274a;
@@ -217,13 +218,13 @@ public final class GboardAddSymbolsSoftKeyRuntime {
         final Field keyboardTypeNameField;
         final Constructor<?> actionBuilderConstructor;
         final Field actionBuilderTypeField;
-        final Field actionBuilderEntriesField;
-        final Field actionBuilderLabelsField;
+        final Method setActionEntriesMethod;
+        final Method setPopupLabelsMethod;
         final Field actionBuilderIconsField;
         final Method copyActionMethod;
         final Method buildActionMethod;
         final Constructor<?> metadataBuilderConstructor;
-        final Field metadataActionsField;
+        final Method putActionMethod;
         final Method copyMetadataMethod;
         final Method buildMetadataMethod;
         final Object pressActionType;
@@ -239,43 +240,44 @@ public final class GboardAddSymbolsSoftKeyRuntime {
             Class<?> intentionClass = resolve(classLoader, INTENTION_CLASS);
             Class<?> keyboardTypeClass = resolve(classLoader, KEYBOARD_TYPE_CLASS);
 
-            actionDefsField = field(actionSetClass, "f");
-            keyLabelsField = field(actionSetClass, "g");
-            exactActionLookupMethod = method(actionSetClass, "h", actionTypeClass);
-            actionTypeField = field(actionDefClass, "c");
-            actionEntriesField = field(actionDefClass, "d");
-            popupLayoutField = field(actionDefClass, "g");
-            popupLabelsField = field(actionDefClass, "n");
-            popupIconsField = field(actionDefClass, "o");
+            actionDefsField = field(actionSetClass, "h");
+            keyLabelsField = field(actionSetClass, "i");
+            exactActionLookupMethod = method(actionSetClass, "g", actionTypeClass);
+            actionTypeField = field(actionDefClass, "e");
+            actionEntriesField = field(actionDefClass, "f");
+            popupLayoutField = field(actionDefClass, "i");
+            popupLabelsField = field(actionDefClass, "p");
+            popupIconsField = field(actionDefClass, "q");
             entryKeycodeField = field(actionEntryClass, "c");
             entryPayloadField = field(actionEntryClass, "e");
             entryConstructor = constructor(
                     actionEntryClass, int.class, intentionClass, Object.class, int.class);
-            keyboardTypeFactory = method(keyboardTypeClass, "a", Object.class);
+            keyboardTypeFactory = method(resolve(classLoader, "qaz"), "ag", Object.class);
             keyboardTypeNameField = field(keyboardTypeClass, "m");
             actionBuilderConstructor = constructor(actionBuilderClass);
             actionBuilderTypeField = field(actionBuilderClass, "a");
-            actionBuilderEntriesField = field(actionBuilderClass, "b");
-            actionBuilderLabelsField = field(actionBuilderClass, "c");
+            setActionEntriesMethod = method(actionBuilderClass, "n",
+                    Array.newInstance(actionEntryClass, 0).getClass());
+            setPopupLabelsMethod = method(actionBuilderClass, "t", String[].class);
             actionBuilderIconsField = field(actionBuilderClass, "d");
-            copyActionMethod = method(actionBuilderClass, "j", actionDefClass);
+            copyActionMethod = method(actionBuilderClass, "i", actionDefClass);
             buildActionMethod = method(actionBuilderClass, "c");
             metadataBuilderConstructor = constructor(metadataBuilderClass);
-            metadataActionsField = field(metadataBuilderClass, "b");
-            copyMetadataMethod = method(metadataBuilderClass, "j", actionSetClass);
-            buildMetadataMethod = method(metadataBuilderClass, "d");
+            putActionMethod = method(metadataBuilderClass, "t", actionDefClass);
+            copyMetadataMethod = method(metadataBuilderClass, "k", actionSetClass);
+            buildMetadataMethod = method(metadataBuilderClass, "b");
             pressActionType = enumValue(actionTypeClass, "PRESS");
             longPressActionType = enumValue(actionTypeClass, "LONG_PRESS");
         }
 
         Object[] extractActionDefs(Object metadata) throws IllegalAccessException {
             Object value = metadata == null ? null : actionDefsField.get(metadata);
-            return value instanceof Object[] ? (Object[]) value : new Object[0];
+            return value instanceof List<?> items ? items.toArray() : new Object[0];
         }
 
         Object[] extractEntries(Object action) throws IllegalAccessException {
             Object value = action == null ? null : actionEntriesField.get(action);
-            return value instanceof Object[] ? (Object[]) value : new Object[0];
+            return value instanceof List<?> items ? items.toArray() : new Object[0];
         }
 
         boolean isLongPress(Object action) throws IllegalAccessException {
@@ -288,7 +290,7 @@ public final class GboardAddSymbolsSoftKeyRuntime {
 
         String[] popupLabels(Object action) throws IllegalAccessException {
             Object value = action == null ? null : popupLabelsField.get(action);
-            return value instanceof String[] ? (String[]) value : new String[0];
+            return value instanceof List<?> labels ? labels.toArray(new String[0]) : new String[0];
         }
 
         int[] popupIcons(Object action) throws IllegalAccessException {
@@ -322,10 +324,10 @@ public final class GboardAddSymbolsSoftKeyRuntime {
 
         String extractPrimaryLabel(Object metadata) throws IllegalAccessException {
             Object value = metadata == null ? null : keyLabelsField.get(metadata);
-            if (!(value instanceof CharSequence[] labels)) {
+            if (!(value instanceof List<?> labels)) {
                 return null;
             }
-            for (CharSequence label : labels) {
+            for (Object label : labels) {
                 if (label != null && !label.toString().isBlank()) {
                     return label.toString();
                 }
@@ -345,10 +347,10 @@ public final class GboardAddSymbolsSoftKeyRuntime {
             Array.set(updatedEntries, index, entryConstructor.newInstance(
                     SWITCH_KEYBOARD_FROM_ACCESS_POINT_AND_CLOSE_EXTENSION_KEYCODE,
                     null, customType, Integer.MAX_VALUE));
-            actionBuilderEntriesField.set(builder, updatedEntries);
+            setActionEntriesMethod.invoke(builder, updatedEntries);
             String[] labels = normalizeLabels(popupLabels(template), entries.length);
             labels[index] = CUSTOM_POPUP_LABEL;
-            actionBuilderLabelsField.set(builder, labels);
+            setPopupLabelsMethod.invoke(builder, (Object) labels);
             actionBuilderIconsField.set(builder,
                     normalizeIcons(popupIcons(template), entries.length));
             return buildActionMethod.invoke(builder);
@@ -363,22 +365,18 @@ public final class GboardAddSymbolsSoftKeyRuntime {
             Array.set(updatedEntries, entries.length, entryConstructor.newInstance(
                     SWITCH_KEYBOARD_FROM_ACCESS_POINT_AND_CLOSE_EXTENSION_KEYCODE,
                     null, customType, Integer.MAX_VALUE));
-            actionBuilderEntriesField.set(builder, updatedEntries);
+            setActionEntriesMethod.invoke(builder, updatedEntries);
             String[] labels = normalizeLabels(popupLabels(template), entries.length + 1);
             labels[entries.length] = CUSTOM_POPUP_LABEL;
-            actionBuilderLabelsField.set(builder, labels);
+            setPopupLabelsMethod.invoke(builder, (Object) labels);
             actionBuilderIconsField.set(builder,
                     normalizeIcons(popupIcons(template), entries.length + 1));
             return buildActionMethod.invoke(builder);
         }
 
-        @SuppressWarnings("unchecked")
         void replaceAction(Object metadataBuilder, Object actionType, Object action)
-                throws IllegalAccessException {
-            Object value = metadataActionsField.get(metadataBuilder);
-            if (value instanceof Map<?, ?>) {
-                ((Map<Object, Object>) value).put(actionType, action);
-            }
+                throws Throwable {
+            putActionMethod.invoke(metadataBuilder, action);
         }
 
         private Object copiedActionBuilder(Object template) throws Throwable {

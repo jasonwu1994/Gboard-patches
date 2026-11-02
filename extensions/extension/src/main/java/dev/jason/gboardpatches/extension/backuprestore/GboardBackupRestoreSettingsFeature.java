@@ -10,6 +10,7 @@ import java.util.Set;
 
 import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.backuprestore.flagstore.GboardFlagStoreSettingsFeature;
+import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
@@ -37,6 +38,16 @@ public final class GboardBackupRestoreSettingsFeature
     @Override
     public String getEntrySummary() {
         return entrySummary;
+    }
+
+    @Override
+    public int getEntryIcon() {
+        return GboardPatchesIcons.BACKUP;
+    }
+
+    @Override
+    public String getEntryTone() {
+        return "slate";
     }
 
     @Override

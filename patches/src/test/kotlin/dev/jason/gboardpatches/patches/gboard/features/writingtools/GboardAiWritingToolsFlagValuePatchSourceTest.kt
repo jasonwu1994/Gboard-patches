@@ -21,6 +21,7 @@ class GboardAiWritingToolsFlagValuePatchSourceTest {
         assertFalse(patchSource.contains("GboardFlagFamilyArgumentShape"))
         assertFalse(patchSource.contains("GboardVersionBindings"))
         assertTrue(patchSource.contains("findMutableMethodOrThrow"))
+        assertFalse(patchSource.contains("runCatching"))
         assertFalse(patchSource.contains("FLAG_VALUE_CLASS"))
         assertFalse(constantsSource.contains("FLAG_VALUE_CLASS"))
         assertFalse(constantsSource.contains("\"Lmky;\""))

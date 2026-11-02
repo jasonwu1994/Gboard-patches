@@ -21,7 +21,7 @@ class GboardWebClipboardPatchRegistrySourceTest {
     private val repositoryRoot = repositoryRoot()
 
     @Test
-    fun actualPublicPatchHasExactMetadataDependenciesAnd1803Compatibility() {
+    fun actualPublicPatchHasExactMetadataDependenciesAnd1853Compatibility() {
         val patch = gboardWebClipboardPatch
         assertEquals("Web Clipboard", patch.name)
         assertEquals(WEB_CLIPBOARD_DESCRIPTION, patch.description)
@@ -72,12 +72,17 @@ class GboardWebClipboardPatchRegistrySourceTest {
     }
 
     @Test
-    fun webClipboardAddsNoBindingAndGeneratedBindingsStayReviewed() {
+    fun webClipboardUsesTheReviewed1853LifecycleBindingWithoutFlagFactory() {
         val bindingsText = readSource(BINDINGS_JSON_PATH)
         val bindings = JsonParser.parseString(bindingsText).asJsonObject
             .getAsJsonObject("bindings")
         assertFalse(bindings.has("flag_factory"))
-        assertTrue(bindings.keySet().none { it.contains("web_clipboard") })
+        val lifecycle = bindings.getAsJsonObject("web_clipboard_create")
+        assertEquals("method", lifecycle["kind"].asString)
+        assertEquals("Lphr;", lifecycle["class_type"].asString)
+        assertEquals("onCreate", lifecycle["method_name"].asString)
+        assertTrue(lifecycle.getAsJsonArray("parameter_types").isEmpty)
+        assertEquals("V", lifecycle["return_type"].asString)
     }
 
     private fun readSource(relativePath: String): String = Files.readString(
@@ -101,7 +106,7 @@ class GboardWebClipboardPatchRegistrySourceTest {
 
     private companion object {
         const val GBOARD_PACKAGE = "com.google.android.inputmethod.latin"
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val WEB_CLIPBOARD_DESCRIPTION =
             "新增手機自架的 Web Clipboard，支援瀏覽器同步、配對碼與快速設定開關\n" +
                 "Add the phone-hosted Web Clipboard with browser sync, pairing, and a " +

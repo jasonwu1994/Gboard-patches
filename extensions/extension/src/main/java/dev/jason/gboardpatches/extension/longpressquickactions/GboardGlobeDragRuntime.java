@@ -22,7 +22,7 @@ public final class GboardGlobeDragRuntime {
     }
 
     private static final String TAG = "GboardPatches";
-    private static final String LOG_PREFIX = "[gboard-globe-drag-18.0.3] ";
+    private static final String LOG_PREFIX = "[gboard-globe-drag-18.5.4] ";
     private static final String MARKER = "__gboard_patches_globe_drag__";
     private static final long RELEASE_EVENT_GRACE_MS = 2_000L;
     private static final int LOG_LIMIT = 40;

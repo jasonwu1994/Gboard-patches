@@ -51,6 +51,7 @@ public final class GboardQuickInsertSettingsFeature
                         return GboardQuickInsertSettings.writeEnabled(preferences, enabled);
                     }
                 });
+        declareRestartRequired(GboardQuickInsertSettings.PREF_KEY_ENABLED);
     }
 
     private static String text(Context context, int resourceId) {

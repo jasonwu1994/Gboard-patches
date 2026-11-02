@@ -13,10 +13,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowLog;
 
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(RobolectricTestRunner.class)
@@ -58,6 +60,40 @@ public final class GboardAiWritingToolsRuntimeLoggingTest {
         Assert.assertEquals(80L, warningCount("failed to apply flag override"));
         Assert.assertEquals(80L, warningCount("failed to evaluate settings removal"));
         Assert.assertEquals(80L, warningCount("failed to evaluate signal"));
+    }
+
+    @Test
+    public void serverModelPinningDoesNotReadApplicationPackage() throws Exception {
+        Context base = RuntimeEnvironment.getApplication();
+        SharedPreferences preferences = base.getSharedPreferences(
+                GboardAiWritingToolsSettings.PREF_FILE, Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        GboardAiWritingToolsSettings.ensureDefaults(preferences);
+        Context context = new ContextWrapper(base) {
+            @Override
+            public Context getApplicationContext() {
+                return this;
+            }
+
+            @Override
+            public String getPackageName() {
+                throw new AssertionError("Server model selection must not query package identity");
+            }
+        };
+        staticField("applicationContext").set(null, context);
+        Properties expectedModels = new Properties();
+        try (InputStream input = getClass().getResourceAsStream(
+                "/writingtools/pixel11-18.5-server-models.properties")) {
+            Assert.assertNotNull(input);
+            expectedModels.load(input);
+        }
+        for (String name : new String[]{"writing_helper_model_version",
+                "writing_helper_voice_input_model_version",
+                "writing_helper_text_stylization_model_version"}) {
+            Assert.assertEquals(name, expectedModels.getProperty(name),
+                    GboardAiWritingToolsRuntime.applyOverriddenFlagValue(
+                            new ModelFlagReceiver(name), "stock-model"));
+        }
     }
 
     @Test
@@ -146,6 +182,15 @@ public final class GboardAiWritingToolsRuntimeLoggingTest {
     private static final class FlagReceiver {
         @SuppressWarnings("unused")
         private final String a = GboardAiWritingToolsRuntime.FLAG_WRITING_TOOLS;
+    }
+
+    private static final class ModelFlagReceiver {
+        @SuppressWarnings("unused")
+        private final String a;
+
+        private ModelFlagReceiver(String name) {
+            a = name;
+        }
     }
 
     private static final class ThrowingSharedPreferencesContext extends ContextWrapper {

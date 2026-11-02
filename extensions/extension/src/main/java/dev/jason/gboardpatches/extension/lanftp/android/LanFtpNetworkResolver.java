@@ -69,7 +69,7 @@ public final class LanFtpNetworkResolver {
             if (address instanceof Inet6Address
                     && !address.isMulticastAddress()
                     && isUniqueLocalIpv6(address)
-                    && ipv6Candidate.isEmpty()) {
+                    && !ipv6Candidate.isPresent()) {
                 ipv6Candidate = Optional.of(address);
             }
         }

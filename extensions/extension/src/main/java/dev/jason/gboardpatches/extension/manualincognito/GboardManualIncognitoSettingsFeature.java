@@ -133,7 +133,9 @@ public final class GboardManualIncognitoSettingsFeature
                 true,
                 safeRequested.featureEnabled,
                 featureToggle,
-                buildEnabledPreview()));
+                buildEnabledPreview())
+                .setRestartRequired(GboardManualIncognitoSettings.PREF_FEATURE_ENABLED)
+                .setMasterToggle(true));
         rows.add(new GboardPatchesSettingsContract.ToggleRow(
                 clipboardTitle,
                 clipboardSummary,

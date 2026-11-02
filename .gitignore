@@ -132,3 +132,7 @@ local.properties
 
 # Local patch/build inspection artifacts
 .validation/
+
+# Local Python caches
+__pycache__/
+*.py[cod]

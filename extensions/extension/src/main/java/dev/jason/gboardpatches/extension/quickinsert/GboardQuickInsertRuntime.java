@@ -10,6 +10,10 @@ public final class GboardQuickInsertRuntime {
 
     public static Object applyFlagValue(String flagName, Object stockResult) {
         try {
+            if (!GboardQuickInsertPolicy.isTargetFlagName(flagName)
+                    || !(stockResult instanceof Boolean)) {
+                return stockResult;
+            }
             return applyFlagValue(
                     flagName,
                     stockResult,

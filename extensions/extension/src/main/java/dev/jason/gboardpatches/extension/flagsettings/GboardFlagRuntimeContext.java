@@ -14,11 +14,18 @@ public final class GboardFlagRuntimeContext {
     }
 
     public static SharedPreferences preferencesOrNull() {
-        Context context = resolveContext();
-        return context == null ? null : GboardPatchesSettings.preferences(context);
+        return preferencesOrNull(resolveContext());
     }
 
-    private static Context resolveContext() {
+    public static SharedPreferences preferencesOrNull(Context context) {
+        return GboardPatchesSettings.preferencesOrNull(context);
+    }
+
+    public static boolean isUserUnlocked(Context context) {
+        return GboardPatchesSettings.isUserUnlocked(context);
+    }
+
+    public static Context resolveContext() {
         Context cached = applicationContext;
         if (cached != null) {
             return cached;

@@ -1,5 +1,5 @@
 {
-  "version": "3.11.0",
+  "version": "4.1.1",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -8,7 +8,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -20,7 +20,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -32,7 +32,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -44,7 +44,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -56,7 +56,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -68,7 +68,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -80,7 +80,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -92,7 +92,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -104,7 +104,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -116,7 +116,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -128,7 +128,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -140,7 +140,19 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Dictionaries & Predictions",
+      "description": "可選擇字典、預測及輸入修正的資源版本\nChoose resource versions for dictionaries, predictions, and input correction.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -152,7 +164,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -164,7 +176,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -176,7 +188,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -188,7 +200,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -200,7 +212,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -212,7 +224,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -224,7 +236,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -236,7 +248,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -248,7 +260,19 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Frosted Glass",
+      "description": "為鍵盤加入即時背景模糊與自訂主題透明度。\nAdd live background blur and custom-theme opacity to the keyboard.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -260,7 +284,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -272,19 +296,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
-      "name": "Hyperspeed Typing Animation",
-      "description": "持續快速輸入時顯示動畫，並支援所有鍵盤\nShow the animation during sustained fast typing with support for all keyboards.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -296,7 +308,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -308,7 +320,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -320,7 +332,19 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Keypress Vibration Intensity Control",
+      "description": "將按鍵震動由持續時間改為力度控制。\nControl keypress vibration intensity instead of duration.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -332,7 +356,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -344,7 +368,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -356,7 +380,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": [
@@ -384,7 +408,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -396,7 +420,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -408,7 +432,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -420,7 +444,19 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Swipe Down to Dismiss Keyboard",
+      "description": "從建議列或工具列向下滑動以關閉鍵盤。\nSwipe down from the suggestions or toolbar to close the keyboard.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -432,7 +468,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -444,7 +480,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -456,7 +492,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -468,7 +504,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -480,7 +516,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -492,7 +528,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -506,7 +542,7 @@
       ],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []
@@ -518,7 +554,7 @@
       "dependencies": [],
       "compatiblePackages": {
         "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
+          "18.5.4.993608717-release-arm64-v8a"
         ]
       },
       "options": []

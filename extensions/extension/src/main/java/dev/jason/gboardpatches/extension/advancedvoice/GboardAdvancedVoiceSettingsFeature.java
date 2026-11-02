@@ -22,7 +22,7 @@ public final class GboardAdvancedVoiceSettingsFeature
         implements GboardPatchesSettingsContract.Feature {
     private static final String TAG = "GboardPatches";
     private static final String APKMIRROR_DOWNLOAD_URL =
-            "https://www.apkmirror.com/apk/google-inc/gboard/gboard-the-google-keyboard-18-0-3-954559732-release/gboard-the-google-keyboard-18-0-3-954559732-release-arm64-v8a-2-android-apk-download/";
+            "https://www.apkmirror.com/apk/google-inc/gboard/gboard-the-google-keyboard-18-5-4-993608717-release/gboard-the-google-keyboard-18-5-4-993608717-release-arm64-v8a-2-android-apk-download/";
     private static final String ADVANCED_VOICE_GITHUB_URL =
             "https://github.com/jasonwu1994/Gboard-patches";
 
@@ -57,6 +57,8 @@ public final class GboardAdvancedVoiceSettingsFeature
     private final String downloadedLanguagesSeparator;
     private final String liveTranscribeManageTitle;
     private final String liveTranscribeManageSummary;
+    private final String modesTitle;
+    private final String modesSummary;
     private final String payloadPresentTitle;
     private final String payloadPresentSummary;
     private final String payloadPresentRequirementTitle;
@@ -133,6 +135,10 @@ public final class GboardAdvancedVoiceSettingsFeature
                 R.string.gboard_patches_advanced_voice_live_transcribe_manage_title);
         liveTranscribeManageSummary = GboardSettingsText.get(context,
                 R.string.gboard_patches_advanced_voice_live_transcribe_manage_summary);
+        modesTitle = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_modes_title);
+        modesSummary = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_modes_summary);
         payloadPresentTitle = GboardSettingsText.get(context,
                 R.string.gboard_patches_advanced_voice_payload_present_title);
         payloadPresentSummary = GboardSettingsText.get(context,
@@ -220,16 +226,23 @@ public final class GboardAdvancedVoiceSettingsFeature
                     enabledSummary,
                     true,
                     enabled,
-                    value -> saveEnabled(host, context, value)));
+                    value -> saveEnabled(host, context, value))
+                    .setRestartRequired(GboardAdvancedVoiceSettings.PREF_KEY_ENABLED));
             behaviorRows.add(new GboardPatchesSettingsContract.ToggleRow(
                     zhTwPunctuationTitle,
                     zhTwPunctuationSummary,
                     enabled,
                     zhTwPunctuationEnabled,
-                    value -> saveZhTwPunctuationEnabled(context, value)));
+                    value -> saveZhTwPunctuationEnabled(context, value))
+                    .setRestartRequired(
+                            GboardAdvancedVoiceSettings.PREF_KEY_ZH_TW_PUNCTUATION_ENABLED));
 
             List<GboardPatchesSettingsContract.Row> informationRows =
                     new ArrayList<GboardPatchesSettingsContract.Row>();
+            informationRows.add(new GboardPatchesSettingsContract.DetailRow(
+                    modesTitle,
+                    modesSummary,
+                    true));
             PayloadGuidance guidance = buildPayloadGuidance(payloadDetection);
             informationRows.add(new GboardPatchesSettingsContract.DetailRow(
                     guidance.statusTitle,

@@ -6,25 +6,26 @@ import android.view.View;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
     private static final String SOFT_KEY_VIEW_CLASS =
             "com.google.android.libraries.inputmethod.widgets.SoftKeyView";
     private static final String ACTION_SET_CLASS =
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
-    private static final String ACTION_TYPE_CLASS = "pmy";
+    private static final String ACTION_TYPE_CLASS = "qae";
     private static final String ACTION_DEF_CLASS =
             "com.google.android.libraries.inputmethod.metadata.ActionDef";
-    private static final String ACTION_ENTRY_CLASS = "pnu";
-    private static final String ACTION_BUILDER_CLASS = "pmz";
-    private static final String METADATA_BUILDER_CLASS = "ppo";
-    private static final String INTENTION_CLASS = "pnt";
-    private static final String GESTURE_DISPATCHER_CLASS = "pvf";
-    private static final String PREFERENCE_CLASS = "qhy";
-    private static final String PREFERENCE_BASE_CLASS = "cdl";
+    private static final String ACTION_ENTRY_CLASS = "qbc";
+    private static final String ACTION_BUILDER_CLASS = "qaf";
+    private static final String METADATA_BUILDER_CLASS = "qcv";
+    private static final String INTENTION_CLASS = "qbb";
+    private static final String GESTURE_DISPATCHER_CLASS = "qil";
+    private static final String PREFERENCE_CLASS = "qvt";
+    private static final String PREFERENCE_BASE_CLASS = "cht";
 
     private static final int PLAIN_TEXT_KEYCODE = -0x2719;
-    public static final int PREFERENCE_KEY_RES_ID = 0x7f140a1b;
+    public static final int PREFERENCE_KEY_RES_ID = 0x7f140966;
     private static final String PREFERENCE_KEY = "enable_sc_tc_conversion_zh_tw";
 
     private final Method softKeyBindMethod;
@@ -33,10 +34,12 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
     private final Field metadataKeyIdField;
     private final Field actionDefTypeField;
     private final Field actionDefEntriesField;
+    private final Method exactActionLookupMethod;
+    private final Field entryKeycodeField;
+    private final Field entryPayloadField;
     private final Constructor<?> actionBuilderConstructor;
     private final Field actionBuilderTypeField;
-    private final Field actionBuilderEntriesField;
-    private final Field actionBuilderPopupLabelsField;
+    private final Method setPopupLabelsMethod;
     private final Method actionBuilderCopyMethod;
     private final Method setSingleActionMethod;
     private final Method buildActionMethod;
@@ -66,26 +69,28 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         Class<?> preferenceClass = resolve(classLoader, PREFERENCE_CLASS);
         Class<?> preferenceBaseClass = resolve(classLoader, PREFERENCE_BASE_CLASS);
 
-        softKeyBindMethod = softKeyViewClass.getDeclaredMethod("r", actionSetClass, long.class);
+        softKeyBindMethod = softKeyViewClass.getDeclaredMethod("s", actionSetClass, long.class);
         softKeyMetadataField = softKeyViewClass.getDeclaredField("e");
         softKeyBindTokenField = softKeyViewClass.getDeclaredField("f");
-        metadataKeyIdField = actionSetClass.getDeclaredField("d");
-        actionDefTypeField = actionDefClass.getDeclaredField("c");
-        actionDefEntriesField = actionDefClass.getDeclaredField("d");
+        metadataKeyIdField = actionSetClass.getDeclaredField("f");
+        actionDefTypeField = actionDefClass.getDeclaredField("e");
+        actionDefEntriesField = actionDefClass.getDeclaredField("f");
+        exactActionLookupMethod = actionSetClass.getDeclaredMethod("g", actionTypeClass);
+        entryKeycodeField = actionEntryClass.getDeclaredField("c");
+        entryPayloadField = actionEntryClass.getDeclaredField("e");
 
         actionBuilderConstructor = actionBuilderClass.getDeclaredConstructor();
         actionBuilderTypeField = actionBuilderClass.getDeclaredField("a");
-        actionBuilderEntriesField = actionBuilderClass.getDeclaredField("b");
-        actionBuilderPopupLabelsField = actionBuilderClass.getDeclaredField("c");
-        actionBuilderCopyMethod = actionBuilderClass.getDeclaredMethod("j", actionDefClass);
+        setPopupLabelsMethod = actionBuilderClass.getDeclaredMethod("t", String[].class);
+        actionBuilderCopyMethod = actionBuilderClass.getDeclaredMethod("i", actionDefClass);
         setSingleActionMethod = actionBuilderClass.getDeclaredMethod(
-                "q", int.class, intentionClass, Object.class);
+                "s", int.class, intentionClass, Object.class);
         buildActionMethod = actionBuilderClass.getDeclaredMethod("c");
 
         metadataBuilderConstructor = metadataBuilderClass.getDeclaredConstructor();
-        copyMetadataMethod = metadataBuilderClass.getDeclaredMethod("j", actionSetClass);
+        copyMetadataMethod = metadataBuilderClass.getDeclaredMethod("k", actionSetClass);
         putActionMethod = metadataBuilderClass.getDeclaredMethod("t", actionDefClass);
-        buildMetadataMethod = metadataBuilderClass.getDeclaredMethod("d");
+        buildMetadataMethod = metadataBuilderClass.getDeclaredMethod("b");
 
         dispatcherContextField = gestureDispatcherClass.getDeclaredField("b");
         dispatcherPreferenceField = gestureDispatcherClass.getDeclaredField("c");
@@ -102,10 +107,10 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
                 metadataKeyIdField,
                 actionDefTypeField,
                 actionDefEntriesField,
+                exactActionLookupMethod, entryKeycodeField, entryPayloadField,
                 actionBuilderConstructor,
                 actionBuilderTypeField,
-                actionBuilderEntriesField,
-                actionBuilderPopupLabelsField,
+                setPopupLabelsMethod,
                 actionBuilderCopyMethod,
                 setSingleActionMethod,
                 buildActionMethod,
@@ -143,6 +148,21 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         return actionDef == null ? null : actionName(actionDefTypeField.get(actionDef));
     }
 
+    boolean isExactPlaceholderMetadata(Object metadata) throws ReflectiveOperationException {
+        return metadata != null && isExactPlaceholderAction(
+                exactActionLookupMethod.invoke(metadata, slideUpActionType));
+    }
+
+    boolean isExactPlaceholderAction(Object action) throws IllegalAccessException {
+        if (action == null) return false;
+        Object value = actionDefEntriesField.get(action);
+        if (!(value instanceof List<?> entries) || entries.size() != 1) return false;
+        Object entry = entries.get(0);
+        if (entry == null || entryKeycodeField.getInt(entry) != PLAIN_TEXT_KEYCODE) return false;
+        Object payload = entryPayloadField.get(entry);
+        return payload instanceof CharSequence && ((CharSequence) payload).length() == 0;
+    }
+
     Object buildToggleMetadata(Object metadata, String label)
             throws ReflectiveOperationException {
         if (metadata == null || label == null) {
@@ -162,8 +182,7 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
         }
         Object builder = actionBuilderConstructor.newInstance();
         actionBuilderCopyMethod.invoke(builder, actionDef);
-        actionBuilderEntriesField.set(builder, actionDefEntriesField.get(actionDef));
-        actionBuilderPopupLabelsField.set(builder, new String[] {label});
+        setPopupLabelsMethod.invoke(builder, (Object) new String[] {label});
         Object built = buildActionMethod.invoke(builder);
         return built != null ? built : actionDef;
     }
@@ -218,7 +237,7 @@ final class GboardZhuyinTraditionalSimplifiedToggleRuntimeSupport {
     private Object buildToggleAction(String label) throws ReflectiveOperationException {
         Object builder = actionBuilderConstructor.newInstance();
         actionBuilderTypeField.set(builder, slideUpActionType);
-        actionBuilderPopupLabelsField.set(builder, new String[] {label});
+        setPopupLabelsMethod.invoke(builder, (Object) new String[] {label});
         setSingleActionMethod.invoke(
                 builder,
                 Integer.valueOf(PLAIN_TEXT_KEYCODE),

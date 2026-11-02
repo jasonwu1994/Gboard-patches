@@ -6,7 +6,7 @@ final class GboardGlobeDragPortFactory {
     }
 
     static GboardGlobeDragPort create(ClassLoader classLoader) throws Throwable {
-        return new GboardGlobeDrag1803Adapter(
-                GboardLongPressQuickActions1803Runtime.reflectionHandles(classLoader));
+        return new GboardGlobeDragAdapter(
+                GboardLongPressQuickActionsRuntime.reflectionHandles(classLoader));
     }
 }

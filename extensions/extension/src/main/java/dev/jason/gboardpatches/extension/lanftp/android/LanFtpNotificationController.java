@@ -9,7 +9,6 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.SystemClock;
 
-import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.lanftp.runtime.LanFtpSessionInfo;
 
 /** Owns notification rendering and foreground-service publication. */
@@ -126,6 +125,21 @@ final class LanFtpNotificationController {
         }
     }
 
+    private int resolveSmallIcon() {
+        try {
+            android.content.res.Resources resources = service.getResources();
+            String packageName = service.getPackageName();
+            int icon = resources.getIdentifier("ic_lan_ftp_tile", "drawable", packageName);
+            if (icon != 0 && packageName.equals(resources.getResourcePackageName(icon))
+                    && "drawable".equals(resources.getResourceTypeName(icon))
+                    && "ic_lan_ftp_tile".equals(resources.getResourceEntryName(icon))) {
+                return icon;
+            }
+        } catch (RuntimeException unavailable) {
+        }
+        return android.R.drawable.stat_sys_upload;
+    }
+
     private Notification build(String status) {
         return build(status, null);
     }
@@ -144,7 +158,7 @@ final class LanFtpNotificationController {
         LanFtpNotificationContent content = LanFtpNotificationContent.from(
                 status, activeTransfer);
         builder
-                .setSmallIcon(R.drawable.ic_lan_ftp_tile)
+                .setSmallIcon(resolveSmallIcon())
                 .setContentTitle("LAN FTP Server")
                 .setContentText(content.text())
                 .setContentIntent(openSettings)

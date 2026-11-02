@@ -3,7 +3,16 @@ package dev.jason.gboardpatches.extension.writingtools;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public final class GboardAiWritingToolsRuntimeTest {
+    private static final String[][] STOCK_REMOTE_MODELS = new String[][]{
+            {"writing_helper_model_version", "202406101250_prod_sd_config"},
+            {"writing_helper_voice_input_model_version", "202406101250_prod_sd_config"},
+            {"writing_helper_text_stylization_model_version", "composer_stylization_base"}
+    };
+
     @Test
     public void masterOffPreservesEveryStockResultIdentity() {
         Object original = Long.valueOf(3L);
@@ -114,63 +123,76 @@ public final class GboardAiWritingToolsRuntimeTest {
     }
 
     @Test
-    public void renamedServerPackageUsesTheMorpheModelConfigs() {
-        GboardAiWritingToolsSettings.Snapshot settings = serverSettings(false);
-
-        String proofread = "202406101250_prod_sd_config";
-        Assert.assertEquals("202408051448_prod_sd_config",
-                GboardAiWritingToolsRuntime.computeOverrideValue(
-                        GboardAiWritingToolsRuntime.FLAG_WRITING_HELPER_MODEL_VERSION,
-                        proofread,
-                        settings,
-                        official(true, true),
-                        "dev.jason.com.google.android.inputmethod.latin"));
-        String stylization = "composer_stylization_base";
-        Assert.assertEquals("202504090000_writing_tools_config",
-                GboardAiWritingToolsRuntime.computeOverrideValue(
-                        GboardAiWritingToolsRuntime
-                                .FLAG_WRITING_HELPER_TEXT_STYLIZATION_MODEL_VERSION,
-                        stylization,
-                        settings,
-                        official(true, true),
-                        "dev.jason.com.google.android.inputmethod.latin"));
+    public void serverUsesVerifiedPixel11RequestModelConfigs() throws Exception {
+        Properties pixel11 = pixel11ServerModels();
+        for (boolean allKeyboards : new boolean[]{false, true}) {
+            for (String[] model : STOCK_REMOTE_MODELS) {
+                String expected = pixel11.getProperty(model[0]);
+                Assert.assertNotNull("Missing independent model pin: " + model[0], expected);
+                Assert.assertEquals(model[0], expected,
+                        GboardAiWritingToolsRuntime.computeOverrideValue(
+                                model[0], model[1], serverSettings(allKeyboards),
+                                official(true, true)));
+            }
+        }
     }
 
     @Test
-    public void officialServerPackagePreservesItsRemoteModelConfigs() {
-        String stockModel = "official-remote-model";
-        Assert.assertSame(stockModel, GboardAiWritingToolsRuntime.computeOverrideValue(
-                GboardAiWritingToolsRuntime.FLAG_WRITING_HELPER_MODEL_VERSION,
-                stockModel,
-                serverSettings(false),
-                official(true, true),
-                "com.google.android.inputmethod.latin"));
+    public void masterOffPreservesAllServerModelConfigs() {
+        for (String[] model : STOCK_REMOTE_MODELS) {
+            Assert.assertSame(model[0], model[1],
+                    GboardAiWritingToolsRuntime.computeOverrideValue(
+                            model[0], model[1],
+                            settings(false, true,
+                                    GboardAiWritingToolsSettings.BACKEND_GBOARD_SERVER),
+                            official(true, true)));
+        }
     }
 
     @Test
     public void serverModelConfigsPreserveWrongTypeIdentity() {
-        Object wrongType = Integer.valueOf(7);
-
-        Assert.assertSame(wrongType, GboardAiWritingToolsRuntime.computeOverrideValue(
-                GboardAiWritingToolsRuntime.FLAG_WRITING_HELPER_MODEL_VERSION,
-                wrongType,
-                serverSettings(false),
-                official(true, true),
-                "dev.jason.com.google.android.inputmethod.latin"));
+        Object[] wrongTypes = new Object[]{
+                Integer.valueOf(7), Long.valueOf(7L), Boolean.FALSE, new Object(), null
+        };
+        for (String[] model : STOCK_REMOTE_MODELS) {
+            for (Object wrongType : wrongTypes) {
+                Assert.assertSame(model[0], wrongType,
+                        GboardAiWritingToolsRuntime.computeOverrideValue(
+                                model[0], wrongType, serverSettings(true),
+                                official(true, true)));
+            }
+        }
     }
 
     @Test
     public void privateBackendsPreserveTheirStockModelConfigs() {
-        String stockModel = "private-stock-model";
+        String[] backends = new String[]{
+                GboardAiWritingToolsSettings.BACKEND_PRIVATE_INFERENCE_AICORE,
+                GboardAiWritingToolsSettings.BACKEND_PRIVATE_INFERENCE_ASTREA
+        };
+        for (String backend : backends) {
+            for (String[] model : STOCK_REMOTE_MODELS) {
+                Assert.assertSame(backend + ":" + model[0], model[1],
+                        GboardAiWritingToolsRuntime.computeOverrideValue(
+                                model[0], model[1], settings(true, true, backend),
+                                official(true, true)));
+            }
+        }
+    }
 
-        Assert.assertSame(stockModel, GboardAiWritingToolsRuntime.computeOverrideValue(
-                GboardAiWritingToolsRuntime.FLAG_WRITING_HELPER_MODEL_VERSION,
-                stockModel,
-                settings(
-                        true,
-                        false,
-                        GboardAiWritingToolsSettings.BACKEND_PRIVATE_INFERENCE_AICORE),
-                official(true, true)));
+    @Test
+    public void serverModelPinsLeaveUnrelatedStringsAndEndpointUntouched() {
+        String[][] untouched = new String[][]{
+                {"unrelated_string", "original-value"},
+                {"writing_helper_server_target",
+                        "staging-gboard-imagen-pa.sandbox.googleapis.com"}
+        };
+        for (String[] entry : untouched) {
+            Assert.assertSame(entry[0], entry[1],
+                    GboardAiWritingToolsRuntime.computeOverrideValue(
+                            entry[0], entry[1], serverSettings(true),
+                            official(true, true)));
+        }
     }
 
     @Test
@@ -243,7 +265,11 @@ public final class GboardAiWritingToolsRuntimeTest {
                 3L,
                 true,
                 false);
-        assertBackend("INVALID", 1L, false, false);
+        Assert.assertNull(GboardAiWritingToolsRuntime.backendDecision("INVALID").backendType);
+        Long stock = Long.valueOf(4L);
+        Assert.assertSame(stock, GboardAiWritingToolsRuntime.computeOverrideValue(
+                GboardAiWritingToolsRuntime.FLAG_BACKEND_TYPE, stock,
+                settings(true, false, "INVALID"), official(true, true)));
     }
 
     @Test
@@ -300,6 +326,16 @@ public final class GboardAiWritingToolsRuntimeTest {
                         false,
                         GboardAiWritingToolsSettings.BACKEND_PRIVATE_INFERENCE_ASTREA),
                 official(true, true)));
+    }
+
+    private static Properties pixel11ServerModels() throws Exception {
+        Properties properties = new Properties();
+        try (InputStream input = GboardAiWritingToolsRuntimeTest.class.getResourceAsStream(
+                "/writingtools/pixel11-18.5-server-models.properties")) {
+            Assert.assertNotNull("Missing independently sourced Pixel11 model fixture", input);
+            properties.load(input);
+        }
+        return properties;
     }
 
     private static Boolean distinctBoolean(boolean value) throws Exception {

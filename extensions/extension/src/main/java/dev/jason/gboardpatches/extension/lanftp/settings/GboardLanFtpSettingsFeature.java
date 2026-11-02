@@ -20,6 +20,7 @@ import dev.jason.gboardpatches.extension.lanftp.android.LanFtpRuntimeObserver;
 import dev.jason.gboardpatches.extension.lanftp.runtime.LanFtpPortPolicy;
 import dev.jason.gboardpatches.extension.lanftp.runtime.LanFtpCredentialPolicy;
 import dev.jason.gboardpatches.extension.lanftp.runtime.LanFtpSessionInfo;
+import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
@@ -51,6 +52,16 @@ public final class GboardLanFtpSettingsFeature
     public String getEntrySummary() {
         return text(R.string.gboard_patches_lan_ftp_summary,
                 "Transfer files with an FTP client on the local network");
+    }
+
+    @Override
+    public int getEntryIcon() {
+        return GboardPatchesIcons.LAN;
+    }
+
+    @Override
+    public String getEntryTone() {
+        return "teal";
     }
 
     @Override

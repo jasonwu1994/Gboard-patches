@@ -51,28 +51,28 @@ public final class GboardClipboardRuntimeBehaviorTest {
     }
 
     @Test
-    public void resolvesExact1803HandlesAndInstantTimestamp() throws Throwable {
+    public void resolvesExact1853HandlesAndInstantTimestamp() throws Throwable {
         GboardClipboardRuntimeSupport support = new GboardClipboardRuntimeSupport();
         GboardClipboardRuntimeSupport.ReflectionHandles handles =
                 support.reflectionHandles(targetLoader);
 
-        Assert.assertEquals("fik", handles.loaderCallableOwnerField.getDeclaringClass().getName());
-        Assert.assertEquals("fil", handles.loaderContextField.getDeclaringClass().getName());
+        Assert.assertEquals("fpn", handles.loaderCallableOwnerField.getDeclaringClass().getName());
+        Assert.assertEquals("fpo", handles.loaderContextField.getDeclaringClass().getName());
         Assert.assertEquals("b", handles.loaderContextField.getName());
-        Assert.assertEquals("fjv", handles.dataHandlerContextField.getDeclaringClass().getName());
+        Assert.assertEquals("fqx", handles.dataHandlerContextField.getDeclaringClass().getName());
         Assert.assertEquals("f", handles.dataHandlerDisabledField.getName());
         Assert.assertEquals("g", handles.dataHandlerCountField.getName());
-        Assert.assertEquals("fjk", handles.adapterItemsField.getDeclaringClass().getName());
+        Assert.assertEquals("fqn", handles.adapterItemsField.getDeclaringClass().getName());
         Assert.assertEquals("n", handles.adapterItemsField.getName());
         Assert.assertEquals("o", handles.adapterRecentCountField.getName());
-        Assert.assertEquals("y", handles.adapterPinnedVisibleCountField.getName());
+        Assert.assertEquals("z", handles.adapterPinnedVisibleCountField.getName());
         Assert.assertEquals("e", handles.adapterContextField.getName());
-        Assert.assertEquals("fji", handles.clipItemViewHolderTextField.getDeclaringClass().getName());
+        Assert.assertEquals("fql", handles.clipItemViewHolderTextField.getDeclaringClass().getName());
         Assert.assertEquals("d", handles.clipIdField.getName());
         Assert.assertEquals("e", handles.clipTimestampField.getName());
         Assert.assertEquals("g", handles.clipModelField.getName());
-        Assert.assertEquals("c", handles.clipModelTextField.getName());
-        Assert.assertEquals("e", handles.clipModelItemTypeField.getName());
+        Assert.assertEquals("a", handles.clipModelTextField.getName());
+        Assert.assertEquals("c", handles.clipModelItemTypeField.getName());
         Assert.assertEquals("m", handles.clipIsSensitiveMethod.getName());
         Assert.assertEquals("n", handles.clipIsPinnedMethod.getName());
         Assert.assertEquals("o", handles.clipIsSpecialMethod.getName());
@@ -162,7 +162,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         setClipText(clip, fullText);
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip)), 1, 0);
         TextView textView = new TextView(context);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.beforeItemBind(adapter, holder, 1);
@@ -184,7 +184,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         setClipText(clip, fullText);
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip)), 1, 0);
         TextView textView = new TextView(context);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.beforeItemBind(adapter, holder, 1);
@@ -211,7 +211,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip)), 1, 0);
         TextView textView = new TextView(context);
         textView.setText("•".repeat(originalText.length()));
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.afterItemBind(adapter, holder, 1);
@@ -247,7 +247,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         Object clip = newSensitiveClip(11L, System.currentTimeMillis(), fullText);
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip)), 1, 0);
         TextView textView = new TextView(context);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.beforeItemBind(adapter, holder, 1);
@@ -275,7 +275,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip)), 1, 0);
         TextView textView = new TextView(context);
         textView.setText(originalText);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
 
         newUiAdapter().afterItemBind(adapter, holder, 1);
 
@@ -307,7 +307,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         Object pinned = newClip(3L, now - 180_000L, 1, true, false);
         Object special = newClip(4L, now - 240_000L, 2, false, true);
         setQueryItems(Arrays.asList(recent, expired, pinned, special));
-        setStaticLong("cdl", "lastVisibleTimestamp", 0L);
+        setStaticLong("cht", "lastVisibleTimestamp", 0L);
 
         List<?> ttlResult = (List<?>) newLoaderAdapter().maybeBuildLoaderResult(newLoaderReceiver());
         Assert.assertEquals(6, ttlResult.size());
@@ -349,14 +349,14 @@ public final class GboardClipboardRuntimeBehaviorTest {
         long timestamp = System.currentTimeMillis() - 5_000L;
         setRuntimePreferences(60_000L, 100, 10, true, true, true,
                 "newest_first", 2);
-        setStaticLong("fjv", "primaryTimestamp", timestamp);
+        setStaticLong("fqx", "primaryTimestamp", timestamp);
         Object clip = newClip(41L, timestamp, 0, false, false);
         Object second = newClip(40L, timestamp - 1_000L, 0, false, false);
         Object adapter = newAdapter(assemblyWithRecent(Arrays.asList(clip, second)), 2, 0);
         TextView textView = new TextView(context);
         textView.setText("payload");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.afterItemBind(adapter, holder, 1);
@@ -380,7 +380,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("payload-A");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.afterItemBind(adapter, holder, 1);
@@ -403,7 +403,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("original-payload");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.afterItemBind(adapter, holder, 1);
@@ -428,7 +428,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("payload-A");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
 
         ui.afterItemBind(adapter, holder, 1);
@@ -450,7 +450,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("payload-A");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
         ui.afterItemBind(adapter, holder, 1);
 
@@ -475,7 +475,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("payload-A");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
         GboardClipboardUiHookAdapter ui = newUiAdapter();
         ui.afterItemBind(adapter, holder, 1);
 
@@ -497,7 +497,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         TextView textView = new TextView(context);
         textView.setText("[1]\npayload");
         textView.setMaxLines(5);
-        Object holder = construct("fji", new Class<?>[] { TextView.class }, textView);
+        Object holder = construct("fql", new Class<?>[] { TextView.class }, textView);
 
         newUiAdapter().afterItemBind(adapter, holder, 1);
 
@@ -513,7 +513,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         long primaryTimestamp = now - 400_000L;
         setRuntimePreferences(60_000L, 3, 5, false, false, false,
                 "newest_first", 2);
-        setStaticLong("fjv", "primaryTimestamp", primaryTimestamp);
+        setStaticLong("fqx", "primaryTimestamp", primaryTimestamp);
         provider.rows.add(new Row(10L, now - 500_000L, 1));
         provider.rows.add(new Row(11L, now - 500_000L, 2));
         provider.rows.add(new Row(2L, primaryTimestamp, 0));
@@ -521,7 +521,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
         provider.rows.add(new Row(4L, now - 1_000L, 0));
         provider.rows.add(new Row(5L, now - 2_000L, 0));
         provider.rows.add(new Row(6L, now - 3_000L, 0));
-        Object dataHandler = construct("fjv",
+        Object dataHandler = construct("fqx",
                 new Class<?>[] { Context.class, boolean.class, int.class },
                 context, Boolean.FALSE, Integer.valueOf(provider.rows.size()));
         GboardClipboardRuntimeSupport support = new GboardClipboardRuntimeSupport();
@@ -545,10 +545,10 @@ public final class GboardClipboardRuntimeBehaviorTest {
         long now = System.currentTimeMillis();
         setRuntimePreferences(60_000L, 100, 5, false, false, false,
                 "newest_first", 2);
-        setStaticLong("fjv", "cleanupFailureId", 81L);
+        setStaticLong("fqx", "cleanupFailureId", 81L);
         provider.rows.add(new Row(81L, now - 120_000L, 0));
         provider.rows.add(new Row(82L, now - 1_000L, 0));
-        Object dataHandler = construct("fjv",
+        Object dataHandler = construct("fqx",
                 new Class<?>[] { Context.class, boolean.class, int.class },
                 context, Boolean.FALSE, Integer.valueOf(provider.rows.size()));
         GboardClipboardRuntimeSupport support = new GboardClipboardRuntimeSupport();
@@ -618,12 +618,12 @@ public final class GboardClipboardRuntimeBehaviorTest {
     }
 
     private Object newLoaderReceiver() throws Exception {
-        Object owner = construct("fil", new Class<?>[] { Context.class }, context);
-        return construct("fik", new Class<?>[] { targetClass("fil") }, owner);
+        Object owner = construct("fpo", new Class<?>[] { Context.class }, context);
+        return construct("fpn", new Class<?>[] { targetClass("fpo") }, owner);
     }
 
     private Object newAdapter(List<Object> items, int recent, int pinned) throws Exception {
-        return construct("fjk", new Class<?>[] { Context.class, List.class, int.class, int.class },
+        return construct("fqn", new Class<?>[] { Context.class, List.class, int.class, int.class },
                 context, items, Integer.valueOf(recent), Integer.valueOf(pinned));
     }
 
@@ -631,7 +631,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
             boolean special) throws Exception {
         Object instant = construct("j$.time.Instant", new Class<?>[] { long.class },
                 Long.valueOf(timestamp));
-        return construct("fih", new Class<?>[] { long.class, targetClass("j$.time.Instant"),
+        return construct("fpk", new Class<?>[] { long.class, targetClass("j$.time.Instant"),
                 int.class, boolean.class, boolean.class }, Long.valueOf(id), instant,
                 Integer.valueOf(itemType), Boolean.valueOf(pinned), Boolean.valueOf(special));
     }
@@ -639,7 +639,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
     private Object newSensitiveClip(long id, long timestamp, String text) throws Exception {
         Object instant = construct("j$.time.Instant", new Class<?>[] { long.class },
                 Long.valueOf(timestamp));
-        Object clip = construct("fih", new Class<?>[] { long.class,
+        Object clip = construct("fpk", new Class<?>[] { long.class,
                 targetClass("j$.time.Instant"), int.class, boolean.class, boolean.class,
                 boolean.class }, Long.valueOf(id), instant, Integer.valueOf(0), Boolean.FALSE,
                 Boolean.FALSE, Boolean.TRUE);
@@ -649,14 +649,14 @@ public final class GboardClipboardRuntimeBehaviorTest {
 
     private void setClipText(Object clip, String text) throws Exception {
         Object model = getField(clip, "g");
-        Field field = model.getClass().getDeclaredField("c");
+        Field field = model.getClass().getDeclaredField("a");
         field.setAccessible(true);
         field.set(model, text);
     }
 
     private String getClipText(Object clip) throws Exception {
         Object model = getField(clip, "g");
-        Field field = model.getClass().getDeclaredField("c");
+        Field field = model.getClass().getDeclaredField("a");
         field.setAccessible(true);
         return (String) field.get(model);
     }
@@ -677,7 +677,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
     }
 
     private Object header(String name) throws Exception {
-        Field field = targetClass("fih").getDeclaredField(name);
+        Field field = targetClass("fpk").getDeclaredField(name);
         field.setAccessible(true);
         return field.get(null);
     }
@@ -689,7 +689,7 @@ public final class GboardClipboardRuntimeBehaviorTest {
     }
 
     private void setQueryItems(List<Object> values) throws Exception {
-        Field field = targetClass("fjo").getDeclaredField("items");
+        Field field = targetClass("fqr").getDeclaredField("items");
         field.setAccessible(true);
         @SuppressWarnings("unchecked")
         List<Object> items = (List<Object>) field.get(null);
@@ -699,14 +699,14 @@ public final class GboardClipboardRuntimeBehaviorTest {
 
     private void clearTargetState() throws Exception {
         setQueryItems(new ArrayList<Object>());
-        setStaticLong("fjv", "primaryTimestamp", 0L);
-        setStaticLong("fjv", "cleanupFailureId", Long.MIN_VALUE);
-        setStaticLong("cdl", "lastVisibleTimestamp", 0L);
+        setStaticLong("fqx", "primaryTimestamp", 0L);
+        setStaticLong("fqx", "cleanupFailureId", Long.MIN_VALUE);
+        setStaticLong("cht", "lastVisibleTimestamp", 0L);
     }
 
     @SuppressWarnings("unchecked")
     private List<String> targetEvents() throws Exception {
-        Field field = targetClass("fjv").getDeclaredField("events");
+        Field field = targetClass("fqx").getDeclaredField("events");
         field.setAccessible(true);
         return new ArrayList<String>((List<String>) field.get(null));
     }
@@ -772,8 +772,8 @@ public final class GboardClipboardRuntimeBehaviorTest {
 
     private static final class TargetClassLoader extends ClassLoader {
         private static final Set<String> TARGETS = new HashSet<String>(Arrays.asList(
-                "fik", "fil", "fjv", "jt", "fjk", "kr", "fji", "fij", "fih",
-                "fjo", "cdl", "qhy", "AbstractKeyboard1803Stub",
+                "fpn", "fpo", "fqx", "jt", "fqn", "kr", "fql", "fpm", "fpk",
+                "fqr", "cht", "qvt", "AbstractKeyboard1803Stub",
                 "ClipboardKeyboard1803Stub", "j$.time.Instant"));
 
         TargetClassLoader(ClassLoader parent) {

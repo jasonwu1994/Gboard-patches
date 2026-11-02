@@ -478,6 +478,7 @@ object TargetBindingCompiler {
                 when (character) {
                     '\\' -> "\\\\"
                     '"' -> "\\\""
+                    '$' -> "\\\$"
                     '\n' -> "\\n"
                     '\r' -> "\\r"
                     '\t' -> "\\t"

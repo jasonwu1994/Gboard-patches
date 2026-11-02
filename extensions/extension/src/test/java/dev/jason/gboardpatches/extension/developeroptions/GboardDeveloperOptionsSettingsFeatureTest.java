@@ -5,18 +5,51 @@ import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
+import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsTestHost;
 
 public final class GboardDeveloperOptionsSettingsFeatureTest {
     @Test
-    public void rootEntryIsDirectAndRequestsOnlyThe1803HeaderId() throws Exception {
+    public void groupedEntryRequestsOfficialHeaderWithoutOpeningIntermediateScreen() {
+        GboardDeveloperOptionsSettingsFeature developer =
+                new GboardDeveloperOptionsSettingsFeature(
+                        "Developer options", "Open Developer options and the Flag Editor.");
+        GboardPatchesSettingsContract.Feature visibleDeveloper =
+                (GboardPatchesSettingsContract.Feature) Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class<?>[] { GboardPatchesSettingsContract.Feature.class },
+                        (proxy, method, args) -> "isAvailable".equals(method.getName())
+                                ? true : method.invoke(developer, args));
+        AtomicInteger openedHeader = new AtomicInteger();
+        GboardPatchesSettingsTestHost host = new GboardPatchesSettingsTestHost() {
+            @Override
+            public void openTargetSettingsHeader(int headerKeyResourceId) {
+                openedHeader.set(headerKeyResourceId);
+            }
+        };
+        GboardFeatureGroup group = new GboardFeatureGroup(
+                "More settings", "", "Gboard", "", "", "", List.of(visibleDeveloper));
+        GboardPatchesSettingsContract.NavigationRow row =
+                (GboardPatchesSettingsContract.NavigationRow)
+                        group.buildScreen(host).getRows().get(0);
+
+        row.getAction().run();
+
+        Assert.assertEquals(0x7f140a6d, openedHeader.get());
+        Assert.assertNull(host.getOpenedFeature());
+    }
+
+    @Test
+    public void rootEntryIsDirectAndRequestsOnlyThe1853HeaderId() throws Exception {
         Path sourcePath = Path.of(
                 "src/main/java/dev/jason/gboardpatches/extension/developeroptions/"
                         + "GboardDeveloperOptionsSettingsFeature.java");
@@ -50,7 +83,7 @@ public final class GboardDeveloperOptionsSettingsFeatureTest {
                 "openRootEntry", GboardPatchesSettingsContract.FeatureHost.class);
         openRootEntry.invoke(feature, host);
 
-        Assert.assertEquals(0x7f140b4b, openedHeader.get());
+        Assert.assertEquals(0x7f140a6d, openedHeader.get());
         Assert.assertFalse(openedIntermediateFeature.get());
     }
 
@@ -70,7 +103,7 @@ public final class GboardDeveloperOptionsSettingsFeatureTest {
         Assert.assertFalse(activitySource.contains("17.0.10"));
         Assert.assertFalse(activitySource.contains("versionName.startsWith("));
         Assert.assertTrue(activitySource.contains(
-                "18.0.3.954559732-release-arm64-v8a"));
+                "18.5.4.993608717-release-arm64-v8a"));
         Assert.assertTrue(activitySource.contains(
                 "showUnsupportedDeveloperOptionsPackageDialog(currentPackage"));
         Assert.assertTrue(activitySource.contains(
@@ -78,7 +111,7 @@ public final class GboardDeveloperOptionsSettingsFeatureTest {
     }
 
     @Test
-    public void versionSupportRequiresExactFull1803ReleaseName() throws Exception {
+    public void versionSupportRequiresExactFull1853ReleaseName() throws Exception {
         String activityClassName =
                 "dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsActivity";
         Method versionCheck = Class.forName(activityClassName).getDeclaredMethod(
@@ -86,10 +119,11 @@ public final class GboardDeveloperOptionsSettingsFeatureTest {
         versionCheck.setAccessible(true);
 
         Assert.assertEquals(Boolean.TRUE, versionCheck.invoke(
-                null, "18.0.3.954559732-release-arm64-v8a"));
-        Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(null, "18.0.3"));
+                null, "18.5.4.993608717-release-arm64-v8a"));
+        Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(null, "18.5.4"));
+        Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(null, "18.0.3.954559732-release-arm64-v8a"));
         Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(
-                null, "18.0.3.954559732-release-arm64-v8a-debug"));
+                null, "18.5.4.993608717-release-arm64-v8a-debug"));
         Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(
                 null, "18.0.3.932364120-release-arm64-v8a"));
         Assert.assertEquals(Boolean.FALSE, versionCheck.invoke(null, new Object[] { null }));

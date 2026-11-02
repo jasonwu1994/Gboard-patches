@@ -53,6 +53,7 @@ public final class GboardCloseProactiveSuggestionsSettingsFeature
                                 .writeEnabled(preferences, enabled);
                     }
                 });
+        declareRestartRequired(GboardCloseProactiveSuggestionsSettings.PREF_KEY_ENABLED);
     }
 
     private static String text(Context context, int resourceId) {

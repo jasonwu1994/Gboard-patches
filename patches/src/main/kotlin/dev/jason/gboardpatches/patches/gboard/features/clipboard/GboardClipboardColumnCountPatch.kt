@@ -25,13 +25,7 @@ internal val gboardClipboardColumnCountPatch = bytecodePatch(
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
     execute {
-        val mutableMethod = findMutableMethodOrThrow(
-            classType = CLIPBOARD_KEYBOARD_CLASS,
-            name = "l",
-            returnType = "I",
-            parameterTypes = emptyList()
-        )
-        mutableMethod.applyClipboardColumnCountDelegate()
+        installClipboard1853GridAdapter(this)
     }
 }
 

@@ -98,7 +98,7 @@ internal val gboardRoundedKeyboardBytecodePatch = bytecodePatch(
     }
 }
 
-private fun MutableMethod.injectRoundedKeyboardAdmission() {
+internal fun MutableMethod.injectRoundedKeyboardAdmission() {
     val abi = RuntimeAbiCatalog.abi(
         RuntimeCallId.ROUNDED_KEYBOARD_RUNTIME_APPLY_THEME_ADMISSION,
     )
@@ -129,7 +129,7 @@ private fun MutableMethod.injectRoundedKeyboardAdmission() {
     }
 }
 
-private fun MutableMethod.injectRoundedKeyboardStyle() {
+internal fun MutableMethod.injectRoundedKeyboardStyle() {
     val runtimeAbi = RuntimeAbiCatalog.abi(
         RuntimeCallId.ROUNDED_KEYBOARD_RUNTIME_RESOLVE_EFFECTIVE_RADII_DP,
     )

@@ -4,24 +4,24 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import dev.jason.gboardpatches.patches.gboard.features.clipboardcontentlimit.gboardClipboardContentLimitFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.clipboardcontentlimit.gboardClipboardContentLimitFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesSettingsPatch
 import org.junit.Test
 
 class GboardClipboardContentLimitPatchContractTest {
     @Test
     fun `content limit stays an independent public patch`() {
-        val registry = read(
-            "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/" +
-                "GboardPatchRegistry.kt",
-        )
-        val declaration = registry.substringAfter(
-            "val gboardClipboardContentLimitPatch = gboardPublicResourcePatch(",
-        ).substringBefore("\n}\n")
-
-        assertTrue(declaration.contains("name = \"Clipboard Custom Character Limit\""))
-        assertTrue(declaration.contains("gboardClipboardContentLimitFeatureMarkerPatch"))
-        assertTrue(declaration.contains("gboardClipboardContentLimitFlagValuePatch"))
-        assertFalse(declaration.contains("gboardClipboardEnhancementsPatch"))
-        assertTrue(registry.contains("gboardClipboardContentLimitPatch,"))
+        val patch = gboardClipboardContentLimitPatch
+        assertEquals("Clipboard Custom Character Limit", patch.name)
+        assertEquals(listOf(gboardPatchesSettingsPatch, gboardClipboardContentLimitFeatureMarkerPatch,
+            gboardClipboardContentLimitFlagValuePatch), patch.dependencies.toList())
+        assertTrue(patch.dependencies.none { it === gboardClipboardEnhancementsPatch })
+        assertSame(patch, GboardPublishedPatchCatalog.morpheRegistrations.single {
+            it.name == "Clipboard Custom Character Limit"
+        })
     }
 
     @Test

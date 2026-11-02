@@ -51,11 +51,11 @@ public final class GboardAiWritingToolsOfficialPreferencesTest {
 
     @Test
     public void exposesOnlyTargetNativeKeys() {
-        Assert.assertEquals(0x7f1409e7,
+        Assert.assertEquals(0x7f1409b3,
                 GboardAiWritingToolsOfficialPreferences.PROOFREAD_PREF_KEY);
-        Assert.assertEquals(0x7f140b0f,
+        Assert.assertEquals(0x7f140abd,
                 GboardAiWritingToolsOfficialPreferences.WRITING_TOOLS_PREF_KEY);
-        Assert.assertEquals(0x7f140d0b,
+        Assert.assertEquals(0x7f140cb1,
                 GboardAiWritingToolsOfficialPreferences.WRITING_TOOLS_CATEGORY_KEY);
     }
 }

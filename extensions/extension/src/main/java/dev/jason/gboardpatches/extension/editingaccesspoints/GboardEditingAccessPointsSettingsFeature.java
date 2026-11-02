@@ -53,13 +53,16 @@ public final class GboardEditingAccessPointsSettingsFeature
                         getEntryTitle(),
                         "",
                         new GboardPatchesSettingsContract.PreviewImage(
-                                PREVIEW_IMAGE_ENABLED, ""))));
+                                PREVIEW_IMAGE_ENABLED, "")))
+                .setRestartRequired(GboardEditingAccessPointsSettings.ENABLED)
+                .setMasterToggle(true));
         for (EditorAction action : EditorAction.values()) {
             String key = GboardEditingAccessPointsSettings.key(action);
             rows.add(new GboardPatchesSettingsContract.ToggleRow(
                     text(label(action)), "", enabled,
                     GboardEditingAccessPointsSettings.read(preferences, key),
-                    value -> write(owner, key, value)));
+                    value -> write(owner, key, value))
+                    .setRestartRequired(key));
         }
         return new GboardPatchesSettingsContract.Screen(
                 getEntryTitle(), text(R.string.gboard_patches_header_badge), getEntryTitle(),

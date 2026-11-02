@@ -15,7 +15,7 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
     private static final long CACHE_WINDOW_MS = 1_000L;
     private static final String TAG = "GboardPatches";
     private static final String LOG_PREFIX =
-            "[gboard-long-press-quick-actions-settings-18.0.3] ";
+            "[gboard-long-press-quick-actions-settings-18.5.4] ";
     private static final int LOG_LIMIT = 6;
     private static final Object SETTINGS_LOCK = new Object();
     private static final AtomicInteger FAILURE_LOG_COUNT = new AtomicInteger();

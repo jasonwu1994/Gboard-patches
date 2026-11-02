@@ -13,14 +13,14 @@ import java.util.Set;
 
 public final class GboardBluetoothMicrophoneSettingsTest {
     @Test
-    public void ownsExpectedPreferenceKeyAndDefaultsOnButFailsClosedForMalformedValues() {
+    public void ownsExpectedPreferenceKeyAndDefaultsOffAndFailsClosedForMalformedValues() {
         TestSharedPreferences preferences = new TestSharedPreferences();
 
         Assert.assertEquals(
                 "pref_use_bluetooth_microphone_override_enabled",
                 GboardBluetoothMicrophoneSettings.PREF_KEY_ENABLED);
-        Assert.assertTrue(GboardBluetoothMicrophoneSettings.DEFAULT_ENABLED);
-        Assert.assertTrue(GboardBluetoothMicrophoneSettings.readEnabled(preferences));
+        Assert.assertFalse(GboardBluetoothMicrophoneSettings.DEFAULT_ENABLED);
+        Assert.assertFalse(GboardBluetoothMicrophoneSettings.readEnabled(preferences));
         Assert.assertFalse(GboardBluetoothMicrophoneSettings.readEnabled(
                 (SharedPreferences) null));
 
@@ -31,14 +31,24 @@ public final class GboardBluetoothMicrophoneSettingsTest {
     }
 
     @Test
-    public void ensureDefaultPersistsEnabledForFreshInstalls() {
+    public void ensureDefaultPersistsDisabledForFreshInstalls() {
         TestSharedPreferences preferences = new TestSharedPreferences();
 
         GboardBluetoothMicrophoneSettings.ensureDefault(preferences);
 
         Assert.assertEquals(
-                Boolean.TRUE,
+                Boolean.FALSE,
                 preferences.values.get(GboardBluetoothMicrophoneSettings.PREF_KEY_ENABLED));
+    }
+
+    @Test
+    public void firstPopulationNeverOverwritesExistingFalseTrueOrMalformedPreference() {
+        for (Object value : new Object[]{Boolean.FALSE, Boolean.TRUE, "true", "false", Integer.valueOf(1)}) {
+            TestSharedPreferences preferences = new TestSharedPreferences();
+            preferences.values.put(GboardBluetoothMicrophoneSettings.PREF_KEY_ENABLED, value);
+            GboardBluetoothMicrophoneSettings.ensureDefault(preferences);
+            Assert.assertSame(value, preferences.values.get(GboardBluetoothMicrophoneSettings.PREF_KEY_ENABLED));
+        }
     }
 
     @Test

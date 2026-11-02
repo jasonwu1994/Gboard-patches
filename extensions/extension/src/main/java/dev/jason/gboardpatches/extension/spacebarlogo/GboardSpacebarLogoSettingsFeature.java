@@ -22,7 +22,7 @@ public final class GboardSpacebarLogoSettingsFeature
             GboardSpacebarLogoSettings.ICON_EMOJI
     };
     private static final int[] ICON_DRAWABLE_IDS =
-            GboardSpacebarLogo1803Runtime.iconDrawableResourceIds();
+            GboardSpacebarLogoAdapter.iconDrawableResourceIds();
     private static final String[] COLOR_VALUES = {
             GboardSpacebarLogoSettings.COLOR_VALUE_AUTO,
             GboardSpacebarLogoSettings.GOOGLE_BLUE,
@@ -142,7 +142,8 @@ public final class GboardSpacebarLogoSettingsFeature
                                                 GboardSpacebarLogoSettings.writeEnabled(
                                                         hostContext, value);
                                                 GboardPatchesSettingsContract.refresh(host);
-                                            })),
+                                            }))
+                                            .setMasterToggle(true),
                                     new GboardPatchesSettingsContract.SelectorRow(
                                             iconTitle, iconSummary, displayIcon(icon), true,
                                             () -> showIconDialog(host, hostContext, icon)),

@@ -151,21 +151,25 @@ public final class GboardRoundedKeyboardSettingsFeature
         GboardRoundedKeyboardConfig.Mode mode = snapshot.getMode();
         List<GboardPatchesSettingsContract.Row> rows = new ArrayList<>();
         rows.add(new GboardPatchesSettingsContract.ToggleRow(
-                enabledTitle, enabledSummary, true, enabled, toggleAction));
+                enabledTitle, enabledSummary, true, enabled, toggleAction)
+                .setRestartRequired(GboardRoundedKeyboardSettings.PREF_KEY_ENABLED));
         rows.add(new GboardPatchesSettingsContract.SelectorRow(
-                modeTitle, modeSummary, modeLabels[mode.ordinal()], enabled, modeAction));
+                modeTitle, modeSummary, modeLabels[mode.ordinal()], enabled, modeAction)
+                .setRestartRequired(GboardRoundedKeyboardSettings.PREF_KEY_MODE));
         rows.add(new GboardPatchesSettingsContract.SelectorRow(
                 topRadiusTitle,
                 topRadiusSummary,
                 radiusLabel(snapshot.getTopRadiusDp()),
                 enabled && mode != GboardRoundedKeyboardConfig.Mode.BOTTOM,
-                topRadiusAction));
+                topRadiusAction)
+                .setRestartRequired(GboardRoundedKeyboardSettings.PREF_KEY_TOP_RADIUS_DP));
         rows.add(new GboardPatchesSettingsContract.SelectorRow(
                 bottomRadiusTitle,
                 bottomRadiusSummary,
                 radiusLabel(snapshot.getBottomRadiusDp()),
                 enabled && mode != GboardRoundedKeyboardConfig.Mode.TOP,
-                bottomRadiusAction));
+                bottomRadiusAction)
+                .setRestartRequired(GboardRoundedKeyboardSettings.PREF_KEY_BOTTOM_RADIUS_DP));
         List<GboardPatchesSettingsContract.Row> advancedRows =
                 Collections.singletonList(new GboardPatchesSettingsContract.DangerRow(
                         resetTitle,

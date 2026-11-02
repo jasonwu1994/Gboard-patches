@@ -26,7 +26,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeAbiCatalo
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallEmitter
 import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 
-private const val LATIN_IME_SERVICE_CLASS = "Loup;"
+private const val LATIN_IME_SERVICE_CLASS = "Lphr;"
 private const val INPUT_METHOD_SERVICE_CLASS =
     "Landroid/inputmethodservice/InputMethodService;"
 private const val TARGET_METHOD_NAME = "onCreate"
@@ -39,7 +39,7 @@ private const val STOCK_REGISTER_COUNT = 12
 private const val STOCK_RECEIVER_REGISTER = 11
 private const val SAVED_RECEIVER_REGISTER = 10
 private const val STOCK_THROW_COUNT = 3
-private const val STOCK_TRY_BLOCK_COUNT = 6
+private const val STOCK_TRY_BLOCK_COUNT = 5
 private const val STOCK_CATCHALL_HANDLER_COUNT = 3
 private val TARGET_CLASS_ACCESS_FLAGS = AccessFlags.PUBLIC.value
 private val TARGET_METHOD_ACCESS_FLAGS =
@@ -52,7 +52,7 @@ private val CAPTURE_BOOTSTRAP_RUNTIME_CLASS = CAPTURE_BOOTSTRAP_RUNTIME_ABI.owne
 private val CAPTURE_BOOTSTRAP_RUNTIME_DESCRIPTOR = CAPTURE_BOOTSTRAP_RUNTIME_ABI.reference
 
 internal val gboardWebClipboardCapturePatch = bytecodePatch(
-    description = "在 oup.onCreate() 正常返回前掛上 Web Clipboard capture bootstrap。"
+    description = "在 phr.onCreate() 正常返回前掛上 Web Clipboard capture bootstrap。"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
@@ -234,8 +234,8 @@ private fun MutableMethod.validateStockControlFlow() {
         "$TARGET_DESCRIPTOR must retain exactly $STOCK_THROW_COUNT catchall THROW instructions"
     }
     check(
-        throwIndices.count { it < returnIndex } == 1 &&
-            throwIndices.count { it > returnIndex } == 2,
+        throwIndices.count { it < returnIndex } == 2 &&
+            throwIndices.count { it > returnIndex } == 1,
     ) {
         "$TARGET_DESCRIPTOR catchall THROW ordering drifted around its normal return"
     }

@@ -13,8 +13,10 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 
 private const val ABOUT_XML = "res/xml/setting_about.xml"
-private const val ABOUT_VERSION_KEY_REF = "@string/APKTOOL_RENAMED_0x7f140c23"
-private const val ABOUT_VERSION_SANITIZED_KEY_REF = "@string/string_0x7f140c23"
+private val ABOUT_VERSION_TITLE_REFS = mapOf(
+    "@string/APKTOOL_RENAMED_0x7f140b30" to "@string/APKTOOL_RENAMED_0x7f140b3a",
+    "@string/string_0x7f140b30" to "@string/string_0x7f140b3a",
+)
 private const val ABOUT_PREFERENCE_CLASS =
     "com.google.android.libraries.inputmethod.settings.widget.ExtendedPreference"
 
@@ -38,26 +40,28 @@ private fun applyAboutPagePatch() {
 internal fun applyGboardAboutPagePatch(aboutDocument: Document) {
     val screen = aboutDocument.documentElement
     val childElements = screen.childElements()
-    var versionPreference: Element? = null
-    for (child in childElements) {
-        if (child.androidAttribute("key") in setOf(
-                ABOUT_VERSION_KEY_REF,
-                ABOUT_VERSION_SANITIZED_KEY_REF,
-            )
-        ) {
-            versionPreference = child
-            break
-        }
-    }
-    if (versionPreference == null) {
+    val versionCandidates = childElements.filter { child ->
+        child.androidAttribute("key") in ABOUT_VERSION_TITLE_REFS
+    }.toList()
+    check(versionCandidates.size == 1) {
         val observed = childElements.joinToString { child ->
             "${child.tagName}[key=${child.androidAttribute("key")}," +
                 "title=${child.androidAttribute("title")}]"
         }
-        error(
-            "Could not find the 18.0.3 version preference in $ABOUT_XML; " +
-                "observed=$observed",
-        )
+        "Expected exactly one 18.5.4 version preference in $ABOUT_XML, " +
+            "found ${versionCandidates.size}; observed=$observed"
+    }
+    val versionPreference = versionCandidates.single()
+    check(
+        versionPreference.tagName == ABOUT_PREFERENCE_CLASS &&
+            versionPreference.androidAttribute("title") ==
+            ABOUT_VERSION_TITLE_REFS.getValue(versionPreference.androidAttribute("key")) &&
+            versionPreference.androidAttribute("persistent") == "false" &&
+            versionPreference.androidAttribute("focusable") == "false" &&
+            versionPreference.androidAttribute("selectable") == "false" &&
+            versionPreference.androidAttribute("maxLines") == "100",
+    ) {
+        "Unexpected 18.5.4 version preference identity or metadata in $ABOUT_XML"
     }
 
     val authorPreference = ensureAboutPreference(

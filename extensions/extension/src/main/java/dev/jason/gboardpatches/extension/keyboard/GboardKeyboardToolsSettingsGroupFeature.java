@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.extension.keyboard;
 
 import android.content.Context;
+import dev.jason.gboardpatches.extension.keypresshaptics.GboardKeypressHapticsSettingsFeature;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +15,10 @@ import dev.jason.gboardpatches.extension.manualincognito.GboardManualIncognitoSe
 import dev.jason.gboardpatches.extension.ocr.GboardOcrSettingsFeature;
 import dev.jason.gboardpatches.extension.quickinsert.GboardQuickInsertSettingsFeature;
 import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
+import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
+import dev.jason.gboardpatches.extension.swipedismiss.GboardSwipeDismissSettingsFeature;
 import dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeSettingsFeature;
 import dev.jason.gboardpatches.extension.websearch.GboardFloatingWebSearchSettingsFeature;
 
@@ -45,7 +48,9 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         new GboardOcrSettingsFeature(context),
                         new GboardQuickInsertSettingsFeature(context),
                         new GboardFloatingWebSearchSettingsFeature(context),
-                        new GboardCalculatorSettingsFeature(context)));
+                        new GboardCalculatorSettingsFeature(context),
+                        new GboardSwipeDismissSettingsFeature(context),
+                        new GboardKeypressHapticsSettingsFeature(context)));
     }
 
     @Override
@@ -56,6 +61,16 @@ public final class GboardKeyboardToolsSettingsGroupFeature
     @Override
     public String getEntrySummary() {
         return delegate.getEntrySummary();
+    }
+
+    @Override
+    public int getEntryIcon() {
+        return GboardPatchesIcons.BOLT;
+    }
+
+    @Override
+    public String getEntryTone() {
+        return "blue";
     }
 
     @Override

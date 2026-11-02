@@ -1,0 +1,67 @@
+name: Bug Report
+description: Report patching, installation, crashes, or unexpected behavior.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue titles must be written in English. English and 繁體中文 are welcome in the issue body. Please report one problem per issue.
+
+        Mixed source sets are unsupported. Before reporting, patch an original, unmodified Gboard APK using only the Gboard Patches source set and confirm that the problem still occurs.
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected to happen.
+      placeholder: |
+        Actual behavior:
+
+        Expected behavior:
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: If the problem is intermittent, describe the circumstances and frequency, even if you cannot reproduce it reliably.
+      placeholder: |
+        1. Open ...
+        2. Enable ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: patches-version
+    attributes:
+      label: Gboard Patches version
+      description: Find this under Gboard settings > Patches > About.
+      placeholder: Exact patch bundle version, not the Gboard or Manager version
+    validations:
+      required: true
+  - type: textarea
+    id: device-and-system
+    attributes:
+      label: Device and Android version
+      description: Include your device model and Android version.
+      placeholder: |
+        Device: Samsung Galaxy S25
+        Android: Android 16
+    validations:
+      required: true
+  - type: input
+    id: manager-version
+    attributes:
+      label: Morphe Manager version
+      description: Please provide this for patching or installation problems.
+      placeholder: Exact Morphe Manager version
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Confirm both items before submitting this bug report.
+      options:
+        - label: I have checked existing issues and this is not a duplicate.
+          required: true
+        - label: I reproduced this problem after patching an original, unmodified Gboard APK using only the Gboard Patches source set in Morphe, without applying patches from any other source set.
+          required: true

@@ -10,7 +10,7 @@ import dev.jason.gboardpatches.extension.settings.GboardPatchesSettings;
 public final class GboardBluetoothMicrophoneSettings {
     public static final String PREF_KEY_ENABLED =
             "pref_use_bluetooth_microphone_override_enabled";
-    public static final boolean DEFAULT_ENABLED = true;
+    public static final boolean DEFAULT_ENABLED = false;
 
     private GboardBluetoothMicrophoneSettings() {
     }

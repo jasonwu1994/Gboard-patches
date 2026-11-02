@@ -48,17 +48,31 @@ public final class GboardPatchesSettingsActivitySourceTest {
     }
 
     @Test
-    public void selectorRowsRenderCurrentValueAsSupportLineInsteadOfTrailingRail()
-            throws Exception {
+    public void selectorRowsShowValueInTrailingRailAndPreviewBelowSummary() throws Exception {
+        String source = readSource(
+                "src/main/java/dev/jason/gboardpatches/extension/settings/"
+                        + "GboardPatchesSettingsActivity.java");
+        String selector = extractMethod(source, "private View createSelectorRow(");
+
+        Assert.assertTrue(selector.contains("buildTrailingValue(rowModel.getCurrentValue())"));
+        Assert.assertTrue(selector.contains("addPreviewBelowSummary(textColumn, rowModel)"));
+        Assert.assertTrue(source.contains("R.string.gboard_patches_preview_label"));
+        Assert.assertTrue(source.contains("R.string.gboard_patches_confirm_action"));
+    }
+
+    @Test
+    public void shellUsesCodeDrawnIconsAndRestartBadge() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
                         + "GboardPatchesSettingsActivity.java");
 
-        Assert.assertTrue(source.contains("buildSelectorSupportLine("));
-        Assert.assertTrue(source.contains("buildCurrentValueChip("));
-        Assert.assertTrue(source.contains("R.string.gboard_patches_current_value_label"));
-        Assert.assertTrue(source.contains("R.string.gboard_patches_preview_label"));
-        Assert.assertTrue(source.contains("R.string.gboard_patches_confirm_action"));
+        Assert.assertFalse(source.contains("R.drawable."));
+        Assert.assertTrue(source.contains("GboardPatchesIcons.create("));
+        Assert.assertTrue(source.contains("GboardRestartPendingChanges.addListener("));
+        Assert.assertTrue(source.contains("GboardRestartPendingChanges.removeListener("));
+        Assert.assertTrue(source.contains("R.plurals.gboard_patches_restart_action_pending"));
+        Assert.assertTrue(source.contains("WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS"));
+        Assert.assertTrue(source.contains("row.isMasterToggleExplicit()"));
     }
 
     @Test
@@ -89,8 +103,12 @@ public final class GboardPatchesSettingsActivitySourceTest {
                 "dialog.show();",
                 "onManagedDialogShown();");
         assertOccursInOrder(
-                extractMethod(source, "public void showPreviewDialog("),
+                extractMethod(source, "private void showPreviewSheet("),
                 "dialog.show();",
+                "onManagedDialogShown();");
+        assertOccursInOrder(
+                extractMethod(source, "private void showFullScreenViewer("),
+                "viewer.show();",
                 "onManagedDialogShown();");
         assertOccursInOrder(
                 extractMethod(source, "private void showConfirmDialog("),
@@ -99,14 +117,16 @@ public final class GboardPatchesSettingsActivitySourceTest {
     }
 
     @Test
-    public void choiceDialogUsesStableCancelText() throws Exception {
+    public void choiceDialogIsBottomSheetCancelledByOutsideTapOrBack() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/settings/"
                         + "GboardPatchesSettingsActivity.java");
         String method = extractMethod(source, "public void showChoiceDialog(");
+        String sheet = extractMethod(source, "private Dialog buildBottomSheetDialog(");
 
-        Assert.assertTrue(method.contains(
-                ".setNegativeButton(text(R.string.gboard_patches_dialog_cancel), null)"));
+        Assert.assertTrue(method.contains("buildBottomSheetDialog()"));
+        Assert.assertTrue(sheet.contains("dialog.setCanceledOnTouchOutside(true);"));
+        Assert.assertTrue(sheet.contains("window.setGravity(Gravity.BOTTOM);"));
         Assert.assertFalse(method.contains("android.R.string.cancel"));
     }
 

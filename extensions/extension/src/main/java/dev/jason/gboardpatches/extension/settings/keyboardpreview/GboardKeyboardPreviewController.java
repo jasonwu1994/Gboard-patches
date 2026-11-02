@@ -32,7 +32,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.util.Log;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -49,10 +48,8 @@ public final class GboardKeyboardPreviewController {
     private static final int BUTTON_SIZE_DP = 56;
     private static final int BUTTON_MARGIN_DP = 16;
     private static final int CONTENT_CLEARANCE_DP = 88;
-    private static final int TARGET_KEYBOARD_DRAWABLE_ID = 0x7f0804a6;
 
     private final Activity activity;
-    private final Supplier<List<String>> targetPackageNames;
     private final Runnable onDialogShown;
     private final Runnable onDialogDismissed;
     private final int accentColor;
@@ -66,7 +63,6 @@ public final class GboardKeyboardPreviewController {
             int accentColor,
             int iconColor) {
         this.activity = activity;
-        this.targetPackageNames = targetPackageNames;
         this.onDialogShown = onDialogShown;
         this.onDialogDismissed = onDialogDismissed;
         this.accentColor = accentColor;
@@ -133,42 +129,16 @@ public final class GboardKeyboardPreviewController {
     private Drawable buildLauncherBackground() {
         GradientDrawable content = new GradientDrawable();
         content.setColor(accentColor);
-        content.setShape(GradientDrawable.OVAL);
+        content.setCornerRadius(dp(16));
         GradientDrawable mask = new GradientDrawable();
         mask.setColor(Color.WHITE);
-        mask.setShape(GradientDrawable.OVAL);
+        mask.setCornerRadius(dp(16));
         return new RippleDrawable(
                 ColorStateList.valueOf(withAlpha(iconColor, 0.16f)), content, mask);
     }
 
     private Drawable loadKeyboardDrawable() {
-        Drawable drawable = null;
-        for (String packageName : suppliedTargetPackageNames()) {
-            try {
-                Context targetContext = activity.createPackageContext(packageName, 0);
-                drawable = targetContext.getDrawable(TARGET_KEYBOARD_DRAWABLE_ID);
-                if (drawable != null) break;
-            } catch (Throwable ignored) {
-                // Try the next supported package, then the local vector.
-            }
-        }
-        if (drawable != null) {
-            drawable = drawable.mutate();
-            drawable.setTint(iconColor);
-            return drawable;
-        }
         return new KeyboardIconDrawable(iconColor);
-    }
-
-    private List<String> suppliedTargetPackageNames() {
-        try {
-            List<String> packageNames = targetPackageNames == null
-                    ? null : targetPackageNames.get();
-            return packageNames == null ? Collections.emptyList() : packageNames;
-        } catch (Throwable throwable) {
-            logWarningSafely("Failed to resolve keyboard preview target packages", throwable);
-            return Collections.emptyList();
-        }
     }
 
     private void showPreviewDialog() {

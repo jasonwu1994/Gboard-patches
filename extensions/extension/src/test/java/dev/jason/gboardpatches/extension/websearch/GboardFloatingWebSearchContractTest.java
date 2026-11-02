@@ -108,12 +108,12 @@ public final class GboardFloatingWebSearchContractTest {
             throws Exception {
         String source = new String(Files.readAllBytes(Path.of(
                 "src/main/java/dev/jason/gboardpatches/extension/accesspoint/"
-                        + "GboardAccessPointContributions1803Runtime.java")),
+                        + "GboardAccessPointContributionsRuntime.java")),
                 java.nio.charset.StandardCharsets.UTF_8);
         int synchronization = source.indexOf(
                 "synchronizeControllerOrderCatalog(controller, context);");
         int registration = source.indexOf(
-                "GboardFloatingWebSearchAccessPoint1803Contribution.INSTANCE.register(");
+                "GboardFloatingWebSearchAccessPointContribution.INSTANCE.register(");
 
         Assert.assertTrue(synchronization >= 0);
         Assert.assertTrue(registration > synchronization);

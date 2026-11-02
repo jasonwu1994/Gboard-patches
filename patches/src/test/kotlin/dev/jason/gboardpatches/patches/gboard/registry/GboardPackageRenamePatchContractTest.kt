@@ -86,7 +86,7 @@ class GboardPackageRenamePatchContractTest {
     fun `package rename adds no runtime binding family or flag factory`() {
         val profile = JsonParser.parseString(readSource(BINDINGS_PROFILE_PATH)).asJsonObject
 
-        assertEquals("18.0.3", profile.get("target_version").asString)
+        assertEquals("18.5.4", profile.get("target_version").asString)
         val bindings = profile.getAsJsonObject("bindings")
         assertFalse(bindings.has("flag_factory"))
         assertTrue(bindings.keySet().none { key -> key.contains("package_rename") })
@@ -107,7 +107,7 @@ class GboardPackageRenamePatchContractTest {
     }
 
     private companion object {
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val PACKAGE_RENAME_DESCRIPTION =
             "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
                 "Rename the package to dev.jason.com.google.android.inputmethod.latin " +

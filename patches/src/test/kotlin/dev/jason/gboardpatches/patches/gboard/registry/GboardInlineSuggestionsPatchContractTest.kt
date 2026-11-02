@@ -219,7 +219,7 @@ class GboardInlineSuggestionsPatchContractTest {
 
     private companion object {
         const val GBOARD_PACKAGE = "com.google.android.inputmethod.latin"
-        const val TARGET_VERSION = "18.0.3.954559732-release-arm64-v8a"
+        const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val INLINE_MARKER = "dev.jason.gboardpatches.feature.inline_suggestions"
         const val INLINE_MARKER_PATH =
             "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/" +

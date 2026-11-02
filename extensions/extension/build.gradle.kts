@@ -89,17 +89,12 @@ val customThemeBindingsAuthority = objects.fileProperty().apply {
 android {
     namespace = "dev.jason.gboardpatches.extension"
 
-    packaging {
-        resources {
-            excludes += "META-INF/DEPENDENCIES"
-        }
-    }
-
     buildFeatures {
         buildConfig = true
     }
 
     defaultConfig {
+        minSdk = 26
         buildConfigField("String", "PATCH_AUTHOR", "\"jasonwu1994\"")
         buildConfigField("String", "PATCH_AUTHOR_URL", "\"https://github.com/jasonwu1994\"")
         buildConfigField(
@@ -117,11 +112,19 @@ android {
         java.directories.add(generatedCustomThemeBindingsJavaDir.get().asFile.absolutePath)
         res.directories.add(generatedSettingsTextResDir.get().asFile.absolutePath)
     }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+        checkOnly += "NewApi"
+    }
 }
 
 dependencies {
+    compileOnly("androidx.annotation:annotation:1.9.1")
     implementation(libs.apache.ftpserver.core)
     implementation(libs.apache.mina.core)
+    implementation(libs.hidden.api.bypass)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
 }
@@ -295,7 +298,7 @@ val generateSettingsText = tasks.register("generateSettingsText") {
                     }
                 }
                 appendLine("</resources>")
-            })
+            }, StandardCharsets.UTF_8)
         }
 
         val stringEntries = entries.filter { it.type == "string" }
@@ -366,8 +369,14 @@ val generateSettingsText = tasks.register("generateSettingsText") {
                 appendLine("    }")
             }
             appendLine("}")
-        })
+        }, StandardCharsets.UTF_8)
     }
+}
+
+// Settings assertions use English unless a test explicitly selects another locale.
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    systemProperty("user.language", "en")
+    systemProperty("user.country", "US")
 }
 
 val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
@@ -577,6 +586,10 @@ tasks.named("preBuild") {
 }
 
 tasks.named("syncExtension") {
+    dependsOn("lintDebug")
+}
+
+tasks.named("syncExtension") {
     doLast {
         val extensionDex = layout.buildDirectory.file(
             "morphe/extensions/gboard-patches.rve"
@@ -618,16 +631,3 @@ tasks.named("syncExtension") {
         }
     }
 }
-
-tasks.register<Exec>("installExtension") {
-    dependsOn("assembleDebug")
-    group = "install"
-    description = "Installs the extension APK on the connected device."
-    
-    val apkFile = layout.buildDirectory.file("outputs/apk/debug/extension-debug.apk")
-    
-    executable = "adb"
-    args("install", "-r", apkFile.get().asFile.absolutePath)
-}
-
-

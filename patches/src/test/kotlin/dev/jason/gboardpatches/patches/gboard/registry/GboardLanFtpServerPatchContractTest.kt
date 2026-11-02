@@ -42,7 +42,7 @@ class GboardLanFtpServerPatchContractTest {
         assertSame(COMPATIBILITY_GBOARD, compatibility)
         assertEquals("com.google.android.inputmethod.latin", compatibility.packageName)
         assertEquals(
-            listOf("18.0.3.954559732-release-arm64-v8a"),
+            listOf("18.5.4.993608717-release-arm64-v8a"),
             compatibility.targets.map { target -> target.version },
         )
     }

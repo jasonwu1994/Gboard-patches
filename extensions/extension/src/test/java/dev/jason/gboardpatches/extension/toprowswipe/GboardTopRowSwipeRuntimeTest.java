@@ -427,14 +427,14 @@ public final class GboardTopRowSwipeRuntimeTest {
     }
 
     @Test
-    public void targetRuntimeSourceUsesOnly1803ReflectionMappings() throws Exception {
+    public void targetRuntimeSourceUsesOnly1853ReflectionMappings() throws Exception {
         String source = readSource(
                 "src/main/java/dev/jason/gboardpatches/extension/toprowswipe/"
                         + "GboardTopRowSwipeRuntimeSupport.java");
 
-        assertTrue(source.contains("PRIMARY_LABEL_VIEW_ID = 0x7f0b0651"));
+        assertTrue(source.contains("PRIMARY_LABEL_VIEW_ID = 0x7f0b05f5"));
         for (String targetType : List.of(
-                "pmy", "pnu", "pmz", "ppo", "pnt", "pvi", "pvf")) {
+                "qae", "qbc", "qaf", "qcv", "qbb", "qin", "qil")) {
             assertTrue("missing target type " + targetType,
                     source.contains("\"" + targetType + "\""));
         }
@@ -444,13 +444,13 @@ public final class GboardTopRowSwipeRuntimeTest {
                     source.contains("\"" + baselineType + "\""));
         }
         assertFalse(source.contains("0x7f0b062a"));
-        assertTrue(source.contains("getDeclaredMethod(\"r\", actionSetClass"));
+        assertTrue(source.contains("getDeclaredMethod(\"s\", actionSetClass"));
         assertTrue(source.contains("getDeclaredField(\"f\")"));
-        assertTrue(source.contains("getDeclaredField(\"g\")"));
+        assertTrue(source.contains("getDeclaredField(\"i\")"));
         assertTrue(source.contains("getDeclaredField(\"h\")"));
-        assertTrue(source.contains("getDeclaredMethod(\"h\", actionTypeClass)"));
+        assertTrue(source.contains("getDeclaredMethod(\"g\", actionTypeClass)"));
         assertTrue(source.replaceAll("\\s+", " ").contains(
-                "getDeclaredMethod(\"q\", int.class, intentionClass, Object.class)"));
+                "getDeclaredMethod(\"s\", int.class, intentionClass, Object.class)"));
     }
 
     @Test

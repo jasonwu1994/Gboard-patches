@@ -76,7 +76,8 @@ public final class GboardFloatingWebSearchSettingsFeature
                 enabled,
                 value -> safeWrite(() ->
                         GboardFloatingWebSearchSettingsStore.writeEnabled(context, value)),
-                buildEnabledPreview()));
+                buildEnabledPreview())
+                .setRestartRequired(GboardFloatingWebSearchSettings.PREF_KEY_ENABLED));
 
         List<GboardPatchesSettingsContract.Row> launchRows = new ArrayList<>();
         launchRows.add(new GboardPatchesSettingsContract.SelectorRow(

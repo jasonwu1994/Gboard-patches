@@ -2,10 +2,13 @@ package dev.jason.gboardpatches.extension.manualincognito;
 
 import android.content.Context;
 import android.inputmethodservice.InputMethodService;
+import android.os.Build;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class GboardManualIncognitoRuntime {
     private static final String TAG = "GboardPatches";
-    private static final String LOG_PREFIX = "[gboard-manual-incognito-18.0.3] ";
+    private static final String LOG_PREFIX = "[gboard-manual-incognito-18.5.4] ";
     private static final AtomicLong GENERATION = new AtomicLong(0L);
     private static final AtomicBoolean STOCK_SESSION_RESTART_PENDING =
             new AtomicBoolean(false);
@@ -47,11 +50,22 @@ public final class GboardManualIncognitoRuntime {
         }
         new Handler(service.getMainLooper()).post(() -> {
             try {
-                service.requestShowSelf(0);
+                requestShowSelf(service);
             } catch (Throwable failure) {
                 logFailure("keyboard reopen after toggle failed", failure);
             }
         });
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void requestShowSelf(InputMethodService service) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            service.requestShowSelf(0);
+            return;
+        }
+        IBinder token = service.getWindow().getWindow().getAttributes().token;
+        InputMethodManager manager = service.getSystemService(InputMethodManager.class);
+        if (token != null && manager != null) manager.showSoftInputFromInputMethod(token, 0);
     }
 
     public static Object includeAccessPointInOrderCatalog(Context context, Object original) {

@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 final class GboardZhuyinBottomRowWeightRuntimeSupport {
-    private static final String ACTION_TYPE_CLASS = "pmy";
+    private static final String ACTION_TYPE_CLASS = "qae";
     private static final String ACTION_SET_CLASS =
             "com.google.android.libraries.inputmethod.metadata.SoftKeyDef";
     private static final String ACTION_DEF_CLASS =
             "com.google.android.libraries.inputmethod.metadata.ActionDef";
-    private static final String ACTION_DATA_CLASS = "pnu";
+    private static final String ACTION_DATA_CLASS = "qbc";
     private static final String ACTION_NAME_PRESS = "PRESS";
     private static final String ACTION_NAME_LONG_PRESS = "LONG_PRESS";
     private static final String ACTION_NAME_SLIDE_UP = "SLIDE_UP";
@@ -133,13 +133,13 @@ final class GboardZhuyinBottomRowWeightRuntimeSupport {
             softKeyMetadataField = softKeyViewClass.getDeclaredField("e");
             softKeyMetadataField.setAccessible(true);
 
-            keyLabelTextsField = actionSetClass.getDeclaredField("g");
+            keyLabelTextsField = actionSetClass.getDeclaredField("i");
             keyLabelTextsField.setAccessible(true);
 
-            exactActionLookupMethod = actionSetClass.getDeclaredMethod("h", actionTypeClass);
+            exactActionLookupMethod = actionSetClass.getDeclaredMethod("g", actionTypeClass);
             exactActionLookupMethod.setAccessible(true);
 
-            actionEntriesField = actionDefClass.getDeclaredField("d");
+            actionEntriesField = actionDefClass.getDeclaredField("f");
             actionEntriesField.setAccessible(true);
 
             actionPayloadField = actionDataClass.getDeclaredField("e");
@@ -164,10 +164,10 @@ final class GboardZhuyinBottomRowWeightRuntimeSupport {
                 return null;
             }
             Object labelsObject = keyLabelTextsField.get(keyMetadata);
-            if (!(labelsObject instanceof CharSequence[] labels)) {
+            if (!(labelsObject instanceof List<?> labels)) {
                 return null;
             }
-            for (CharSequence label : labels) {
+            for (Object label : labels) {
                 if (label == null) {
                     continue;
                 }
@@ -184,7 +184,7 @@ final class GboardZhuyinBottomRowWeightRuntimeSupport {
                 return new String[0];
             }
             Object actionsObject = actionEntriesField.get(actionDef);
-            if (!(actionsObject instanceof Object[] actionEntries) || actionEntries.length == 0) {
+            if (!(actionsObject instanceof List<?> actionEntries) || actionEntries.isEmpty()) {
                 return new String[0];
             }
             List<String> tokens = new ArrayList<String>();
@@ -200,7 +200,7 @@ final class GboardZhuyinBottomRowWeightRuntimeSupport {
                     }
                 }
             }
-            return tokens.toArray(String[]::new);
+            return tokens.toArray(new String[0]);
         }
 
         String extractSinglePayloadToken(Object actionDef) throws Throwable {
