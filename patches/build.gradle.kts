@@ -90,7 +90,6 @@ val gboardProductCatalog = layout.projectDirectory.file(
 )
 val syncExtensionTasks = listOf(
     project(":extensions:extension").tasks.named("syncExtension"),
-    project(":extensions:calculator").tasks.named("syncExtension"),
 )
 val runtimeAbiOutputDirectories = syncExtensionTasks.map { task ->
     task.map { it.outputs.files.singleFile }
