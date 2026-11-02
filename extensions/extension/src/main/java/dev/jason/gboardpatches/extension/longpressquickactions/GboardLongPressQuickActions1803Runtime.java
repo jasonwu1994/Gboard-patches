@@ -75,26 +75,73 @@ public final class GboardLongPressQuickActions1803Runtime {
                 GboardLongPressQuickActions1803ReflectionHandles handles =
                         reflectionHandles(classLoader);
                 Context context = softKeyView == null ? null : softKeyView.getContext();
+                Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
                 GboardLongPressQuickActions1803Policy.QuickAction action =
                         GboardLongPressQuickActions1803Policy.plan(
-                                handles.extractKeyId(metadata),
-                                handles.extractPressText(metadata),
+                                handles.extractKeyId(identityMetadata),
+                                handles.extractPressText(identityMetadata),
                                 handles.extractLongPressCodes(metadata));
-                if (action == null) {
-                    UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
-                    return metadata;
+                
+                Object currentMetadata = metadata;
+                
+                // Detection for Top Row slots 1-4 (Q, W, E, R)
+                String pressText = handles.extractPressText(identityMetadata);
+                int topRowIndex = -1;
+                if (pressText != null && pressText.length() == 1) {
+                    char c = Character.toLowerCase(pressText.charAt(0));
+                    if (c == 'q') topRowIndex = 0;
+                    else if (c == 'w') topRowIndex = 1;
+                    else if (c == 'e') topRowIndex = 2;
+                    else if (c == 'r') topRowIndex = 3;
                 }
-                Object patched = handles.appendLongPressAction(context, metadata, action);
-                if (patched == null) {
-                    UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
-                    return metadata;
+
+                if (topRowIndex != -1) {
+                    // Q (index 0) gets Switch Top Row button
+                    if (topRowIndex == 0) {
+                        GboardLongPressQuickActions1803Policy.QuickAction switchAction = 
+                            new GboardLongPressQuickActions1803Policy.QuickAction(-0x27f0, 0x7f08022a, "Switch top row", 0);
+                        currentMetadata = handles.appendLongPressAction(context, currentMetadata, switchAction);
+                    }
+                    
+                    // All 1-4 get their corresponding Slot action
+                    GboardLongPressQuickActions1803Policy.QuickAction slotAction = 
+                        GboardLongPressQuickActions1803Policy.getSlotAction(topRowIndex);
+                    
+                    if (slotAction != null) {
+                        String slotLabel = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.getSlotLabel(context, topRowIndex);
+                        if (slotLabel == null || slotLabel.isEmpty()) {
+                            slotLabel = "J" + (topRowIndex + 1);
+                        }
+                        slotAction.label = slotLabel;
+                        currentMetadata = handles.appendLongPressAction(context, currentMetadata, slotAction);
+                    }
+                    
+                    // We don't want standard Policy actions for these keys if we've handled them
+                    rememberPatchedMetadata(metadata, currentMetadata);
+                    return currentMetadata;
                 }
-                rememberPatchedMetadata(metadata, patched);
+
+                if (shouldHaveToggleQuotes(identityMetadata, handles)) {
+                    GboardLongPressQuickActions1803Policy.QuickAction quotesAction =
+                            GboardLongPressQuickActions1803Policy.TOGGLE_QUOTES;
+                    Object quotesPatched = handles.appendLongPressAction(context, currentMetadata, quotesAction);
+                    if (quotesPatched != null) {
+                        currentMetadata = quotesPatched;
+                    }
+                }
+
+                if (action != null) {
+                    Object actionPatched = handles.appendLongPressAction(context, currentMetadata, action);
+                    if (actionPatched != null) {
+                        currentMetadata = actionPatched;
+                    }
+                }
+
+                rememberPatchedMetadata(metadata, currentMetadata);
                 logInfo(PATCH_LOG_COUNT, 30,
-                        "appended keycode=" + action.actionCode
-                                + ", name=" + action.debugName
-                                + ", icon=0x" + Integer.toHexString(action.iconResId));
-                return patched;
+                        "patched longpress quick actions for keyId=0x"
+                                + Integer.toHexString(handles.extractKeyId(identityMetadata)));
+                return currentMetadata;
             }
         } catch (Throwable throwable) {
             markUnpatchedSafely(incomingMetadata);
@@ -117,12 +164,31 @@ public final class GboardLongPressQuickActions1803Runtime {
                     reflectionHandles(service.getClass().getClassLoader());
             Object metadata = handles.extractEventMetadata(event);
             String actionTypeName = handles.extractEventActionTypeName(event);
-            int keyId = handles.extractKeyId(metadata);
-            String pressText = handles.extractPressText(metadata);
+            Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
+            int keyId = handles.extractKeyId(identityMetadata);
+            String pressText = handles.extractPressText(identityMetadata);
             int selectedCode = handles.extractSelectedEventCode(event);
+            Log.i(TAG, LOG_PREFIX + "Handling input event, selectedCode=" + selectedCode + " (0x" + Integer.toHexString(selectedCode) + ")");
+            
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
             boolean quickActionEvent = GboardLongPressQuickActions1803Policy
                     .isQuickActionEvent(keyId, pressText, actionTypeName, selectedCode);
+            
+            // Check for our custom codes even if Policy didn't plan them via hardcoded IDs
+            if (selectedCode == -0x27f0) { // SWITCH_TOP_ROW
+                Log.i(TAG, LOG_PREFIX + "Triggering manual row switch via code -0x27f0");
+                dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
+                        .triggerManualRowSwitch(service);
+                return true;
+            }
+            if (selectedCode >= -0x27f5 && selectedCode <= -0x27f2) { // SLOTS 0-3
+                int slotIndex = -0x27f2 - selectedCode;
+                Log.i(TAG, LOG_PREFIX + "Triggering slot " + slotIndex + " via code " + selectedCode);
+                dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime
+                        .triggerSlotExecution(service, slotIndex);
+                return true;
+            }
+
             if (shouldConsumeDisabledInjectedEvent(enabled, metadata, quickActionEvent)) {
                 logInfo(ACTION_LOG_COUNT, 30, "suppressed disabled injected action");
                 return true;
@@ -134,6 +200,12 @@ public final class GboardLongPressQuickActions1803Runtime {
                     GboardLongPressQuickActions1803Policy.contextMenuActionFor(
                             keyId, pressText, actionTypeName, selectedCode);
             if (contextMenuAction == null) {
+                if (selectedCode == -0x27f1) { // TOGGLE_CASE
+                    return attemptToggleCaseAction(service.getCurrentInputConnection());
+                }
+                if (selectedCode == -0x27f6) { // TOGGLE_QUOTES
+                    return attemptToggleQuotesAction(service.getCurrentInputConnection());
+                }
                 return false;
             }
             return consumeRecognizedContextMenuAction(
@@ -159,8 +231,9 @@ public final class GboardLongPressQuickActions1803Runtime {
             if (metadata == null) {
                 return;
             }
-            int keyId = handles.extractKeyId(metadata);
-            String pressText = handles.extractPressText(metadata);
+            Object identityMetadata = dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.resolveOriginalKeyMetadataForPatchInterop(metadata);
+            int keyId = handles.extractKeyId(identityMetadata);
+            String pressText = handles.extractPressText(identityMetadata);
             int[] longPressCodes = handles.extractLongPressCodes(metadata);
             if (!GboardLongPressQuickActions1803Policy.containsAssignedAction(
                     keyId, pressText, longPressCodes)) {
@@ -217,10 +290,175 @@ public final class GboardLongPressQuickActions1803Runtime {
         InputConnection get() throws Throwable;
     }
 
+    static boolean attemptToggleCaseAction(InputConnection connection) {
+        if (connection == null) {
+            return false;
+        }
+        CharSequence selectedText = connection.getSelectedText(0);
+        if (selectedText != null && selectedText.length() > 0) {
+            String toggled = toggleCase(selectedText.toString());
+            connection.commitText(toggled, 1);
+            return true;
+        }
+
+        CharSequence before = connection.getTextBeforeCursor(64, 0);
+        if (before == null || before.length() == 0) {
+            return false;
+        }
+
+        String text = before.toString();
+        int end = text.length();
+        while (end > 0 && Character.isWhitespace(text.charAt(end - 1))) {
+            end--;
+        }
+        if (end == 0) {
+            return false;
+        }
+
+        int start = end;
+        while (start > 0 && !Character.isWhitespace(text.charAt(start - 1))) {
+            start--;
+        }
+
+        String lastWord = text.substring(start, end);
+        String suffix = text.substring(end);
+        String toggledWord = toggleCase(lastWord);
+
+        connection.beginBatchEdit();
+        connection.deleteSurroundingText(text.length() - start, 0);
+        connection.commitText(toggledWord + suffix, 1);
+        connection.endBatchEdit();
+        return true;
+    }
+
+    private static String toggleCase(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        boolean hasUppercase = false;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isUpperCase(text.charAt(i))) {
+                hasUppercase = true;
+                break;
+            }
+        }
+        if (hasUppercase) {
+            return text.toLowerCase();
+        } else {
+            return Character.toUpperCase(text.charAt(0)) + text.substring(1);
+        }
+    }
+
+    private static boolean shouldHaveToggleQuotes(
+            Object metadata,
+            GboardLongPressQuickActions1803ReflectionHandles handles) {
+        try {
+            int keyId = handles.extractKeyId(metadata);
+            if (keyId == 0x7f0b1abf || keyId == 0x7f0b1964 || keyId == 0x7f0b2975) {
+                return true;
+            }
+            String pressText = handles.extractPressText(metadata);
+            if (pressText != null && pressText.length() == 1) {
+                char c = Character.toLowerCase(pressText.charAt(0));
+                return c == 'x' || c == '"' || c == '\'' || c == '”' || c == '“' || c == '„';
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    static boolean attemptToggleQuotesAction(InputConnection connection) {
+        if (connection == null) {
+            return false;
+        }
+        CharSequence selectedText = connection.getSelectedText(0);
+        if (selectedText != null && selectedText.length() > 0) {
+            String text = selectedText.toString();
+            int leadingLen = 0;
+            while (leadingLen < text.length()
+                    && Character.isWhitespace(text.charAt(leadingLen))) {
+                leadingLen++;
+            }
+            int trailingLen = 0;
+            while (trailingLen < (text.length() - leadingLen)
+                    && Character.isWhitespace(
+                            text.charAt(text.length() - 1 - trailingLen))) {
+                trailingLen++;
+            }
+
+            String leadingSpaces = text.substring(0, leadingLen);
+            String inner = text.substring(leadingLen, text.length() - trailingLen);
+            String trailingSpaces = text.substring(text.length() - trailingLen);
+
+            if (inner.isEmpty()) {
+                String quoted = "\"" + text + "\"";
+                connection.commitText(quoted, 1);
+                return true;
+            }
+
+            if (inner.length() >= 2 && isQuoteChar(inner.charAt(0))
+                    && isQuoteChar(inner.charAt(inner.length() - 1))) {
+                String unquoted = inner.substring(1, inner.length() - 1);
+                connection.commitText(leadingSpaces + unquoted + trailingSpaces, 1);
+            } else {
+                String quoted = "\"" + inner + "\"";
+                connection.commitText(leadingSpaces + quoted + trailingSpaces, 1);
+            }
+            return true;
+        }
+
+        CharSequence before = connection.getTextBeforeCursor(64, 0);
+        CharSequence after = connection.getTextAfterCursor(64, 0);
+
+        String beforeText = before != null ? before.toString() : "";
+        String afterText = after != null ? after.toString() : "";
+
+        if (beforeText.isEmpty() && afterText.isEmpty()) {
+            return false;
+        }
+
+        int startBefore = beforeText.length();
+        while (startBefore > 0 && !Character.isWhitespace(beforeText.charAt(startBefore - 1))) {
+            startBefore--;
+        }
+        String wordBefore = beforeText.substring(startBefore);
+
+        int endAfter = 0;
+        while (endAfter < afterText.length() && !Character.isWhitespace(afterText.charAt(endAfter))) {
+            endAfter++;
+        }
+        String wordAfter = afterText.substring(0, endAfter);
+
+        String fullWord = wordBefore + wordAfter;
+        if (fullWord.isEmpty()) {
+            return false;
+        }
+
+        connection.beginBatchEdit();
+        connection.deleteSurroundingText(beforeText.length() - startBefore, endAfter);
+
+        if (fullWord.length() >= 2 && isQuoteChar(fullWord.charAt(0))
+                && isQuoteChar(fullWord.charAt(fullWord.length() - 1))) {
+            String unquoted = fullWord.substring(1, fullWord.length() - 1);
+            connection.commitText(unquoted, 1);
+        } else {
+            String quoted = "\"" + fullWord + "\"";
+            connection.commitText(quoted, 1);
+        }
+        connection.endBatchEdit();
+        return true;
+    }
+
+    private static boolean isQuoteChar(char c) {
+        return c == '"' || c == '\'' || c == '“' || c == '”' || c == '„'
+                || c == '‘' || c == '’' || c == '«' || c == '»';
+    }
+
     static void rememberPatchedMetadata(Object original, Object patched) {
         if (original == null || patched == null) {
             return;
         }
+        dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeRuntime.inheritPatchedMetadataForPatchInterop(original, patched);
         PATCHED_METADATA_BY_ORIGINAL.put(original, patched);
         ORIGINAL_METADATA_BY_PATCHED.put(patched, new WeakReference<>(original));
         PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);

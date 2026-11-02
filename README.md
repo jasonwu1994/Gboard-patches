@@ -57,12 +57,6 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 </details>
 
 <details>
-  <summary><code>Frosted Glass</code></summary>
-
-  Adds live background blur and custom-theme transparency to the keyboard. Available on Android 12+ devices that support cross-window blur, with custom themes such as Animal Black.
-</details>
-
-<details>
   <summary><code>FTP Server</code></summary>
 
   Hosts an FTP server on your phone so desktop FTP clients can browse, upload, download, and resume file transfers over the same LAN. It supports anonymous or password-protected access, a configurable control and passive port range, read-only mode, <code>/sdcard</code> or a user-selected folder as the root, live transfer progress, retained partial uploads, and an optional Quick Settings Tile.
@@ -103,12 +97,6 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
   <summary><code>Simple Calculator</code></summary>
 
   Adds an optional inline calculator for arithmetic expressions typed in any text field. The result appears in Gboard's suggestion row; tap it to replace the expression, or long-press it to copy the result.
-</details>
-
-<details>
-  <summary><code>Swipe Down to Dismiss Keyboard</code></summary>
-
-  Swipe down from the suggestions or toolbar to close the keyboard.
 </details>
 
 <details>

@@ -47,7 +47,7 @@ internal enum class GboardSoftKeyFamilyFeature(
         ),
     ),
     LONG_PRESS_QUICK_ACTIONS(
-        beforeOrder = 300,
+        beforeOrder = 800,
         afterOrder = null,
         beforeRuntimeCalls = listOf(
             RuntimeCallId.LONG_PRESS_QUICK_ACTIONS_RUNTIME_MAYBE_PATCH_METADATA,

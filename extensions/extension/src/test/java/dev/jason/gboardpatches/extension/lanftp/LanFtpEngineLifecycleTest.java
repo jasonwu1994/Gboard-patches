@@ -53,7 +53,7 @@ public final class LanFtpEngineLifecycleTest {
             engine.stop();
 
             Assert.assertTrue(sessionExecutor.isShutdown());
-            Assert.assertTrue(sessionExecutor.awaitTermination(5L, TimeUnit.SECONDS));
+            Assert.assertTrue(sessionExecutor.awaitTermination(1L, TimeUnit.SECONDS));
             Assert.assertTrue(sessionExecutor.isTerminated());
             try {
                 Assert.assertEquals(-1, client.getInputStream().read());

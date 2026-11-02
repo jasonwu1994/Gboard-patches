@@ -1,5 +1,5 @@
 {
-  "version": "3.13.0",
+  "version": "3.11.0",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -254,18 +254,6 @@
       "options": []
     },
     {
-      "name": "Frosted Glass",
-      "description": "為鍵盤加入即時背景模糊與自訂主題透明度。\nAdd live background blur and custom-theme opacity to the keyboard.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
       "name": "G Logo on Spacebar",
       "description": "在空白鍵顯示 G Logo，並隱藏語言名稱\nShow the G Logo on the spacebar and hide the language label.",
       "use": true,
@@ -428,18 +416,6 @@
     {
       "name": "Simple Calculator",
       "description": "直接輸入算式，在 Gboard 推薦列顯示可捲動算式與答案。\nType an expression and show a scrollable equation plus its answer in Gboard's suggestion row.",
-      "use": true,
-      "dependencies": [],
-      "compatiblePackages": {
-        "com.google.android.inputmethod.latin": [
-          "18.0.3.954559732-release-arm64-v8a"
-        ]
-      },
-      "options": []
-    },
-    {
-      "name": "Swipe Down to Dismiss Keyboard",
-      "description": "從建議列或工具列向下滑動以關閉鍵盤。\nSwipe down from the suggestions or toolbar to close the keyboard.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

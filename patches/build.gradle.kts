@@ -316,6 +316,17 @@ tasks {
         }
     }
 
+    register<Exec>("pushMppToDevice") {
+        dependsOn("buildAndroid")
+        group = "install"
+        description = "Pushes the built MPP to the device."
+
+        val mppFile = layout.buildDirectory.file("libs/patches-${project.version}.mpp")
+
+        executable = "adb"
+        args("push", mppFile.get().asFile.absolutePath, "/sdcard/Download/patches-${project.version}.mpp")
+    }
+
     named("generatePatchesList") {
         finalizedBy("normalizePatchMetadataEncoding")
     }

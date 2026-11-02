@@ -89,6 +89,18 @@ public final class GboardPatchesSettingsProvider extends ContentProvider {
                 return unavailableTopRowSwipeSettings();
             }
         }
+        if (GboardTopRowSwipeSettings.METHOD_GET_SCREEN_CONTEXT.equals(method)) {
+            try {
+                String json = dev.jason.gboardpatches.extension.GboardAccessibilityService.getLatestContextJson();
+                Log.i(TAG, "Provider returning screen context (length=" + (json != null ? json.length() : 0) + ")");
+                Bundle result = new Bundle();
+                result.putString(GboardTopRowSwipeSettings.BUNDLE_KEY_SCREEN_CONTEXT_JSON, json);
+                return result;
+            } catch (Throwable throwable) {
+                Log.w(TAG, "Provider failed to get screen context", throwable);
+                return new Bundle();
+            }
+        }
 
         try {
             return super.call(method, arg, extras);

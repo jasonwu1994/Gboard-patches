@@ -1,73 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <settings-text locales="en zh-Hant">
-    <string name="gboard_patches_frosted_glass_title">
-        <translation locale="en">Frosted Glass</translation>
-        <translation locale="zh-Hant">磨砂玻璃</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_summary">
-        <translation locale="en">Live background blur for the keyboard panel.</translation>
-        <translation locale="zh-Hant">為鍵盤面板加入即時背景模糊。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_error_title">
-        <translation locale="en">Frosted Glass unavailable</translation>
-        <translation locale="zh-Hant">磨砂玻璃無法使用</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_error_summary">
-        <translation locale="en">Reopen Gboard settings and try again.</translation>
-        <translation locale="zh-Hant">請重新開啟 Gboard 設定再試一次。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_section">
-        <translation locale="en">Appearance</translation>
-        <translation locale="zh-Hant">外觀</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_enabled_title">
-        <translation locale="en">Enable live blur</translation>
-        <translation locale="zh-Hant">啟用即時模糊</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_enabled_summary">
-        <translation locale="en">Android 12+ devices with supported cross-window blur. Custom themes only, such as Animal Black.</translation>
-        <translation locale="zh-Hant">限 Android 12 以上且裝置支援跨視窗模糊。只支援自訂主題，例如 Animal Black。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_radius_title">
-        <translation locale="en">Blur strength</translation>
-        <translation locale="zh-Hant">模糊強度</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_radius_summary">
-        <translation locale="en">Set live blur strength from 1 to 100.</translation>
-        <translation locale="zh-Hant">設定即時模糊強度，範圍為 1 到 100。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_radius_hint">
-        <translation locale="en">Enter strength 1-100</translation>
-        <translation locale="zh-Hant">輸入強度 1-100</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_transparency_title">
-        <translation locale="en">Transparency</translation>
-        <translation locale="zh-Hant">透明度</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_transparency_summary">
-        <translation locale="en">Follow the theme or use a custom keyboard value.</translation>
-        <translation locale="zh-Hant">選擇跟隨主題，或使用自訂鍵盤透明度。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_transparency_theme">
-        <translation locale="en">Follow theme</translation>
-        <translation locale="zh-Hant">跟隨主題</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_transparency_custom">
-        <translation locale="en">Custom</translation>
-        <translation locale="zh-Hant">自訂</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_opacity_title">
-        <translation locale="en">Custom opacity</translation>
-        <translation locale="zh-Hant">自訂透明度</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_opacity_summary">
-        <translation locale="en">Set keyboard background opacity from 0 to 100 percent.</translation>
-        <translation locale="zh-Hant">設定鍵盤背景透明度，範圍為 0 到 100%。</translation>
-    </string>
-    <string name="gboard_patches_frosted_glass_opacity_hint">
-        <translation locale="en">Enter opacity 0-100%</translation>
-        <translation locale="zh-Hant">輸入透明度 0-100%</translation>
-    </string>
     <string name="gboard_patches_activity_title">
         <translation locale="en">Patches</translation>
         <translation locale="zh-Hant">Patches</translation>
@@ -3045,26 +2977,6 @@
     <string name="gboard_patches_calculator_error_summary">
         <translation locale="en">The calculator settings screen failed to load. Reopen Gboard settings and try again.</translation>
         <translation locale="zh-Hant">計算機設定畫面載入失敗。請重新開啟 Gboard 設定再試一次。</translation>
-    </string>
-    <string name="gboard_patches_swipe_dismiss_title">
-        <translation locale="en">Swipe Down to Dismiss Keyboard</translation>
-        <translation locale="zh-Hant">下滑關閉鍵盤</translation>
-    </string>
-    <string name="gboard_patches_swipe_dismiss_summary">
-        <translation locale="en">Swipe down from the suggestions or toolbar to close the keyboard.</translation>
-        <translation locale="zh-Hant">從建議列或工具列向下滑動以關閉鍵盤。</translation>
-    </string>
-    <string name="gboard_patches_swipe_dismiss_section">
-        <translation locale="en">General</translation>
-        <translation locale="zh-Hant">一般</translation>
-    </string>
-    <string name="gboard_patches_swipe_dismiss_enabled_title">
-        <translation locale="en">Enable swipe down to dismiss</translation>
-        <translation locale="zh-Hant">啟用下滑關閉</translation>
-    </string>
-    <string name="gboard_patches_swipe_dismiss_enabled_summary">
-        <translation locale="en">Only swipes starting in the keyboard header can close the keyboard.</translation>
-        <translation locale="zh-Hant">只有從鍵盤頂部開始的下滑手勢可以關閉鍵盤。</translation>
     </string>
     <string name="gboard_patches_custom_theme_title">
         <translation locale="en">Custom themes</translation>

@@ -89,6 +89,12 @@ val customThemeBindingsAuthority = objects.fileProperty().apply {
 android {
     namespace = "dev.jason.gboardpatches.extension"
 
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }
@@ -116,7 +122,6 @@ android {
 dependencies {
     implementation(libs.apache.ftpserver.core)
     implementation(libs.apache.mina.core)
-    implementation(libs.hidden.api.bypass)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
 }
@@ -290,7 +295,7 @@ val generateSettingsText = tasks.register("generateSettingsText") {
                     }
                 }
                 appendLine("</resources>")
-            }, StandardCharsets.UTF_8)
+            })
         }
 
         val stringEntries = entries.filter { it.type == "string" }
@@ -361,14 +366,8 @@ val generateSettingsText = tasks.register("generateSettingsText") {
                 appendLine("    }")
             }
             appendLine("}")
-        }, StandardCharsets.UTF_8)
+        })
     }
-}
-
-// Settings assertions use English unless a test explicitly selects another locale.
-tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
-    systemProperty("user.language", "en")
-    systemProperty("user.country", "US")
 }
 
 val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
@@ -619,3 +618,16 @@ tasks.named("syncExtension") {
         }
     }
 }
+
+tasks.register<Exec>("installExtension") {
+    dependsOn("assembleDebug")
+    group = "install"
+    description = "Installs the extension APK on the connected device."
+    
+    val apkFile = layout.buildDirectory.file("outputs/apk/debug/extension-debug.apk")
+    
+    executable = "adb"
+    args("install", "-r", apkFile.get().asFile.absolutePath)
+}
+
+

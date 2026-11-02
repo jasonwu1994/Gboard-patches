@@ -147,6 +147,50 @@ public final class GboardLongPressQuickActions1803RuntimeTest {
         }
     }
 
+    @Test
+    public void togglesQuotesOfSelectedText() {
+        AtomicInteger commitCount = new AtomicInteger();
+        StringBuilder committedText = new StringBuilder();
+
+        InputConnection connection = proxyConnection((proxy, method, args) -> {
+            if ("getSelectedText".equals(method.getName())) {
+                return "hello world";
+            }
+            if ("commitText".equals(method.getName())) {
+                commitCount.incrementAndGet();
+                committedText.append(args[0]);
+                return Boolean.TRUE;
+            }
+            return defaultValue(method.getReturnType());
+        });
+
+        Assert.assertTrue(GboardLongPressQuickActions1803Runtime.attemptToggleQuotesAction(connection));
+        Assert.assertEquals(1, commitCount.get());
+        Assert.assertEquals("\"hello world\"", committedText.toString());
+    }
+
+    @Test
+    public void unquotesAlreadyQuotedSelectedText() {
+        AtomicInteger commitCount = new AtomicInteger();
+        StringBuilder committedText = new StringBuilder();
+
+        InputConnection connection = proxyConnection((proxy, method, args) -> {
+            if ("getSelectedText".equals(method.getName())) {
+                return "\"hello world\"";
+            }
+            if ("commitText".equals(method.getName())) {
+                commitCount.incrementAndGet();
+                committedText.append(args[0]);
+                return Boolean.TRUE;
+            }
+            return defaultValue(method.getReturnType());
+        });
+
+        Assert.assertTrue(GboardLongPressQuickActions1803Runtime.attemptToggleQuotesAction(connection));
+        Assert.assertEquals(1, commitCount.get());
+        Assert.assertEquals("hello world", committedText.toString());
+    }
+
     private static boolean attemptContextMenuAction(InputConnection connection, int actionId)
             throws Exception {
         try {

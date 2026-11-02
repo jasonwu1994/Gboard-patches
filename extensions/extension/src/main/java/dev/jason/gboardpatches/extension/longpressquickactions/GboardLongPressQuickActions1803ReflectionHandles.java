@@ -9,6 +9,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
 
 public final class GboardLongPressQuickActions1803ReflectionHandles {
@@ -248,19 +250,51 @@ public final class GboardLongPressQuickActions1803ReflectionHandles {
                     actionBuilder, resolvedPopupLayoutResId);
         }
 
-        Object updatedEntries = Array.newInstance(actionEntryClass, existingEntries.length + 1);
-        System.arraycopy(existingEntries, 0, updatedEntries, 0, existingEntries.length);
-        Array.set(updatedEntries, existingEntries.length,
+        List<Object> filteredEntries = new ArrayList<>();
+        List<String> filteredLabels = new ArrayList<>();
+        List<Integer> filteredIcons = new ArrayList<>();
+
+        if (existingEntries.length == 0) {
+            String pressText = extractPressText(metadata);
+            int pressCode = extractPressCarrierCode(metadata);
+            if (pressCode != 0 || pressText != null) {
+                Object defaultEntry = entryConstructor.newInstance(
+                        pressCode, null, pressText, Integer.MAX_VALUE);
+                filteredEntries.add(defaultEntry);
+                filteredLabels.add(pressText);
+                filteredIcons.add(0);
+            }
+        }
+
+        for (int i = 0; i < existingEntries.length; i++) {
+            Object entry = existingEntries[i];
+            int code = extractEntryCode(entry);
+            if (code != action.actionCode) {
+                filteredEntries.add(entry);
+                filteredLabels.add(i < existingLabels.length ? existingLabels[i] : null);
+                filteredIcons.add(i < existingIcons.length ? existingIcons[i] : 0);
+            }
+        }
+
+        int newLength = filteredEntries.size() + 1;
+        Object updatedEntries = Array.newInstance(actionEntryClass, newLength);
+        String[] labels = new String[newLength];
+        int[] icons = new int[newLength];
+
+        for (int i = 0; i < filteredEntries.size(); i++) {
+            Array.set(updatedEntries, i, filteredEntries.get(i));
+            labels[i] = filteredLabels.get(i);
+            icons[i] = filteredIcons.get(i);
+        }
+
+        Array.set(updatedEntries, newLength - 1,
                 entryConstructor.newInstance(
                         action.actionCode, null, null, Integer.MAX_VALUE));
+        labels[newLength - 1] = action.label;
+        icons[newLength - 1] = action.iconResId;
+
         actionBuilderEntriesField.set(actionBuilder, updatedEntries);
-
-        String[] labels = normalizeLabels(existingLabels, existingEntries.length + 1);
-        labels[existingEntries.length] = null;
         actionBuilderLabelsField.set(actionBuilder, labels);
-
-        int[] icons = normalizeIcons(existingIcons, existingEntries.length + 1);
-        icons[existingEntries.length] = action.iconResId;
         actionBuilderIconsField.set(actionBuilder, icons);
 
         Object patchedAction = buildActionMethod.invoke(actionBuilder);

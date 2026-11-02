@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-16T09:42:08",
-  "description": "### ✨ New Features\n\n* **Gboard:** add the `Swipe Down to Dismiss Keyboard` patch, allowing you to dismiss the keyboard by swiping down from the suggestion strip or toolbar.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix an issue where the `Frosted Glass` patch could cause the keyboard to crash when entering the password upon device startup (Direct Boot).\n* **Gboard:** fix the `Swipe Down to Dismiss Keyboard` patch to prevent accidental dismissal during toolbar icon sorting and candidate drag-to-delete.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Swipe Down to Dismiss Keyboard` Patch，支援從建議列或工具列向下滑動以關閉鍵盤。\n\n### 🐛 修復\n\n* **Gboard:** 修復 `Frosted Glass` Patch 在裝置開機輸入密碼時（Direct Boot）可能導致鍵盤崩潰的問題。\n* **Gboard:** 修復 `Swipe Down to Dismiss Keyboard` Patch，避免在排序工具列圖示及拖曳候選字刪除時誤觸關閉鍵盤。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v3.13.0/patches-3.13.0.mpp",
-  "signature_download_url": "",
-  "version": "3.13.0"
+    "created_at":  "2026-09-22T06:27:05",
+    "description":  "### ✨ New Features\n\n* **Gboard:** add the `Toolbar Editing Buttons` patch, which adds Select all, Copy, Cut, and Paste actions to the toolbar menu.\n* **Gboard:** add the `Custom Theme` patch, supporting custom ZIP theme imports and a selection of beautiful themes from Rboard's official repository.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** fix an issue where `Custom Symbols` history entries were incorrectly saved to `Emoticon` history.\n\n### ✨ 新功能\n\n* **Gboard:** 新增 `Toolbar Editing Buttons` Patch，將「全選」、「複製」、「剪下」與「貼上」操作加入工具列選單。\n* **Gboard:** 新增 `Custom Theme` Patch，支援匯入自訂 ZIP 主題，也能從 Rboard 官方儲存庫匯入精美主題。\n\n### 🐛 修復\n\n* **Gboard:** 修復 `Custom Symbols` 歷史記錄誤寫入 `Emoticon` 歷史記錄的問題。",
+    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v3.11.0/patches-3.11.0.mpp",
+    "signature_download_url":  "",
+    "version":  "3.11.0"
 }
