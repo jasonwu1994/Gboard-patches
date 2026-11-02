@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   build:
@@ -33,6 +34,16 @@ jobs:
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
+
+      - name: Verify Morphe Packages credentials
+        env:
+          MORPHE_PACKAGES_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN }}
+        shell: bash
+        run: |
+          if [ -z "${MORPHE_PACKAGES_TOKEN}" ]; then
+            echo "::error::Missing MORPHE_PACKAGES_TOKEN. Add a GitHub Personal Access Token with read:packages permission in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
 
       - name: Build and test Morphe patches
         env:
