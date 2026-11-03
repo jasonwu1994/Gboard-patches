@@ -48,27 +48,32 @@ final class GboardSpacebarLogoDialogs {
     }
 
     static GboardPatchesSettingsContract.ManagedDialogAction iconDialog(
-            Context context, String title, String[] labels, String[] values, int[] drawableIds,
+            Context context, String title, String[] labels, String[] values, Drawable[] previews,
             String currentValue, SelectionConsumer consumer) {
         return onDismiss -> {
             GridLayout grid = new GridLayout(context);
-            grid.setColumnCount(3);
+            grid.setColumnCount(2);
             grid.setPadding(dp(context, 12), dp(context, 8), dp(context, 12), dp(context, 8));
             AlertDialog[] holder = new AlertDialog[1];
             for (int index = 0; index < values.length; index++) {
                 final String value = values[index];
-                LinearLayout tile = iconTile(context, labels[index], drawableIds[index],
-                        value.equals(currentValue));
+                boolean preserveColor = GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR.equals(value)
+                        || GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE.equals(value);
+                LinearLayout tile = iconTile(context, labels[index], previews[index],
+                        value.equals(currentValue), preserveColor);
                 tile.setOnClickListener(view -> {
                     runSafely("handle icon selection", () -> {
-                        consumer.accept(value);
                         if (holder[0] != null) holder[0].dismiss();
+                        new Handler(Looper.getMainLooper()).post(() ->
+                                runSafely("apply icon selection", () -> consumer.accept(value)));
                     });
                 });
                 grid.addView(tile, gridParams(context, ICON_TILE_HEIGHT_DP));
             }
+            ScrollView scroll = new ScrollView(context);
+            scroll.addView(grid);
             AlertDialog dialog = new AlertDialog.Builder(context).setTitle(title)
-                    .setView(grid)
+                    .setView(scroll)
                     .setNegativeButton(text(context, R.string.gboard_patches_dialog_cancel), null)
                     .create();
             holder[0] = dialog;
@@ -227,8 +232,8 @@ final class GboardSpacebarLogoDialogs {
         };
     }
 
-    private static LinearLayout iconTile(Context context, String label, int drawableId,
-            boolean selected) {
+    private static LinearLayout iconTile(Context context, String label, Drawable drawable,
+            boolean selected, boolean preserveColor) {
         LinearLayout tile = baseTile(context, selected, ICON_TILE_HEIGHT_DP);
         tile.setGravity(Gravity.CENTER);
         tile.setContentDescription(label);
@@ -236,10 +241,9 @@ final class GboardSpacebarLogoDialogs {
         image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         try {
-            Drawable drawable = context.getDrawable(drawableId);
             if (drawable != null) {
                 drawable = drawable.mutate();
-                drawable.setTint(palette(context).primary);
+                if (!preserveColor) drawable.setTint(palette(context).primary);
                 image.setImageDrawable(drawable);
             }
         } catch (Throwable ignored) { }

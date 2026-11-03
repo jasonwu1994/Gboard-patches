@@ -173,6 +173,8 @@ final class GboardSettingsSearchIndexData {
             {19, R.string.gboard_patches_spacebar_logo_title, R.string.gboard_patches_spacebar_logo_summary, 1},
             {19, R.string.gboard_patches_spacebar_logo_icon_title, R.string.gboard_patches_spacebar_logo_icon_summary, 0},
             {19, R.string.gboard_patches_spacebar_logo_color_title, R.string.gboard_patches_spacebar_logo_color_summary, 0},
+            {19, R.string.gboard_patches_spacebar_image_import, R.string.gboard_patches_spacebar_image_import_summary, 0},
+            {19, R.string.gboard_patches_spacebar_logo_size_title, R.string.gboard_patches_spacebar_logo_size_summary, 0},
             {20, R.string.gboard_patches_close_proactive_suggestions_title, 0, 1},
             {21, R.string.gboard_patches_latin_globe_title, R.string.gboard_patches_latin_globe_summary, 1},
             {21, R.string.gboard_patches_latin_globe_enabled_title, R.string.gboard_patches_latin_globe_enabled_summary, 0},

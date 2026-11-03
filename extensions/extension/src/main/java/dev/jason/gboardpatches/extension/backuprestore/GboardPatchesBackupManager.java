@@ -32,6 +32,7 @@ import dev.jason.gboardpatches.extension.webclipboard.WebClipboardPreferences;
 import dev.jason.gboardpatches.extension.writingtools.GboardAiWritingToolsSettings;
 import dev.jason.gboardpatches.extension.zhuyinbottomrow.GboardZhuyinBottomRowWeightSettings;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettings;
+import dev.jason.gboardpatches.extension.spacebarlogo.GboardSpacebarLogoSettings;
 
 /** Lossless typed JSON backup for Gboard Patches-owned settings stores. */
 public final class GboardPatchesBackupManager {
@@ -55,7 +56,7 @@ public final class GboardPatchesBackupManager {
     private static final List<BackupModuleDescriptor> MODULE_CATALOG = validatedCatalog(List.of(
             new BackupModuleDescriptor("gboard-patches.core", "Core Patches settings",
                     GboardPatchesSettings.PREF_FILE,
-                    null),
+                    GboardSpacebarLogoSettings::refreshRuntime),
             new BackupModuleDescriptor("gboard-patches.custom-top-row", "Custom Top Row",
                     GboardTopRowSwipeSettings.PREF_FILE,
                     null),
@@ -215,36 +216,38 @@ public final class GboardPatchesBackupManager {
         for (BackupModuleDescriptor descriptor : selected) {
             Map<String, PreferenceValue> values = parsed.modules.get(descriptor.logicalId);
             SharedPreferences preferences = requiredStore(stores, descriptor.physicalName);
-            Map<String, PreferenceValue> previousStore = capturePhysicalStore(preferences);
-            Set<String> previousKeys = new LinkedHashSet<>(preferences.getAll().keySet());
-            try {
-                if (!replaceModule(descriptor, preferences, values)) {
-                    throw new RestoreOperationException(descriptor.logicalId, null,
-                            "Settings commit returned false");
-                }
-                results.add(verifyModule(descriptor, preferences, values, previousKeys));
-                restoredModules++;
-                restoredEntries += values.size();
-            } catch (Throwable failure) {
-                failedModules++;
-                String failureMessage = failure.getMessage() == null
-                        ? failure.getClass().getSimpleName() : failure.getMessage();
+            synchronized (preferences) {
+                Map<String, PreferenceValue> previousStore = capturePhysicalStore(preferences);
+                Set<String> previousKeys = new LinkedHashSet<>(preferences.getAll().keySet());
                 try {
-                    if (!replaceStore(preferences, previousStore)
-                            || !matchesStore(preferences, previousStore)) {
-                        throw new IllegalStateException("Previous values did not match read-back");
+                    if (!replaceModule(descriptor, preferences, values)) {
+                        throw new RestoreOperationException(descriptor.logicalId, null,
+                                "Settings commit returned false");
                     }
-                    results.add(previousValuesRestoredResult(
-                            descriptor, values, previousKeys, failure));
-                    failures.add(descriptor.displayName + ": " + failureMessage);
-                } catch (Throwable protectiveRestoreFailure) {
-                    ModuleResult uncertain = inspectFailedModule(
-                            descriptor, preferences, values, previousKeys,
-                            failureMessage + "; previous values could not be restored: "
-                                    + String.valueOf(protectiveRestoreFailure.getMessage()));
-                    results.add(uncertain);
-                    restoredEntries += countAppliedKeys(uncertain);
-                    failures.add(descriptor.displayName + ": " + uncertain.getMessage());
+                    results.add(verifyModule(descriptor, preferences, values, previousKeys));
+                    restoredModules++;
+                    restoredEntries += values.size();
+                } catch (Throwable failure) {
+                    failedModules++;
+                    String failureMessage = failure.getMessage() == null
+                            ? failure.getClass().getSimpleName() : failure.getMessage();
+                    try {
+                        if (!replaceStore(preferences, previousStore)
+                                || !matchesStore(preferences, previousStore)) {
+                            throw new IllegalStateException("Previous values did not match read-back");
+                        }
+                        results.add(previousValuesRestoredResult(
+                                descriptor, values, previousKeys, failure));
+                        failures.add(descriptor.displayName + ": " + failureMessage);
+                    } catch (Throwable protectiveRestoreFailure) {
+                        ModuleResult uncertain = inspectFailedModule(
+                                descriptor, preferences, values, previousKeys,
+                                failureMessage + "; previous values could not be restored: "
+                                        + String.valueOf(protectiveRestoreFailure.getMessage()));
+                        results.add(uncertain);
+                        restoredEntries += countAppliedKeys(uncertain);
+                        failures.add(descriptor.displayName + ": " + uncertain.getMessage());
+                    }
                 }
             }
         }
@@ -405,20 +408,28 @@ public final class GboardPatchesBackupManager {
 
     private static Map<String, PreferenceValue> captureModuleValues(
             BackupModuleDescriptor descriptor, SharedPreferences preferences) {
-        Map<String, PreferenceValue> captured = new LinkedHashMap<>();
-        for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
-            captured.put(entry.getKey(), descriptor.valueAdapter.toPortable(
-                    entry.getKey(), PreferenceValue.fromStoredValue(entry.getValue())));
+        synchronized (preferences) {
+            Map<String, PreferenceValue> captured = new LinkedHashMap<>();
+            for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
+                captured.put(entry.getKey(), descriptor.valueAdapter.toPortable(
+                        entry.getKey(), PreferenceValue.fromStoredValue(entry.getValue())));
+            }
+            return captured;
         }
-        return captured;
     }
 
     private static Map<String, PreferenceValue> normalizeModuleValues(
             BackupModuleDescriptor descriptor, Map<String, PreferenceValue> values) {
         Map<String, PreferenceValue> normalized = new LinkedHashMap<>();
         for (Map.Entry<String, PreferenceValue> entry : values.entrySet()) {
-            normalized.put(entry.getKey(), descriptor.valueAdapter.toPortable(
-                    entry.getKey(), entry.getValue()));
+            String key = entry.getKey();
+            if ("gboard-patches.core".equals(descriptor.logicalId)
+                    && key.startsWith("pref_spacebar_g_logo_")) {
+                key = "pref_spacebar_logo_" + key.substring("pref_spacebar_g_logo_".length());
+                // Preserve an explicit current key when a backup includes both spellings.
+                if (values.containsKey(key)) continue;
+            }
+            normalized.put(key, descriptor.valueAdapter.toPortable(key, entry.getValue()));
         }
         return normalized;
     }

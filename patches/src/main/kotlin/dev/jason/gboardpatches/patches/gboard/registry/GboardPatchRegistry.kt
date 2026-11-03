@@ -194,8 +194,8 @@ val gboardLongPressQuickActionsPatch = gboardPublicResourcePatch(
 val gboardSpacebarLogoPatch = gboardPublicResourcePatch(
     featureId = "g_logo_on_spacebar",
     name = "G Logo on Spacebar",
-    description = "在空白鍵顯示 G Logo，並隱藏語言名稱\n" +
-        "Show the G Logo on the spacebar and hide the language label.",
+    description = "自訂空白鍵圖示、圖片、顏色及大小，並隱藏語言名稱\n" +
+        "Choose a built-in or imported spacebar image, its colors and size, and hide the language label.",
     default = true,
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)

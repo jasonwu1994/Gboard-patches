@@ -1,3 +1,13 @@
+## [4.2.0-dev.5](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.4...v4.2.0-dev.5) (2026-11-03)
+
+### ✨ New Features
+
+* **Gboard:** extend the G Logo on Spacebar patch with custom image support, a full-color Google G icon, and adjustable icon sizes.
+
+### ✨ 新功能
+
+* **Gboard:** 「G Logo on Spacebar」Patch 新增自訂圖片與「Google G（全彩）」圖示，並支援自訂圖示大小。
+
 ## [4.2.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.2...v4.2.0-dev.4) (2026-11-02)
 
 ### ✨ New Features

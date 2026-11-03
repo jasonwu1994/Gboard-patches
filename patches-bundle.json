@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-02T23:55:22",
-  "description": "### ✨ New Features\n\n* **Gboard:** update morphe-patcher to **v2.1.0**.\n* **Gboard:** add a search button to the Patches settings page to quickly find settings.\n\n### ✨ 新功能\n\n* **Gboard:** 將 morphe-patcher 更新至 **v2.1.0**。\n* **Gboard:** 在 Patches 設定頁面新增搜尋按鈕，方便快速尋找設定項目。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.2.0-dev.4/patches-4.2.0-dev.4.mpp",
+  "created_at": "2026-11-03T08:40:53",
+  "description": "### ✨ New Features\n\n* **Gboard:** extend the G Logo on Spacebar patch with custom image support, a full-color Google G icon, and adjustable icon sizes.\n\n### ✨ 新功能\n\n* **Gboard:** 「G Logo on Spacebar」Patch 新增自訂圖片與「Google G（全彩）」圖示，並支援自訂圖示大小。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.2.0-dev.5/patches-4.2.0-dev.5.mpp",
   "signature_download_url": "",
-  "version": "4.2.0-dev.4"
+  "version": "4.2.0-dev.5"
 }

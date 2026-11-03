@@ -17,7 +17,6 @@ import java.util.WeakHashMap;
 public final class GboardSpacebarLogoRuntime {
     private static final String TAG = "GboardPatches";
     private static final String OVERLAY_TAG = "gboard-patches:spacebar-logo";
-    private static final int LOGO_SIZE_DP = 20;
     private static final Map<View, Integer> ORIGINAL_LABEL_VISIBILITIES = new WeakHashMap<>();
     private static final Map<View, BoundSpacebar> BOUND_SPACEBARS = new WeakHashMap<>();
 
@@ -96,21 +95,27 @@ public final class GboardSpacebarLogoRuntime {
             return;
         }
         try {
-            Drawable drawable = root.getContext().getDrawable(
-                    bindings.drawableResourceIdForIcon(settings.iconValue));
+            Drawable drawable;
+            if (GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR.equals(settings.iconValue)) {
+                drawable = GboardSpacebarLogoImages.googleDrawable(root.getResources());
+            } else if (GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE.equals(settings.iconValue)) {
+                drawable = GboardSpacebarLogoImages.customDrawable(root.getResources(), settings.customImage);
+            } else {
+                drawable = root.getContext().getDrawable(bindings.drawableResourceIdForIcon(settings.iconValue));
+            }
             if (drawable == null) {
                 safeRestoreStockAppearance(root, bindings);
                 return;
             }
             drawable = drawable.mutate();
-            if (settings.useFixedColor) drawable.setTint(settings.color);
+            if (settings.shouldTint()) drawable.setTint(settings.color);
 
             View label = root.findViewById(bindings.primaryLabelViewId);
             if (label != null) {
                 rememberLabelVisibility(label);
                 label.setVisibility(View.INVISIBLE);
             }
-            ImageView overlay = ensureOverlay(root);
+            ImageView overlay = ensureOverlay(root, settings.sizeDp);
             overlay.setImageDrawable(drawable);
             overlay.setVisibility(View.VISIBLE);
         } catch (Throwable throwable) {
@@ -124,21 +129,25 @@ public final class GboardSpacebarLogoRuntime {
                 && view.getId() == bindings.spacebarViewId ? (ViewGroup) view : null;
     }
 
-    private static ImageView ensureOverlay(ViewGroup root) {
+    private static ImageView ensureOverlay(ViewGroup root, int sizeDp) {
         ImageView existing = findOverlay(root);
-        if (existing != null) return existing;
-        ImageView overlay = new ImageView(root.getContext());
+        if (existing instanceof SizedOverlay sized) {
+            sized.setSizeDp(sizeDp);
+            return sized;
+        }
+        SizedOverlay overlay = new SizedOverlay(root);
         overlay.setTag(OVERLAY_TAG);
-        overlay.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        overlay.setScaleType(ImageView.ScaleType.FIT_CENTER);
         overlay.setClickable(false);
         overlay.setLongClickable(false);
         overlay.setFocusable(false);
         overlay.setFocusableInTouchMode(false);
         overlay.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         overlay.setDuplicateParentStateEnabled(true);
-        int size = Math.max(1, Math.round(LOGO_SIZE_DP
-                * root.getResources().getDisplayMetrics().density));
-        root.addView(overlay, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
+        root.addView(
+                overlay,
+                new FrameLayout.LayoutParams(1, 1, Gravity.CENTER));
+        overlay.setSizeDp(sizeDp);
         return overlay;
     }
 
@@ -146,7 +155,10 @@ public final class GboardSpacebarLogoRuntime {
         View label = root.findViewById(bindings.primaryLabelViewId);
         if (label != null) restoreLabelVisibility(label);
         ImageView overlay = findOverlay(root);
-        if (overlay != null) root.removeView(overlay);
+        if (overlay != null) {
+            if (overlay instanceof SizedOverlay sized) root.removeOnLayoutChangeListener(sized);
+            root.removeView(overlay);
+        }
     }
 
     private static void safeRestoreStockAppearance(ViewGroup root, ViewBindings bindings) {
@@ -161,6 +173,47 @@ public final class GboardSpacebarLogoRuntime {
         try {
             Log.w(TAG, message, throwable);
         } catch (Throwable ignored) {
+        }
+    }
+
+    /** Only sizes the decorative child; never changes the space key's own geometry. */
+    private static final class SizedOverlay extends ImageView implements View.OnLayoutChangeListener {
+        private final ViewGroup root;
+        private int requestedSizePx;
+
+        SizedOverlay(ViewGroup root) {
+            super(root.getContext());
+            this.root = root;
+            root.addOnLayoutChangeListener(this);
+        }
+
+        void setSizeDp(int sizeDp) {
+            requestedSizePx = Math.max(1, Math.round(sizeDp
+                    * root.getResources().getDisplayMetrics().density));
+            fitWithinKey();
+        }
+
+        private void fitWithinKey() {
+            int sizePx = requestedSizePx;
+            if (root.getWidth() > 0) {
+                sizePx = Math.min(sizePx, Math.max(1,
+                        root.getWidth() - root.getPaddingLeft() - root.getPaddingRight()));
+            }
+            if (root.getHeight() > 0) {
+                sizePx = Math.min(sizePx, Math.max(1,
+                        root.getHeight() - root.getPaddingTop() - root.getPaddingBottom()));
+            }
+            ViewGroup.LayoutParams params = getLayoutParams();
+            if (params != null && (params.width != sizePx || params.height != sizePx)) {
+                params.width = params.height = sizePx;
+                setLayoutParams(params);
+            }
+        }
+
+        @Override public void onLayoutChange(View view, int left, int top, int right, int bottom,
+                int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            try { fitWithinKey(); }
+            catch (Throwable failure) { logWarningSafely("Failed to resize spacebar image", failure); }
         }
     }
 
@@ -195,13 +248,37 @@ public final class GboardSpacebarLogoRuntime {
         public final boolean useFixedColor;
         public final int color;
         public final String iconValue;
+        public final String customImage;
+        public final boolean customImageTint;
+        public final int sizeDp;
 
         public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
                 String iconValue) {
+            this(enabled, useFixedColor, color, iconValue, "", false);
+        }
+
+        public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
+                String iconValue, String customImage, boolean customImageTint) {
+            this(enabled, useFixedColor, color, iconValue, customImage, customImageTint,
+                    GboardSpacebarLogoContract.DEFAULT_SIZE_DP);
+        }
+
+        public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
+                String iconValue, String customImage, boolean customImageTint, int sizeDp) {
             this.enabled = enabled;
             this.useFixedColor = useFixedColor;
             this.color = color;
             this.iconValue = GboardSpacebarLogoContract.normalizeIcon(iconValue);
+            this.customImage = GboardSpacebarLogoContract.boundedImageValue(customImage);
+            this.customImageTint = customImageTint;
+            this.sizeDp = GboardSpacebarLogoContract.normalizeSizeDp(sizeDp);
+        }
+
+        public boolean shouldTint() {
+            return useFixedColor
+                    && !GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR.equals(iconValue)
+                    && (!GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE.equals(iconValue)
+                            || customImageTint);
         }
     }
 

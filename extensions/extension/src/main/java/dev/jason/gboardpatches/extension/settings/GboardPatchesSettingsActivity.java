@@ -233,12 +233,19 @@ public final class GboardPatchesSettingsActivity extends Activity
                 return thread;
             });
     private final Object screenBuildLock = new Object();
+    private final ExecutorService boundedDocumentExecutor =
+            Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "GboardPatchesDocumentRead");
+                thread.setDaemon(true);
+                return thread;
+            });
     private int requestedScrollYOnNextScreenApply = 0;
     private boolean initialFeatureFromIntentHandled;
     private PendingTextDocumentWrite pendingTextDocumentWrite;
     private GboardPatchesSettingsContract.StringValueConsumer pendingTextDocumentReader;
     private PendingBinaryDocumentWrite pendingBinaryDocumentWrite;
     private GboardPatchesSettingsContract.BinaryDocumentConsumer pendingBinaryDocumentReader;
+    private int pendingBinaryDocumentLimit = Integer.MAX_VALUE;
     private GboardPatchesSettingsContract.StringValueConsumer pendingDocumentTreeConsumer;
     private GboardPatchesSettingsContract.Feature lifecycleVisibleFeature;
     private boolean featureLifecycleEnabled;
@@ -316,6 +323,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         detachKeyboardPreviewSafely();
         screenBuildExecutor.shutdownNow();
         backgroundStateExecutor.shutdownNow();
+        boundedDocumentExecutor.shutdownNow();
         super.onDestroy();
     }
 
@@ -346,6 +354,10 @@ public final class GboardPatchesSettingsActivity extends Activity
 
     @Override
     public void refresh() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            runOnUiThread(this::refresh);
+            return;
+        }
         initializeFeaturesAndRenderSafely();
     }
 
@@ -1256,10 +1268,19 @@ public final class GboardPatchesSettingsActivity extends Activity
     @SuppressWarnings("deprecation")
     public void openBinaryDocument(String[] mimeTypes,
             GboardPatchesSettingsContract.BinaryDocumentConsumer documentConsumer) {
+        openBinaryDocument(mimeTypes, Integer.MAX_VALUE, documentConsumer);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void openBinaryDocument(String[] mimeTypes, int maxBytes,
+            GboardPatchesSettingsContract.BinaryDocumentConsumer documentConsumer) {
         if (documentConsumer == null) {
             return;
         }
+        if (maxBytes <= 0) throw new IllegalArgumentException("Document limit must be positive");
         pendingBinaryDocumentReader = documentConsumer;
+        pendingBinaryDocumentLimit = maxBytes;
         String[] normalizedMimeTypes = normalizeMimeTypes(mimeTypes);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
@@ -1783,18 +1804,45 @@ public final class GboardPatchesSettingsActivity extends Activity
         GboardPatchesSettingsContract.BinaryDocumentConsumer reader =
                 pendingBinaryDocumentReader;
         pendingBinaryDocumentReader = null;
+        int maxBytes = pendingBinaryDocumentLimit;
+        pendingBinaryDocumentLimit = Integer.MAX_VALUE;
         Uri uri = selectedDocumentUri(data);
         if (resultCode != RESULT_OK || uri == null || reader == null) {
             return;
         }
-        try {
-            reader.accept(new GboardPatchesSettingsContract.BinaryDocument(
-                    queryDisplayName(uri), getContentResolver().getType(uri),
-                    readBinaryDocument(uri)));
-        } catch (Throwable throwable) {
-            Log.w(TAG, "Failed to read selected binary document", throwable);
-            Toast.makeText(this, DOCUMENT_READ_FAILED, Toast.LENGTH_SHORT).show();
+        Runnable read = () -> {
+            try {
+                if (maxBytes != Integer.MAX_VALUE && (isFinishing() || isDestroyed())) return;
+                GboardPatchesSettingsContract.BinaryDocument document = new GboardPatchesSettingsContract.BinaryDocument(
+                        queryDisplayName(uri), getContentResolver().getType(uri),
+                        readBinaryDocument(uri, maxBytes));
+                if (maxBytes != Integer.MAX_VALUE
+                        && (Thread.currentThread().isInterrupted() || isFinishing() || isDestroyed())) return;
+                reader.accept(document);
+            } catch (Throwable throwable) {
+                reportBinaryDocumentReadFailure(throwable);
+            }
+        };
+        if (maxBytes == Integer.MAX_VALUE) read.run();
+        else {
+            try {
+                if (!isFinishing() && !isDestroyed()) boundedDocumentExecutor.execute(read);
+            } catch (Throwable failure) {
+                reportBinaryDocumentReadFailure(failure);
+            }
         }
+    }
+
+    private void reportBinaryDocumentReadFailure(Throwable failure) {
+        try { Log.w(TAG, "Failed to read selected binary document", failure); }
+        catch (Throwable ignored) { }
+        try {
+            runOnUiThread(() -> {
+                try {
+                    if (!isFinishing() && !isDestroyed()) showMessage(DOCUMENT_READ_FAILED);
+                } catch (Throwable ignored) { }
+            });
+        } catch (Throwable ignored) { }
     }
 
     private static Uri selectedDocumentUri(Intent data) {
@@ -1828,7 +1876,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         return uri.getLastPathSegment();
     }
 
-    private byte[] readBinaryDocument(Uri uri) throws java.io.IOException {
+    private byte[] readBinaryDocument(Uri uri, int maxBytes) throws java.io.IOException {
         try (InputStream input = getContentResolver().openInputStream(uri)) {
             if (input == null) {
                 throw new java.io.IOException("Content resolver returned null input stream");
@@ -1837,6 +1885,7 @@ public final class GboardPatchesSettingsActivity extends Activity
             byte[] buffer = new byte[8192];
             int read;
             while ((read = input.read(buffer)) != -1) {
+                if (read > maxBytes - output.size()) throw new java.io.IOException("Selected document exceeds size limit");
                 output.write(buffer, 0, read);
             }
             return output.toByteArray();
