@@ -74,6 +74,10 @@ public final class GboardTopRowSwipeSettings {
 
     public static final String METHOD_GET_TOP_ROW_SWIPE_SETTINGS =
             "get_top_row_swipe_settings";
+    public static final String METHOD_GET_SCREEN_CONTEXT =
+            "get_screen_context";
+    public static final String BUNDLE_KEY_SCREEN_CONTEXT_JSON =
+            "screen_context_json";
     public static final String BUNDLE_KEY_TOP_ROW_SWIPE_ENABLED =
             "top_row_swipe_enabled";
     public static final String BUNDLE_KEY_TOP_ROW_SWIPE_ZHUYIN_ENABLED =

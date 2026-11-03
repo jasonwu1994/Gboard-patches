@@ -5,8 +5,6 @@ import android.content.SharedPreferences;
 
 import java.lang.reflect.Method;
 
-import dev.jason.gboardpatches.extension.flagsettings.GboardFlagRuntimeContext;
-
 @SuppressWarnings("unused")
 public final class GboardClipboardContentLimitRuntime {
     private static volatile Context applicationContext;
@@ -15,31 +13,18 @@ public final class GboardClipboardContentLimitRuntime {
     }
 
     public static Object applyOverriddenFlagValue(String flagName, Object stockResult) {
-        try {
-            if (!GboardClipboardContentLimitPolicy.TEXT_CLIP_ITEM_CHAR_LIMIT.equals(flagName)
-                    || !(stockResult instanceof Long)) {
-                return stockResult;
-            }
-            return applyOverriddenFlagValue(flagName, stockResult, resolveContext());
-        } catch (Throwable ignored) {
-            return stockResult;
-        }
-    }
-
-    static Object applyOverriddenFlagValue(String flagName, Object stockResult, Context context) {
         if (!GboardClipboardContentLimitPolicy.TEXT_CLIP_ITEM_CHAR_LIMIT.equals(flagName)
-                || !(stockResult instanceof Long)
-                || !GboardFlagRuntimeContext.isUserUnlocked(context)) {
+                || !(stockResult instanceof Long)) {
             return stockResult;
         }
-        try {
-            return applyOverriddenFlagValue(
-                    flagName,
-                    stockResult,
-                    GboardClipboardContentLimitSettings.preferences(context));
-        } catch (Throwable ignored) {
+        Context context = resolveContext();
+        if (context == null) {
             return stockResult;
         }
+        return applyOverriddenFlagValue(
+                flagName,
+                stockResult,
+                GboardClipboardContentLimitSettings.preferences(context));
     }
 
     static Object applyOverriddenFlagValue(String flagName, Object stockResult,

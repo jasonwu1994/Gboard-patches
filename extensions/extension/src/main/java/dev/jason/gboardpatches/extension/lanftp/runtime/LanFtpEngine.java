@@ -360,18 +360,18 @@ public final class LanFtpEngine implements AutoCloseable {
 
     private static void stopServer(FtpServer current,
             ThreadPoolExecutor currentSessionExecutor) {
+        if (currentSessionExecutor != null) {
+            try {
+                currentSessionExecutor.shutdownNow();
+            } catch (Throwable ignored) {
+                // Server stop below must still run after an executor failure.
+            }
+        }
         if (current != null) {
             try {
                 current.stop();
             } catch (Throwable ignored) {
                 // Continue into the owned executor shutdown.
-            }
-        }
-        if (currentSessionExecutor != null) {
-            try {
-                currentSessionExecutor.shutdownNow();
-            } catch (Throwable ignored) {
-                // Continue into the bounded executor termination wait.
             }
         }
         if (currentSessionExecutor == null) {
@@ -400,8 +400,8 @@ public final class LanFtpEngine implements AutoCloseable {
     private static void quiesceResources(Listener currentListener,
             LanFtpTransferCoordinator currentTransfers,
             ThreadPoolExecutor currentSessionExecutor) {
-        closeSessions(currentListener);
         stopListener(currentListener);
+        closeSessions(currentListener);
         if (currentTransfers != null) {
             try {
                 currentTransfers.quiesce();

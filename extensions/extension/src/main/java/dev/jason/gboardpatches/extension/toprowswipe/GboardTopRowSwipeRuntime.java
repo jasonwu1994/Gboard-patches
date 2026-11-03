@@ -6,9 +6,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -244,6 +246,100 @@ public final class GboardTopRowSwipeRuntime {
                     ? javaScriptRuntimeLimits
                     : GboardTopRowSwipeSettings.defaultJavaScriptRuntimeLimits();
             this.items = items;
+        }
+    }
+
+    public static void triggerSlotExecution(InputMethodService service, int slotIndex) {
+        Log.i(TAG, "triggerSlotExecution called for slot " + slotIndex);
+        if (service == null || slotIndex < 0 || slotIndex >= GboardTopRowSwipeSettings.SLOT_COUNT) {
+            return;
+        }
+        try {
+            SettingsSnapshot snapshot = settingsSnapshot(service);
+            TopRowItem item = customTopRowItem(snapshot, slotIndex);
+            if (item == null) {
+                return;
+            }
+            
+            if (item.isJavaScript) {
+                Log.i(TAG, "Executing JS for slot " + slotIndex);
+                android.view.inputmethod.InputConnection ic = service.getCurrentInputConnection();
+                String scriptInput = GboardQuickJsFeature.selectedInputText(ic);
+                QuickJsSlotConfig config = new QuickJsSlotConfig(TopRowLayoutKind.ENGLISH_QWERTY, slotIndex, item.scriptText, item.timeoutMs);
+                GboardQuickJsFeature.executeSlotScript(
+                        null, 
+                        service, 
+                        ic, 
+                        new GboardQuickJsFeature.QuickJsSlotKey(TopRowLayoutKind.ENGLISH_QWERTY, slotIndex),
+                        config, 
+                        scriptInput, 
+                        globalJavaScript(service),
+                        snapshot.javaScriptRuntimeLimits);
+            } else if (item.commitText != null) {
+                Log.i(TAG, "Committing text for slot " + slotIndex + ": " + item.commitText);
+                android.view.inputmethod.InputConnection ic = service.getCurrentInputConnection();
+                if (ic != null) {
+                    ic.commitText(item.commitText, 1);
+                }
+            }
+        } catch (Throwable throwable) {
+            Log.e(TAG, "Slot execution failed", throwable);
+        }
+    }
+
+    public static String getSlotLabel(Context context, int slotIndex) {
+        if (context == null || slotIndex < 0 || slotIndex >= GboardTopRowSwipeSettings.SLOT_COUNT) {
+            return null;
+        }
+        SettingsSnapshot snapshot = settingsSnapshot(context);
+        TopRowItem item = customTopRowItem(snapshot, slotIndex);
+        return item != null ? item.label : null;
+    }
+
+    public static void triggerManualRowSwitch(InputMethodService service) {
+        Log.i(TAG, "triggerManualRowSwitch called");
+        if (service == null) {
+            return;
+        }
+        try {
+            SettingsSnapshot snapshot = settingsSnapshot(service);
+            if (!snapshot.enabled) {
+                Log.w(TAG, "Manual switch: Top Row Swipe is NOT enabled in settings!");
+                // We proceed anyway to toggle the internal state, but it won't show anything
+                // unless patchIncomingSoftKeyMetadata also ignores the enabled flag (which it shouldn't).
+            }
+            TopRowLayoutKind activeLayout = TopRowLayoutKind.NONE;
+            Map<Object, VisibleTopRowKey> visibleKeys = null;
+            synchronized (VISIBLE_TOP_ROW_KEYS) {
+                if (!VISIBLE_TOP_ROW_KEYS.isEmpty()) {
+                    visibleKeys = new HashMap<>(VISIBLE_TOP_ROW_KEYS);
+                    activeLayout = visibleKeys.values().iterator().next().layoutKind;
+                }
+            }
+            Log.i(TAG, "Active layout from cache: " + activeLayout + ", visible keys: " + (visibleKeys != null ? visibleKeys.size() : 0));
+            if (activeLayout == TopRowLayoutKind.NONE) {
+                activeLayout = TopRowLayoutKind.ENGLISH_QWERTY;
+                Log.i(TAG, "Defaulting active layout to ENGLISH_QWERTY");
+            }
+            TopRowPage previousPage = currentPage(activeLayout);
+            TopRowPage nextPage = toggledPage(previousPage);
+            Log.i(TAG, "Toggling page: " + previousPage + " -> " + nextPage);
+            
+            ClassLoader classLoader = service.getClass().getClassLoader();
+            GboardTopRowSwipeRuntimeSupport.ReflectionHandles handles =
+                    GboardTopRowSwipeRuntimeSupport.reflectionHandles(classLoader);
+            setCurrentPage(activeLayout, nextPage);
+            
+            if (visibleKeys != null && !visibleKeys.isEmpty()) {
+                Log.i(TAG, "Refreshing " + visibleKeys.size() + " visible keys");
+                @SuppressWarnings("unchecked")
+                Map<View, VisibleTopRowKey> castedKeys = (Map<View, VisibleTopRowKey>) (Map<?, ?>) visibleKeys;
+                refreshVisibleTopRowKeyMetadata(handles, castedKeys);
+            } else {
+                Log.w(TAG, "No visible keys tracked! Manual switch might not be immediately visible.");
+            }
+        } catch (Throwable throwable) {
+            Log.e(TAG, "Manual row switch failed", throwable);
         }
     }
 
@@ -689,8 +785,8 @@ public final class GboardTopRowSwipeRuntime {
         }
         String normalizedLabel =
                 GboardTopRowSwipeRuntimeSupport.asciiLowercase(primaryLabel);
-        if (GboardTopRowSwipeRuntimeSupport.ENGLISH_QWERTY_TOP_ROW_LABELS[rowIndex]
-                .equals(normalizedLabel)) {
+        String expected = GboardTopRowSwipeRuntimeSupport.ENGLISH_QWERTY_TOP_ROW_LABELS[rowIndex];
+        if (expected.equals(normalizedLabel) || (rowIndex == 5 && "z".equals(normalizedLabel))) {
             return TopRowLayoutKind.ENGLISH_QWERTY;
         }
         return TopRowLayoutKind.NONE;
@@ -1258,9 +1354,42 @@ public final class GboardTopRowSwipeRuntime {
                 new PatchedTopRowMetadataState(layoutKind, -1, null));
     }
 
+    private static String readScreenContext(Context context) {
+        if (context == null) {
+            return "{}";
+        }
+        // Try HTTP Server first (reaches Extension process)
+        try {
+            String json = GboardHttpFetcher.fetch("/context");
+            if (json != null && !json.isEmpty() && !json.equals("{}")) {
+                return json;
+            }
+        } catch (Throwable ignored) {
+        }
+        
+        // Fallback to ContentProvider (might be local to Gboard)
+        try {
+            Bundle result = context.getContentResolver().call(
+                    Uri.parse("content://dev.jason.gboardpatches.extension.gboard_patches"),
+                    GboardTopRowSwipeSettings.METHOD_GET_SCREEN_CONTEXT,
+                    null,
+                    null);
+            if (result != null && result.containsKey(GboardTopRowSwipeSettings.BUNDLE_KEY_SCREEN_CONTEXT_JSON)) {
+                String json = result.getString(GboardTopRowSwipeSettings.BUNDLE_KEY_SCREEN_CONTEXT_JSON);
+                if (json != null && !json.isEmpty()) {
+                    return json;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return "{}";
+    }
+
     static String globalJavaScript(Context context) {
         SettingsSnapshot snapshot = settingsSnapshot(context);
-        return snapshot != null ? snapshot.globalJavaScript : "";
+        String baseGlobal = snapshot != null ? snapshot.globalJavaScript : "";
+        String screenContext = readScreenContext(context);
+        return "const context = " + screenContext + ";\n" + baseGlobal;
     }
 
     static GboardTopRowSwipeSettings.JavaScriptRuntimeLimits javaScriptRuntimeLimits(
