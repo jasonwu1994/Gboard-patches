@@ -89,6 +89,12 @@ val customThemeBindingsAuthority = objects.fileProperty().apply {
 android {
     namespace = "dev.jason.gboardpatches.extension"
 
+    packaging {
+        resources {
+            excludes.add("META-INF/DEPENDENCIES")
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }

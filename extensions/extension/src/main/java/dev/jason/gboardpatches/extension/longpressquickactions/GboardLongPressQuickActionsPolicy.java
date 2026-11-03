@@ -56,7 +56,7 @@ public final class GboardLongPressQuickActionsPolicy {
         if (!"LONG_PRESS".equals(actionTypeName)) {
             return false;
         }
-        if (selectedCode == -0x27f6) {
+        if (selectedCode == -0x27f1 || selectedCode == -0x27f6) {
             return true;
         }
         QuickAction action = resolve(keyId, pressText);
@@ -117,6 +117,9 @@ public final class GboardLongPressQuickActionsPolicy {
         }
         if (pressText == null) {
             return null;
+        }
+        if ("g".equalsIgnoreCase(pressText)) {
+            return TOGGLE_CASE;
         }
         if ("\"".equals(pressText) || "'".equals(pressText)
                 || "”".equals(pressText) || "“".equals(pressText) || "„".equals(pressText)) {
