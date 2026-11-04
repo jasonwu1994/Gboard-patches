@@ -124,6 +124,17 @@ final class GboardClipboardSyncSettingsSection {
                 enabled,
                 value -> applyEnabledWithPermission(host, value)));
 
+        boolean imageSyncEnabled = WebClipboardPreferences.isImageSyncEnabled(preferences);
+        generalRows.add(new GboardPatchesSettingsContract.ToggleRow(
+                textLookup.titleImageSync(),
+                textLookup.imageSyncSummary(),
+                enabled,
+                imageSyncEnabled,
+                value -> {
+                    WebClipboardPreferences.setImageSyncEnabled(preferences, value);
+                    GboardPatchesSettingsContract.refresh(host);
+                }));
+
         List<GboardPatchesSettingsContract.Row> securityRows =
                 new ArrayList<GboardPatchesSettingsContract.Row>();
         securityRows.add(new GboardPatchesSettingsContract.ToggleRow(
@@ -301,6 +312,8 @@ final class GboardClipboardSyncSettingsSection {
         String sectionNetwork();
         String sectionConnectedClients();
         String titleEnable();
+        String titleImageSync();
+        String imageSyncSummary();
         String titlePort();
         String titlePairing();
         String titlePairingCode();
@@ -389,6 +402,16 @@ final class GboardClipboardSyncSettingsSection {
             return GboardSettingsText.get(
                     context,
                     R.string.gboard_patches_web_clipboard_enable_title);
+        }
+
+        @Override
+        public String titleImageSync() {
+            return "Image Sync";
+        }
+
+        @Override
+        public String imageSyncSummary() {
+            return "Sync images and screenshots over Web Clipboard";
         }
 
         @Override
@@ -619,6 +642,16 @@ final class GboardClipboardSyncSettingsSection {
         @Override
         public String titleEnable() {
             return "Enable Web Clipboard";
+        }
+
+        @Override
+        public String titleImageSync() {
+            return "Sync images";
+        }
+
+        @Override
+        public String imageSyncSummary() {
+            return "Sync copied images and screenshots with the web portal.";
         }
 
         @Override
