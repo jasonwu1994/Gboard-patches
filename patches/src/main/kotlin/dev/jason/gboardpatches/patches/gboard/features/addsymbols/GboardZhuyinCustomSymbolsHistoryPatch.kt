@@ -20,7 +20,7 @@ private const val EMOTICON_KEYBOARD_CLASS =
 private const val EMOTICON_HISTORY_FIELD = "b"
 
 internal val gboardZhuyinCustomSymbolsHistoryPatch = bytecodePatch(
-    description = "移植 add-symbols 的 recent/history namespace 隔離。",
+    description = "調整 add-symbols 的 recent/history namespace 隔離。",
 ) {
     dependsOn(gboardZhuyinCustomSymbolsExtensionPatch)
 

@@ -61,6 +61,7 @@ val quickJsPayloadSourceDir = layout.projectDirectory.dir("native-payload/arm64-
 val generatedQuickJsPayloadDir = layout.buildDirectory.dir(
     "generated/source/quickJsPayload/java"
 )
+val generatedSpacebarImageDir = layout.buildDirectory.dir("generated/source/spacebarImage/java")
 val settingsTextAuthority = layout.projectDirectory.file(
     "src/main/settings-text/gboard_settings_text.xml"
 )
@@ -107,6 +108,7 @@ android {
 
     sourceSets.named("main") {
         java.directories.add(generatedQuickJsPayloadDir.get().asFile.absolutePath)
+        java.directories.add(generatedSpacebarImageDir.get().asFile.absolutePath)
         java.directories.add(generatedSettingsTextJavaDir.get().asFile.absolutePath)
         java.directories.add(generatedLanFtpMessagesJavaDir.get().asFile.absolutePath)
         java.directories.add(generatedCustomThemeBindingsJavaDir.get().asFile.absolutePath)
@@ -127,6 +129,32 @@ dependencies {
     implementation(libs.hidden.api.bypass)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
+}
+
+val generateSpacebarImage = tasks.register("generateSpacebarImage") {
+    val imageFile = layout.projectDirectory.file("image-payload/google-g-color.png")
+    val outputFile = generatedSpacebarImageDir.map {
+        it.file("dev/jason/gboardpatches/extension/spacebarlogo/GboardSpacebarLogoImageData.java")
+    }
+    inputs.file(imageFile)
+    outputs.file(outputFile)
+    doLast {
+        val bytes = imageFile.asFile.readBytes()
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+            .joinToString("") { "%02x".format(it) }
+        check(digest == "cfd1b005ed53dc782bf7de9696a057529343ba62eb17cc7ad9fc1266732f03da") {
+            "Unexpected Google color image content"
+        }
+        val output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.writeText("""
+            package dev.jason.gboardpatches.extension.spacebarlogo;
+            public final class GboardSpacebarLogoImageData {
+                private GboardSpacebarLogoImageData() { }
+                public static String base64() { return "${Base64.getEncoder().encodeToString(bytes)}"; }
+            }
+        """.trimIndent())
+    }
 }
 
 val generateQuickJsNativePayload = tasks.register("generateQuickJsNativePayload") {
@@ -374,9 +402,17 @@ val generateSettingsText = tasks.register("generateSettingsText") {
 }
 
 // Settings assertions use English unless a test explicitly selects another locale.
+// -PupdateSettingsSearchIndex=true lets the snapshot test rewrite the packaged search index.
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    maxHeapSize = "2g"
+    maxParallelForks = 1
+    forkEvery = 40
     systemProperty("user.language", "en")
     systemProperty("user.country", "US")
+    systemProperty(
+        "gboard.updateSettingsSearchIndex",
+        providers.gradleProperty("updateSettingsSearchIndex").getOrElse("false")
+    )
 }
 
 val generateLanFtpMessageResource = tasks.register("generateLanFtpMessageResource") {
@@ -579,6 +615,7 @@ val generateCustomThemeVersionBindings = tasks.register("generateCustomThemeVers
 }
 
 tasks.named("preBuild") {
+    dependsOn(generateSpacebarImage)
     dependsOn(generateQuickJsNativePayload)
     dependsOn(generateSettingsText)
     dependsOn(generateLanFtpMessageResource)

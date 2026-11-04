@@ -132,6 +132,12 @@ public final class GboardPatchesSettingsContract {
             throw new UnsupportedOperationException("Binary document import is unavailable");
         }
 
+        /** Bounded import; document processing runs on a worker thread. */
+        default void openBinaryDocument(String[] mimeTypes, int maxBytes,
+                BinaryDocumentConsumer documentConsumer) {
+            throw new UnsupportedOperationException("Bounded document import is unavailable");
+        }
+
         default void requestTargetRestart() {
             throw new UnsupportedOperationException("Target restart is unavailable");
         }
@@ -239,6 +245,11 @@ public final class GboardPatchesSettingsContract {
     public static void openBinaryDocument(FeatureHost host, String[] mimeTypes,
             BinaryDocumentConsumer documentConsumer) {
         submit(host, adapter -> adapter.openBinaryDocument(mimeTypes, documentConsumer));
+    }
+
+    public static void openBinaryDocument(FeatureHost host, String[] mimeTypes, int maxBytes,
+            BinaryDocumentConsumer documentConsumer) {
+        submit(host, adapter -> adapter.openBinaryDocument(mimeTypes, maxBytes, documentConsumer));
     }
 
     public static void requestTargetRestart(FeatureHost host) {

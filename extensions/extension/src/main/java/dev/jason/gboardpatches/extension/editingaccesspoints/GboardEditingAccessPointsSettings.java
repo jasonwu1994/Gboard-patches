@@ -3,9 +3,12 @@ package dev.jason.gboardpatches.extension.editingaccesspoints;
 import android.content.SharedPreferences;
 import java.util.Map;
 
-/** A readable missing key defaults on; unavailable or corrupt settings fail closed. */
+/** Buttons default on; automatic select-all defaults off. Unavailable settings fail closed. */
 public final class GboardEditingAccessPointsSettings {
     public static final String ENABLED = "pref_editing_access_points_enabled";
+
+    public static final String SELECT_ALL_WHEN_UNSELECTED =
+            "pref_editing_access_points_select_all_when_unselected";
 
     private GboardEditingAccessPointsSettings() {}
 
@@ -23,7 +26,7 @@ public final class GboardEditingAccessPointsSettings {
 
     public static boolean read(Map<String, ?> values, String key) {
         if (values == null) return false;
-        if (!values.containsKey(key)) return true;
+        if (!values.containsKey(key)) return !SELECT_ALL_WHEN_UNSELECTED.equals(key);
         Object value = values.get(key);
         // Accept portable settings backups containing Boolean or string values.
         return Boolean.TRUE.equals(value) || "true".equals(value);

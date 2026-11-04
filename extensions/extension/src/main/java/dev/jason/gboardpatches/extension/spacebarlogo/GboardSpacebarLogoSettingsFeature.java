@@ -3,9 +3,12 @@ package dev.jason.gboardpatches.extension.spacebarlogo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.graphics.drawable.Drawable;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
@@ -18,8 +21,10 @@ public final class GboardSpacebarLogoSettingsFeature
     private static final String TAG = "GboardPatches";
     private static final String[] ICON_VALUES = {
             GboardSpacebarLogoSettings.ICON_GOOGLE_G,
+            GboardSpacebarLogoSettings.ICON_GOOGLE_G_COLOR,
             GboardSpacebarLogoSettings.ICON_HEART,
-            GboardSpacebarLogoSettings.ICON_EMOJI
+            GboardSpacebarLogoSettings.ICON_EMOJI,
+            GboardSpacebarLogoSettings.ICON_CUSTOM_IMAGE
     };
     private static final int[] ICON_DRAWABLE_IDS =
             GboardSpacebarLogoAdapter.iconDrawableResourceIds();
@@ -69,8 +74,10 @@ public final class GboardSpacebarLogoSettingsFeature
                 R.string.gboard_patches_spacebar_logo_icon_dialog_title, "Spacebar icon");
         iconLabels = new String[] {
                 textOrFallback(R.string.gboard_patches_spacebar_logo_icon_google_g, "Google G"),
+                textOrFallback(R.string.gboard_patches_spacebar_logo_icon_google_color, "Google G (color)"),
                 textOrFallback(R.string.gboard_patches_spacebar_logo_icon_heart, "Heart"),
-                textOrFallback(R.string.gboard_patches_spacebar_logo_icon_emoji, "Emoji")
+                textOrFallback(R.string.gboard_patches_spacebar_logo_icon_emoji, "Emoji"),
+                textOrFallback(R.string.gboard_patches_spacebar_logo_icon_image, "Custom image")
         };
         colorTitle = textOrFallback(R.string.gboard_patches_spacebar_logo_color_title, "Logo color");
         colorSummary = textOrFallback(R.string.gboard_patches_spacebar_logo_color_summary, "");
@@ -131,28 +138,58 @@ public final class GboardSpacebarLogoSettingsFeature
             String selection = GboardSpacebarLogoSettings.readColorSelection(preferences);
             String custom = GboardSpacebarLogoSettings.readCustomColorHex(preferences);
             String icon = GboardSpacebarLogoSettings.readIcon(preferences);
+            boolean hasImage = !GboardSpacebarLogoSettings.readImage(preferences).isEmpty();
+            boolean imageSelected = GboardSpacebarLogoSettings.ICON_CUSTOM_IMAGE.equals(icon);
+            boolean tintImage = GboardSpacebarLogoSettings.readImageTint(preferences);
+            boolean colorEnabled = !GboardSpacebarLogoSettings.ICON_GOOGLE_G_COLOR.equals(icon)
+                    && (!imageSelected || tintImage);
+            List<GboardPatchesSettingsContract.Row> rows = new ArrayList<>();
+            rows.add(new GboardPatchesSettingsContract.ToggleRow(
+                    entryTitle, entrySummary, true, enabled,
+                    value -> runSafely("update enabled state", () -> {
+                        GboardSpacebarLogoSettings.writeEnabled(hostContext, value);
+                        GboardPatchesSettingsContract.refresh(host);
+                    })).setMasterToggle(true));
+            rows.add(new GboardPatchesSettingsContract.SelectorRow(
+                    iconTitle, iconSummary, displayIcon(icon), true,
+                    () -> showIconDialog(host, hostContext, icon, preferences)));
+            rows.add(new GboardPatchesSettingsContract.SelectorRow(
+                    colorTitle, colorEnabled ? colorSummary : textOrFallback(
+                            R.string.gboard_patches_spacebar_image_original_summary, "This image keeps its original colors."),
+                    colorEnabled ? displayColor(color) : textOrFallback(
+                            R.string.gboard_patches_spacebar_image_original, "Original colors"), colorEnabled,
+                    () -> showColorDialog(host, hostContext, color, selection, custom, imageSelected)));
+            rows.add(new GboardPatchesSettingsContract.ActionRow(
+                    textOrFallback(hasImage ? R.string.gboard_patches_spacebar_image_replace
+                            : R.string.gboard_patches_spacebar_image_import, "Import image"),
+                    textOrFallback(R.string.gboard_patches_spacebar_image_import_summary, "PNG, WebP or JPEG, up to 8 MB."),
+                    true, () -> runSafely("import spacebar image", () -> importImage(host, hostContext))));
+            if (imageSelected && hasImage) {
+                rows.add(new GboardPatchesSettingsContract.ToggleRow(
+                        textOrFallback(R.string.gboard_patches_spacebar_image_tint, "Apply a single color"),
+                        textOrFallback(R.string.gboard_patches_spacebar_image_tint_summary, ""), true, tintImage,
+                        value -> runSafely("change image color mode", () -> {
+                            GboardSpacebarLogoSettings.writeImageTint(hostContext, value);
+                            GboardPatchesSettingsContract.refresh(host);
+                        })));
+            }
+            if (hasImage) {
+                rows.add(new GboardPatchesSettingsContract.ActionRow(
+                        textOrFallback(R.string.gboard_patches_spacebar_image_remove, "Remove imported image"), "", true,
+                        () -> runSafely("remove spacebar image", () -> {
+                            GboardSpacebarLogoSettings.removeImage(hostContext);
+                            GboardPatchesSettingsContract.refresh(host);
+                        })));
+            }
+            int sizeDp = GboardSpacebarLogoSettings.readSizeDp(preferences);
+            rows.add(new GboardPatchesSettingsContract.SelectorRow(
+                    textOrFallback(R.string.gboard_patches_spacebar_logo_size_title, "Icon size"),
+                    textOrFallback(R.string.gboard_patches_spacebar_logo_size_summary, ""), sizeDp + " dp", true,
+                    () -> runSafely("choose spacebar image size", () -> showSizeDialog(host, hostContext, sizeDp))));
             return new GboardPatchesSettingsContract.Screen(
                     entryTitle, headerBadge, entryTitle, "", Collections.emptyList(),
-                    Collections.singletonList(new GboardPatchesSettingsContract.Section(
-                            sectionAppearance,
-                            Arrays.asList(
-                                    new GboardPatchesSettingsContract.ToggleRow(
-                                            entryTitle, entrySummary, true, enabled,
-                                            value -> runSafely("update enabled state", () -> {
-                                                GboardSpacebarLogoSettings.writeEnabled(
-                                                        hostContext, value);
-                                                GboardPatchesSettingsContract.refresh(host);
-                                            }))
-                                            .setMasterToggle(true),
-                                    new GboardPatchesSettingsContract.SelectorRow(
-                                            iconTitle, iconSummary, displayIcon(icon), true,
-                                            () -> showIconDialog(host, hostContext, icon)),
-                                    new GboardPatchesSettingsContract.SelectorRow(
-                                            colorTitle, colorSummary, displayColor(color), true,
-                                            () -> showColorDialog(host, hostContext, color,
-                                                    selection, custom))))),
-                    GboardPatchesSettingsContract.RefreshPolicy.none(),
-                    GboardPatchesSettingsContract.PanelStyle.FLAT);
+                    Collections.singletonList(new GboardPatchesSettingsContract.Section(sectionAppearance, rows)),
+                    GboardPatchesSettingsContract.RefreshPolicy.none(), GboardPatchesSettingsContract.PanelStyle.FLAT);
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to render spacebar logo settings", throwable);
             return errorScreen();
@@ -160,21 +197,73 @@ public final class GboardSpacebarLogoSettingsFeature
     }
 
     private void showIconDialog(GboardPatchesSettingsContract.FeatureHost host,
-            Context hostContext, String current) {
-        runSafely("show icon dialog", () ->
-                GboardPatchesSettingsContract.showManagedDialog(host,
-                        GboardSpacebarLogoDialogs.iconDialog(
-                                hostContext, iconDialogTitle, iconLabels, ICON_VALUES,
-                                ICON_DRAWABLE_IDS, current,
-                                value -> runSafely("update icon", () -> {
+            Context hostContext, String current, SharedPreferences preferences) {
+        runSafely("show icon dialog", () -> {
+            Drawable[] previews = new Drawable[ICON_VALUES.length];
+            int[] stockPositions = {0, 2, 3};
+            for (int i = 0; i < ICON_DRAWABLE_IDS.length; i++) {
+                try { previews[stockPositions[i]] = hostContext.getDrawable(ICON_DRAWABLE_IDS[i]); }
+                catch (Throwable ignored) { }
+            }
+            previews[1] = GboardSpacebarLogoImages.googleDrawable(hostContext.getResources());
+            previews[4] = GboardSpacebarLogoImages.customDrawable(hostContext.getResources(),
+                    GboardSpacebarLogoSettings.readImage(preferences));
+            GboardPatchesSettingsContract.showManagedDialog(host,
+                    GboardSpacebarLogoDialogs.iconDialog(hostContext, iconDialogTitle, iconLabels, ICON_VALUES,
+                            previews, current, value -> runSafely("update icon", () -> {
+                                if (GboardSpacebarLogoSettings.ICON_CUSTOM_IMAGE.equals(value)
+                                        && GboardSpacebarLogoSettings.readImage(preferences).isEmpty()) {
+                                    importImage(host, hostContext);
+                                } else {
                                     GboardSpacebarLogoSettings.writeIcon(hostContext, value);
                                     GboardPatchesSettingsContract.refresh(host);
-                                }))));
+                                }
+                            })));
+        });
+    }
+
+    private void importImage(GboardPatchesSettingsContract.FeatureHost host, Context hostContext) {
+        GboardPatchesSettingsContract.openBinaryDocument(host,
+                new String[] {"image/png", "image/webp", "image/jpeg"}, GboardSpacebarLogoImages.MAX_IMPORT_BYTES,
+                document -> {
+                    try {
+                        String image = GboardSpacebarLogoImages.importImage(document.getData());
+                        if (!GboardSpacebarLogoSettings.writeImage(hostContext, image)) {
+                            throw new java.io.IOException("Image setting could not be saved");
+                        }
+                        GboardPatchesSettingsContract.showMessage(host,
+                                textOrFallback(R.string.gboard_patches_spacebar_image_imported, "Image imported."));
+                        GboardPatchesSettingsContract.refresh(host);
+                    } catch (Throwable failure) {
+                        Log.w(TAG, "Failed to import spacebar image", failure);
+                        GboardPatchesSettingsContract.showMessage(host,
+                                textOrFallback(R.string.gboard_patches_spacebar_image_failed, "Could not import this image."));
+                    }
+                });
+    }
+
+    private void showSizeDialog(GboardPatchesSettingsContract.FeatureHost host, Context hostContext, int currentSize) {
+        String title = textOrFallback(R.string.gboard_patches_spacebar_logo_size_title, "Icon size");
+        String[] values = {"12", "24", "30", "40", "CUSTOM"};
+        String[] labels = {"12 dp", textOrFallback(R.string.gboard_patches_spacebar_logo_size_default, "24 dp (default)"),
+                "30 dp", "40 dp", colorLabels[colorLabels.length - 1]};
+        java.util.function.IntConsumer save = value -> runSafely("save image size", () -> {
+            if (!GboardSpacebarLogoContract.isValidSizeDp(value)) {
+                GboardPatchesSettingsContract.showMessage(host,
+                        textOrFallback(R.string.gboard_patches_spacebar_logo_size_invalid, "Enter 12 to 40 dp."));
+            } else if (GboardSpacebarLogoSettings.writeSizeDp(hostContext, value)) {
+                GboardPatchesSettingsContract.refresh(host);
+            }
+        });
+        GboardPatchesSettingsContract.showChoiceDialog(host, title, labels, values,
+                Integer.toString(currentSize), "CUSTOM", () -> GboardPatchesSettingsContract.showPositiveIntegerDialog(
+                        host, title, textOrFallback(R.string.gboard_patches_spacebar_logo_size_hint, "12–40 dp"),
+                        currentSize, save::accept), value -> save.accept(Integer.parseInt(value)));
     }
 
     private void showColorDialog(GboardPatchesSettingsContract.FeatureHost host,
             Context hostContext, String currentColor, String currentSelection,
-            String customColor) {
+            String customColor, boolean imageSelected) {
         String[] summaries = {
                 colorAutomaticSummary,
                 COLOR_VALUES[1], COLOR_VALUES[2], COLOR_VALUES[3], COLOR_VALUES[4],
@@ -183,7 +272,10 @@ public final class GboardSpacebarLogoSettingsFeature
         runSafely("show color dialog", () ->
                 GboardPatchesSettingsContract.showManagedDialog(host,
                     GboardSpacebarLogoDialogs.paletteDialog(
-                        hostContext, colorDialogTitle, colorLabels, summaries, COLOR_VALUES,
+                        hostContext, colorDialogTitle,
+                        Arrays.copyOfRange(colorLabels, imageSelected ? 1 : 0, colorLabels.length),
+                        Arrays.copyOfRange(summaries, imageSelected ? 1 : 0, summaries.length),
+                        Arrays.copyOfRange(COLOR_VALUES, imageSelected ? 1 : 0, COLOR_VALUES.length),
                         currentSelection, GboardSpacebarLogoSettings.COLOR_SELECTION_CUSTOM,
                         () -> showCustomColorDialog(
                                 host, hostContext, currentColor, customColor),

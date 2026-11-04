@@ -19,7 +19,7 @@ import dev.jason.gboardpatches.patches.gboard.shared.runtimeabi.RuntimeCallId
 private val LOADER_RUNTIME_CALL = RuntimeCallId.CLIPBOARD_RUNTIME_MAYBE_BUILD_LOADER_RESULT
 
 internal val gboardClipboardLoaderPatch = bytecodePatch(
-    description = "移植 clipboard visible list 重組與 TTL cutoff"
+    description = "調整 clipboard visible list 重組與 TTL cutoff"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 

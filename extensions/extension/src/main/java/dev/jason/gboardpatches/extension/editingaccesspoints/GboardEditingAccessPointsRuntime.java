@@ -33,9 +33,12 @@ public final class GboardEditingAccessPointsRuntime {
             if (receiver instanceof InputMethodService ime) {
                 service = new WeakReference<>(ime);
                 WeakReference<InputMethodService> reference = service;
-                editor = () -> {
-                    InputMethodService current = reference.get();
-                    return current == null ? null : current.getCurrentInputConnection();
+                editor = new EditorActionSession.Editor() {
+                    @Override public android.view.inputmethod.InputConnection connection() {
+                        InputMethodService current = reference.get();
+                        return current == null ? null : current.getCurrentInputConnection();
+                    }
+                    @Override public InputMethodService inputMethodService() { return reference.get(); }
                 };
                 SESSION.begin(editor);
             }
@@ -54,7 +57,11 @@ public final class GboardEditingAccessPointsRuntime {
         try {
             // Stock AP clicks are synchronous UI callbacks. Do not queue stale edits.
             if (Looper.myLooper() == Looper.getMainLooper() && enabled(service.get(), action)) {
-                SESSION.execute(action);
+                boolean selectAllWhenUnselected = GboardPatchesSettings.readRuntimeSetting(
+                        service.get(), preferences -> GboardEditingAccessPointsSettings.read(
+                                preferences, GboardEditingAccessPointsSettings.SELECT_ALL_WHEN_UNSELECTED),
+                        false);
+                SESSION.execute(action, selectAllWhenUnselected);
             }
         } catch (Throwable ignored) {
             // Descriptor callbacks must not escape into Gboard.

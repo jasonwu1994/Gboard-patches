@@ -16,7 +16,7 @@ public final class GboardLongPressQuickActionsRuntimeTest {
                     + "GboardLongPressQuickActionsRuntime";
 
     @Test
-    public void attemptsExactContextMenuActionAndConsumesEvenWhenTargetReturnsFalse()
+    public void returnsExactMenuDeliveryResultWithoutRetry()
             throws Exception {
         AtomicInteger calls = new AtomicInteger(0);
         AtomicInteger receivedAction = new AtomicInteger(0);
@@ -32,7 +32,7 @@ public final class GboardLongPressQuickActionsRuntimeTest {
             return defaultValue(method.getReturnType());
         });
 
-        Assert.assertTrue(attemptContextMenuAction(connection, 0x1020021));
+        Assert.assertFalse(attemptContextMenuAction(connection, 0x1020021));
         Assert.assertEquals(1, calls.get());
         Assert.assertEquals(0x1020021, receivedAction.get());
     }

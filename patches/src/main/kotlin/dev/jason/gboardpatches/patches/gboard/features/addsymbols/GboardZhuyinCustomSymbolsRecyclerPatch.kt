@@ -12,7 +12,7 @@ private const val BASE_RECYCLER_ADAPTER_CLASS = "Ljt;"
 private const val EMOTICON_RECYCLER_ADAPTER_CLASS = "Ljiu;"
 
 internal val gboardZhuyinCustomSymbolsRecyclerPatch = bytecodePatch(
-    description = "移植 add-symbols 的 custom recycler bind rendering。"
+    description = "調整 add-symbols 的 custom recycler bind rendering。"
 ) {
     dependsOn(gboardZhuyinCustomSymbolsExtensionPatch)
 

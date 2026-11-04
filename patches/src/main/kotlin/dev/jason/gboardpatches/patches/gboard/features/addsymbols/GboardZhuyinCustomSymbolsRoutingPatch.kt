@@ -25,7 +25,7 @@ private val providerRequestReceiverType: String
     get() = GboardVersionBindings.keyboardCompletionCallbackType.descriptor
 
 internal val gboardZhuyinCustomSymbolsRoutingPatch = bytecodePatch(
-    description = "移植 add-symbols 的 provider / routing / tab identity 主線。"
+    description = "調整 add-symbols 的 provider / routing / tab identity 主線。"
 ) {
     dependsOn(gboardZhuyinCustomSymbolsExtensionPatch)
 

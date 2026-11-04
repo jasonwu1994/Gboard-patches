@@ -120,7 +120,7 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 <details>
   <summary><code>G Logo on Spacebar</code></summary>
 
-  Show the G Logo on the spacebar and hide the language label.
+  Show a built-in icon or your own PNG, WebP, or JPEG on the spacebar. Keep its original colors or choose a single color, adjust its size, and include imported images in settings backups.
 </details>
 
 <details>

@@ -220,6 +220,48 @@
         <translation locale="en">Navigate up</translation>
         <translation locale="zh-Hant">返回上一層</translation>
     </string>
+    <string name="gboard_patches_search_title">
+        <translation locale="en">Search settings</translation>
+        <translation locale="zh-Hant">搜尋設定</translation>
+    </string>
+    <string name="gboard_patches_search_hint">
+        <translation locale="en">Search settings</translation>
+        <translation locale="zh-Hant">搜尋設定</translation>
+    </string>
+    <string name="gboard_patches_search_clear">
+        <translation locale="en">Clear search</translation>
+        <translation locale="zh-Hant">清除搜尋</translation>
+    </string>
+    <string name="gboard_patches_search_close">
+        <translation locale="en">Close search</translation>
+        <translation locale="zh-Hant">關閉搜尋</translation>
+    </string>
+    <string name="gboard_patches_search_empty_summary">
+        <translation locale="en">Search feature and setting names.</translation>
+        <translation locale="zh-Hant">輸入功能或設定名稱。</translation>
+    </string>
+    <string name="gboard_patches_search_no_results_title">
+        <translation locale="en">No matching settings</translation>
+        <translation locale="zh-Hant">找不到相符的設定</translation>
+    </string>
+    <string name="gboard_patches_search_no_results_summary">
+        <translation locale="en">Try a shorter or different keyword.</translation>
+        <translation locale="zh-Hant">試試較短或其他關鍵字。</translation>
+    </string>
+    <plurals name="gboard_patches_search_results">
+        <item quantity="one">
+            <translation locale="en">%d result</translation>
+            <translation locale="zh-Hant">%d 個結果</translation>
+        </item>
+        <item quantity="other">
+            <translation locale="en">%d results</translation>
+            <translation locale="zh-Hant">%d 個結果</translation>
+        </item>
+    </plurals>
+    <string name="gboard_patches_search_english_match">
+        <translation locale="en">English: %1$s</translation>
+        <translation locale="zh-Hant">英文相符：%1$s</translation>
+    </string>
     <string name="gboard_patches_restart_action">
         <translation locale="en">Restart Gboard</translation>
         <translation locale="zh-Hant">重新啟動 Gboard</translation>
@@ -1794,6 +1836,14 @@
         <translation locale="en">Feature</translation>
         <translation locale="zh-Hant">功能</translation>
     </string>
+    <string name="gboard_patches_long_press_quick_actions_select_all_title">
+        <translation locale="en">Select all when nothing is selected</translation>
+        <translation locale="zh-Hant">未選取時自動全選</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_select_all_summary">
+        <translation locale="en">When no text is selected, long-press C/X or drag from Globe to C/X to copy or cut all text in the input field.</translation>
+        <translation locale="zh-Hant">未選取文字時，長按 C/X 或從地球鍵拖曳到 C/X，會複製或剪下輸入框內的全部文字。</translation>
+    </string>
     <string name="gboard_patches_long_press_quick_actions_section_mappings">
         <translation locale="en">Mappings</translation>
         <translation locale="zh-Hant">說明</translation>
@@ -3254,6 +3304,14 @@
         <translation locale="en">Editing buttons settings unavailable. Reopen settings and try again.</translation>
         <translation locale="zh-Hant">編輯按鈕設定無法載入，請重新開啟設定再試一次。</translation>
     </string>
+    <string name="gboard_edit_ap_select_all_unselected_title">
+        <translation locale="en">Select all when nothing is selected</translation>
+        <translation locale="zh-Hant">未選取時自動全選</translation>
+    </string>
+    <string name="gboard_edit_ap_select_all_unselected_summary">
+        <translation locale="en">When no text is selected, the toolbar Copy/Cut buttons copy or cut all text in the input field.</translation>
+        <translation locale="zh-Hant">未選取文字時，工具列的複製/剪下會複製或剪下輸入框內的全部文字。</translation>
+    </string>
     <string name="gboard_patches_section_settings">
         <translation locale="en">Settings</translation>
         <translation locale="zh-Hant">設定</translation>
@@ -3645,5 +3703,73 @@
     <string name="gboard_patches_keypress_haptics_support_unknown">
         <translation locale="en">Unable to check device support; Gboard still checks before playing</translation>
         <translation locale="zh-Hant">無法確認裝置支援狀態，播放時仍由 Gboard 檢查</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_icon_google_color">
+        <translation locale="en">Google G (color)</translation>
+        <translation locale="zh-Hant">Google G (全彩)</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_icon_image">
+        <translation locale="en">Custom image</translation>
+        <translation locale="zh-Hant">自訂圖片</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_import">
+        <translation locale="en">Import image</translation>
+        <translation locale="zh-Hant">匯入圖片</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_replace">
+        <translation locale="en">Replace image</translation>
+        <translation locale="zh-Hant">更換圖片</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_import_summary">
+        <translation locale="en">PNG, WebP or JPEG, up to 8 MB. The image is fitted to the spacebar and saved at up to 96 pixels.</translation>
+        <translation locale="zh-Hant">支援 8 MB 以內的 PNG、WebP 或 JPEG。圖片會按比例縮小，以最長邊 96 像素保存。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_tint">
+        <translation locale="en">Apply a single color</translation>
+        <translation locale="zh-Hant">套用單色</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_tint_summary">
+        <translation locale="en">Off keeps the original colors. On colors the visible pixels; transparent icons work best.</translation>
+        <translation locale="zh-Hant">關閉時保留原色；開啟時將可見像素套用指定顏色，適合透明背景圖示。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_remove">
+        <translation locale="en">Remove imported image</translation>
+        <translation locale="zh-Hant">移除匯入的圖片</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_imported">
+        <translation locale="en">Image imported. Original colors are preserved.</translation>
+        <translation locale="zh-Hant">圖片已匯入，保留原始顏色。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_failed">
+        <translation locale="en">Could not import this image. Choose a PNG, WebP or JPEG up to 8 MB. Your previous image is unchanged.</translation>
+        <translation locale="zh-Hant">無法匯入這張圖片，請選擇 8 MB 以內的 PNG、WebP 或 JPEG。原有圖片保持不變。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_original">
+        <translation locale="en">Original colors</translation>
+        <translation locale="zh-Hant">原始顏色</translation>
+    </string>
+    <string name="gboard_patches_spacebar_image_original_summary">
+        <translation locale="en">This image keeps its original colors.</translation>
+        <translation locale="zh-Hant">此圖片保留原始顏色。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_title">
+        <translation locale="en">Icon size</translation>
+        <translation locale="zh-Hant">圖示大小</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_summary">
+        <translation locale="en">Resize all spacebar icons. Large sizes fit within the space key.</translation>
+        <translation locale="zh-Hant">調整所有空白鍵圖示的大小；較大的尺寸會限制在空白鍵內。</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_default">
+        <translation locale="en">24 dp (default)</translation>
+        <translation locale="zh-Hant">24 dp (預設)</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_hint">
+        <translation locale="en">12–40 dp (default: 24)</translation>
+        <translation locale="zh-Hant">12–40 dp (預設 24)</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_invalid">
+        <translation locale="en">Enter a size between 12 and 40 dp.</translation>
+        <translation locale="zh-Hant">請輸入 12 至 40 dp 的尺寸。</translation>
     </string>
 </settings-text>

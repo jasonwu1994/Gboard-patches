@@ -46,6 +46,16 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         }
     }
 
+    public static boolean isSelectAllWhenUnselectedEnabled() {
+        try {
+            Snapshot current = snapshot();
+            return current.enabled && current.selectAllWhenUnselected;
+        } catch (Throwable failure) {
+            logFailure("failed to resolve select-all runtime settings", failure);
+            return false;
+        }
+    }
+
     static Snapshot snapshot() {
         Snapshot override = snapshotOverrideForTest;
         if (override != null) {
@@ -72,12 +82,13 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
     static Snapshot snapshotFromPreferences(SharedPreferences preferences,
             long loadedAtElapsedMs) {
         if (preferences == null) {
-            return new Snapshot(loadedAtElapsedMs, false, false, "unavailable");
+            return new Snapshot(loadedAtElapsedMs, false, false, false, "unavailable");
         }
         return new Snapshot(
                 loadedAtElapsedMs,
                 GboardLongPressQuickActionsSettings.readEnabled(preferences),
                 GboardLongPressQuickActionsSettings.readGlobeDragEnabled(preferences),
+                GboardLongPressQuickActionsSettings.readSelectAllWhenUnselected(preferences),
                 "local");
     }
 
@@ -86,7 +97,13 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
     }
 
     static void setOverrideForTest(boolean enabled, boolean globeDragEnabled) {
-        snapshotOverrideForTest = new Snapshot(0L, enabled, globeDragEnabled, "test");
+        setOverrideForTest(enabled, globeDragEnabled, false);
+    }
+
+    static void setOverrideForTest(boolean enabled, boolean globeDragEnabled,
+            boolean selectAllWhenUnselected) {
+        snapshotOverrideForTest = new Snapshot(0L, enabled, globeDragEnabled,
+                selectAllWhenUnselected, "test");
     }
 
     static void clearEnabledOverrideForTest() {
@@ -101,7 +118,7 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         if (context == null) {
             return previous != null
                     ? new Snapshot(loadedAtElapsedMs, previous.enabled,
-                            previous.globeDragEnabled, "last-known")
+                            previous.globeDragEnabled, previous.selectAllWhenUnselected, "last-known")
                     : snapshotFromPreferences(null, loadedAtElapsedMs);
         }
         try {
@@ -112,7 +129,7 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
             logFailure("failed to read local settings", failure);
             return previous != null
                     ? new Snapshot(loadedAtElapsedMs, previous.enabled,
-                            previous.globeDragEnabled, "last-known")
+                            previous.globeDragEnabled, previous.selectAllWhenUnselected, "last-known")
                     : snapshotFromPreferences(null, loadedAtElapsedMs);
         }
     }
@@ -169,13 +186,15 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         final long loadedAtElapsedMs;
         final boolean enabled;
         final boolean globeDragEnabled;
+        final boolean selectAllWhenUnselected;
         final String source;
 
         Snapshot(long loadedAtElapsedMs, boolean enabled, boolean globeDragEnabled,
-                String source) {
+                boolean selectAllWhenUnselected, String source) {
             this.loadedAtElapsedMs = loadedAtElapsedMs;
             this.enabled = enabled;
             this.globeDragEnabled = globeDragEnabled;
+            this.selectAllWhenUnselected = selectAllWhenUnselected;
             this.source = source == null ? "unknown" : source;
         }
     }

@@ -28,7 +28,7 @@ private val ITEM_BIND_BEFORE_RUNTIME_CALL = RuntimeCallId.CLIPBOARD_RUNTIME_BEFO
 private val ITEM_BIND_RUNTIME_CALL = RuntimeCallId.CLIPBOARD_RUNTIME_AFTER_ITEM_BIND
 
 internal val gboardClipboardAdapterTrimPatch = bytecodePatch(
-    description = "移植 clipboard adapter trim 保險"
+    description = "調整 clipboard adapter trim 保險"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
@@ -44,7 +44,7 @@ internal val gboardClipboardAdapterTrimPatch = bytecodePatch(
 }
 
 internal val gboardClipboardItemBindPatch = bytecodePatch(
-    description = "移植 clipboard countdown / creation time / preview lines bind。"
+    description = "調整 clipboard countdown / creation time / preview lines bind。"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 

@@ -187,14 +187,16 @@ public final class GboardPatchesSettingsActivitySourceTest {
         String openFeature = extractMethod(source, "public void openFeature(");
         String navigateBack = extractMethod(source, "private boolean navigateBack(");
         String applyScreen = extractMethod(source, "private void applyScreen(");
+        String finishScreenApply = extractMethod(source, "private void finishScreenApply(");
 
         Assert.assertTrue(openFeature.contains(
                 "scrollState.enterFeature(state.getCurrent() == null, currentScrollY())"));
         Assert.assertTrue(navigateBack.contains(
                 "scrollState.leaveFeature(returningToRoot)"));
-        Assert.assertTrue(applyScreen.contains(
+        Assert.assertTrue(applyScreen.contains("finishScreenApply();"));
+        Assert.assertTrue(finishScreenApply.contains(
                 "consumeRequestedScrollPositionOnNextScreenApply()"));
-        Assert.assertTrue(applyScreen.contains(
+        Assert.assertTrue(finishScreenApply.contains(
                 "scrollContentToPositionAfterLayout(requestedScrollY)"));
     }
 

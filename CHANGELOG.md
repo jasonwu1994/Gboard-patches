@@ -1,3 +1,67 @@
+## [4.2.0](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.1...v4.2.0) (2026-11-03)
+
+### ✨ New Features
+
+* **Gboard:** add an option to automatically select all text before copying or cutting when nothing is selected, available through the toolbar, long-press shortcuts, and globe-key drag gestures.
+* **Gboard:** update morphe-patcher to **v2.1.0**.
+* **Gboard:** add a search button to the Patches settings page to quickly find settings.
+* **Gboard:** extend the G Logo on Spacebar patch with custom image support, a full-color Google G icon, and adjustable icon sizes.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix paste shortcuts from the toolbar, long-press actions, and globe-key drag gestures in terminal input fields such as Termux.
+
+### ✨ 新功能
+
+* **Gboard:** 新增「未選取文字時自動全選」選項，支援透過工具列、長按及地球鍵拖曳快捷操作，全選並複製或剪下文字。
+* **Gboard:** 將 morphe-patcher 更新至 **v2.1.0**。
+* **Gboard:** 在 Patches 設定頁面新增搜尋按鈕，方便快速尋找設定項目。
+* **Gboard:** 「G Logo on Spacebar」Patch 新增自訂圖片與「Google G（全彩）」圖示，並支援自訂圖示大小。
+
+### 🐛 修復
+
+* **Gboard:** 修復工具列、長按及地球鍵拖曳快捷貼上在 Termux 等終端機輸入介面中無法正常運作的問題。
+
+## [4.2.0-dev.5](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.4...v4.2.0-dev.5) (2026-11-03)
+
+### ✨ New Features
+
+* **Gboard:** extend the G Logo on Spacebar patch with custom image support, a full-color Google G icon, and adjustable icon sizes.
+
+### ✨ 新功能
+
+* **Gboard:** 「G Logo on Spacebar」Patch 新增自訂圖片與「Google G（全彩）」圖示，並支援自訂圖示大小。
+
+## [4.2.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.2...v4.2.0-dev.4) (2026-11-02)
+
+### ✨ New Features
+
+* **Gboard:** update morphe-patcher to **v2.1.0**.
+* **Gboard:** add a search button to the Patches settings page to quickly find settings.
+
+### ✨ 新功能
+
+* **Gboard:** 將 morphe-patcher 更新至 **v2.1.0**。
+* **Gboard:** 在 Patches 設定頁面新增搜尋按鈕，方便快速尋找設定項目。
+
+## [4.2.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.1...v4.2.0-dev.2) (2026-10-31)
+
+### ✨ New Features
+
+* **Gboard:** add an option to automatically select all text before copying or cutting when nothing is selected, available through the toolbar, long-press shortcuts, and globe-key drag gestures.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix paste shortcuts from the toolbar, long-press actions, and globe-key drag gestures in terminal input fields such as Termux.
+
+### ✨ 新功能
+
+* **Gboard:** 新增「未選取文字時自動全選」選項，支援透過工具列、長按及地球鍵拖曳快捷操作，全選並複製或剪下文字。
+
+### 🐛 修復
+
+* **Gboard:** 修復工具列、長按及地球鍵拖曳快捷貼上在 Termux 等終端機輸入介面中無法正常運作的問題。
+
 ## [4.1.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.0...v4.1.1) (2026-10-31)
 
 ### 🐛 Bug Fixes

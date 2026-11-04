@@ -29,6 +29,8 @@ public final class GboardLongPressQuickActionsSettingsFeature
     private final String enabledSummary;
     private final String globeDragTitle;
     private final String globeDragSummary;
+    private final String selectAllTitle;
+    private final String selectAllSummary;
     private final String featureSectionTitle;
     private final String mappingsSectionTitle;
     private final String[] actionLabels;
@@ -54,6 +56,10 @@ public final class GboardLongPressQuickActionsSettingsFeature
                 GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_globe_drag_summary),
                 GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_select_all_title),
+                GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_select_all_summary),
+                GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_section_feature),
                 GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_section_mappings),
@@ -76,6 +82,7 @@ public final class GboardLongPressQuickActionsSettingsFeature
     GboardLongPressQuickActionsSettingsFeature(String entryTitle, String entrySummary,
             String headerBadge, String errorTitle, String errorSummary, String enabledTitle,
             String enabledSummary, String globeDragTitle, String globeDragSummary,
+            String selectAllTitle, String selectAllSummary,
             String featureSectionTitle, String mappingsSectionTitle, String[] actionLabels) {
         this.entryTitle = entryTitle;
         this.entrySummary = entrySummary;
@@ -86,6 +93,8 @@ public final class GboardLongPressQuickActionsSettingsFeature
         this.enabledSummary = enabledSummary;
         this.globeDragTitle = globeDragTitle;
         this.globeDragSummary = globeDragSummary;
+        this.selectAllTitle = selectAllTitle;
+        this.selectAllSummary = selectAllSummary;
         this.featureSectionTitle = featureSectionTitle;
         this.mappingsSectionTitle = mappingsSectionTitle;
         this.actionLabels = actionLabels == null ? new String[0] : actionLabels.clone();
@@ -121,11 +130,16 @@ public final class GboardLongPressQuickActionsSettingsFeature
             boolean enabled = GboardLongPressQuickActionsSettings.readEnabled(preferences);
             boolean globeDragEnabled =
                     GboardLongPressQuickActionsSettings.readGlobeDragEnabled(preferences);
+            boolean selectAllWhenUnselected =
+                    GboardLongPressQuickActionsSettings.readSelectAllWhenUnselected(preferences);
             return buildScreenForState(
                     enabled,
                     globeDragEnabled,
+                    selectAllWhenUnselected,
                     value -> GboardLongPressQuickActionsSettings.writeEnabled(context, value),
                     value -> GboardLongPressQuickActionsSettings.writeGlobeDragEnabled(
+                            context, value),
+                    value -> GboardLongPressQuickActionsSettings.writeSelectAllWhenUnselected(
                             context, value));
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to render long-press quick action settings", throwable);
@@ -135,8 +149,10 @@ public final class GboardLongPressQuickActionsSettingsFeature
 
     GboardPatchesSettingsContract.Screen buildScreenForState(boolean enabled,
             boolean globeDragEnabled,
+            boolean selectAllWhenUnselected,
             GboardPatchesSettingsContract.ToggleAction toggleAction,
-            GboardPatchesSettingsContract.ToggleAction globeDragToggleAction) {
+            GboardPatchesSettingsContract.ToggleAction globeDragToggleAction,
+            GboardPatchesSettingsContract.ToggleAction selectAllToggleAction) {
         String[] labels = normalizedActionLabels();
         return new GboardPatchesSettingsContract.Screen(
                 entryTitle,
@@ -160,7 +176,13 @@ public final class GboardLongPressQuickActionsSettingsFeature
                                                 globeDragSummary,
                                                 enabled,
                                                 globeDragEnabled,
-                                                globeDragToggleAction))),
+                                                globeDragToggleAction),
+                                        new GboardPatchesSettingsContract.SwitchRow(
+                                                selectAllTitle,
+                                                selectAllSummary,
+                                                enabled,
+                                                selectAllWhenUnselected,
+                                                selectAllToggleAction))),
                         new GboardPatchesSettingsContract.Section(
                                 mappingsSectionTitle,
                                 Arrays.asList(

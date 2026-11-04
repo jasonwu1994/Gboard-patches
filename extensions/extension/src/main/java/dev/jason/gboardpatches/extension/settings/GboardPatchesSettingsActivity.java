@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.extension.settings;
 
 import android.animation.ObjectAnimator;
+import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -22,8 +23,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Insets;
+import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -41,18 +44,26 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.provider.Settings;
 import android.provider.OpenableColumns;
+import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.view.animation.PathInterpolator;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -72,9 +83,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ExecutorService;
@@ -85,6 +98,7 @@ import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.BuildConfig;
 import dev.jason.gboardpatches.extension.backuprestore.GboardExportFileNames;
 import dev.jason.gboardpatches.extension.settings.keyboardpreview.GboardKeyboardPreviewController;
+import dev.jason.gboardpatches.extension.settings.search.GboardSettingsSearchEngine;
 
 public final class GboardPatchesSettingsActivity extends Activity
         implements GboardPatchesSettingsContract.Host {
@@ -127,6 +141,15 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final int TOOLBAR_HEIGHT_DP = 56;
     private static final int TOOLBAR_SCROLLED_THRESHOLD_DP = 24;
     private static final long TOOLBAR_SCROLL_TRANSITION_MS = 200L;
+    private static final int SEARCH_PILL_HEIGHT_DP = 44;
+    private static final int SEARCH_PILL_GAP_DP = 4;
+    private static final long SEARCH_MORPH_DURATION_MS = 320L;
+    /** Share of the morph, at the toggle end, over which the pill fades in out of the toggle. */
+    private static final float SEARCH_MORPH_FADE = 0.25f;
+    private static final int SEARCH_HIGHLIGHT_TOP_MARGIN_DP = 96;
+    private static final int SEARCH_HIGHLIGHT_ALPHA = 0x55;
+    private static final long SEARCH_HIGHLIGHT_DELAY_MS = 350L;
+    private static final long SEARCH_HIGHLIGHT_FADE_MS = 1400L;
     private static final int SEGMENT_OUTER_RADIUS_DP = 24;
     private static final int SEGMENT_INNER_RADIUS_DP = 6;
     private static final int SEGMENT_GAP_DP = 2;
@@ -159,6 +182,19 @@ public final class GboardPatchesSettingsActivity extends Activity
     private final GboardRestartPendingChanges.Listener restartPendingListener =
             pendingCount -> postToDecorView(() -> applyRestartPendingCount(pendingCount, true));
     private ObjectAnimator restartButtonAnimator;
+    private FrameLayout toolbarSearchArea;
+    private LinearLayout toolbarLeadingRow;
+    private LinearLayout searchPill;
+    private ImageView searchToggleButton;
+    private EditText searchField;
+    private ImageView searchClearButton;
+    private float searchMorphProgress;
+    private boolean searchMorphOpen;
+    private ValueAnimator searchMorphAnimator;
+    private GboardSettingsSearchFeature searchFeature;
+    private String pendingSearchHighlightTitle;
+    private View searchHighlightTarget;
+    private final SearchResultsList searchResults = new SearchResultsList();
     private View headerCardView;
     private boolean toolbarScrolledState;
     private boolean toolbarTitleShown;
@@ -197,12 +233,19 @@ public final class GboardPatchesSettingsActivity extends Activity
                 return thread;
             });
     private final Object screenBuildLock = new Object();
+    private final ExecutorService boundedDocumentExecutor =
+            Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "GboardPatchesDocumentRead");
+                thread.setDaemon(true);
+                return thread;
+            });
     private int requestedScrollYOnNextScreenApply = 0;
     private boolean initialFeatureFromIntentHandled;
     private PendingTextDocumentWrite pendingTextDocumentWrite;
     private GboardPatchesSettingsContract.StringValueConsumer pendingTextDocumentReader;
     private PendingBinaryDocumentWrite pendingBinaryDocumentWrite;
     private GboardPatchesSettingsContract.BinaryDocumentConsumer pendingBinaryDocumentReader;
+    private int pendingBinaryDocumentLimit = Integer.MAX_VALUE;
     private GboardPatchesSettingsContract.StringValueConsumer pendingDocumentTreeConsumer;
     private GboardPatchesSettingsContract.Feature lifecycleVisibleFeature;
     private boolean featureLifecycleEnabled;
@@ -280,6 +323,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         detachKeyboardPreviewSafely();
         screenBuildExecutor.shutdownNow();
         backgroundStateExecutor.shutdownNow();
+        boundedDocumentExecutor.shutdownNow();
         super.onDestroy();
     }
 
@@ -310,6 +354,10 @@ public final class GboardPatchesSettingsActivity extends Activity
 
     @Override
     public void refresh() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            runOnUiThread(this::refresh);
+            return;
+        }
         initializeFeaturesAndRenderSafely();
     }
 
@@ -348,6 +396,8 @@ public final class GboardPatchesSettingsActivity extends Activity
         requestScrollPositionOnNextScreenApply(0);
         applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.open(feature)));
+        // Starts the toolbar search morph with the tap rather than once the page is built.
+        setSearchOpen(isSearching(), true);
     }
 
     @Override
@@ -1218,10 +1268,19 @@ public final class GboardPatchesSettingsActivity extends Activity
     @SuppressWarnings("deprecation")
     public void openBinaryDocument(String[] mimeTypes,
             GboardPatchesSettingsContract.BinaryDocumentConsumer documentConsumer) {
+        openBinaryDocument(mimeTypes, Integer.MAX_VALUE, documentConsumer);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void openBinaryDocument(String[] mimeTypes, int maxBytes,
+            GboardPatchesSettingsContract.BinaryDocumentConsumer documentConsumer) {
         if (documentConsumer == null) {
             return;
         }
+        if (maxBytes <= 0) throw new IllegalArgumentException("Document limit must be positive");
         pendingBinaryDocumentReader = documentConsumer;
+        pendingBinaryDocumentLimit = maxBytes;
         String[] normalizedMimeTypes = normalizeMimeTypes(mimeTypes);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
@@ -1745,18 +1804,45 @@ public final class GboardPatchesSettingsActivity extends Activity
         GboardPatchesSettingsContract.BinaryDocumentConsumer reader =
                 pendingBinaryDocumentReader;
         pendingBinaryDocumentReader = null;
+        int maxBytes = pendingBinaryDocumentLimit;
+        pendingBinaryDocumentLimit = Integer.MAX_VALUE;
         Uri uri = selectedDocumentUri(data);
         if (resultCode != RESULT_OK || uri == null || reader == null) {
             return;
         }
-        try {
-            reader.accept(new GboardPatchesSettingsContract.BinaryDocument(
-                    queryDisplayName(uri), getContentResolver().getType(uri),
-                    readBinaryDocument(uri)));
-        } catch (Throwable throwable) {
-            Log.w(TAG, "Failed to read selected binary document", throwable);
-            Toast.makeText(this, DOCUMENT_READ_FAILED, Toast.LENGTH_SHORT).show();
+        Runnable read = () -> {
+            try {
+                if (maxBytes != Integer.MAX_VALUE && (isFinishing() || isDestroyed())) return;
+                GboardPatchesSettingsContract.BinaryDocument document = new GboardPatchesSettingsContract.BinaryDocument(
+                        queryDisplayName(uri), getContentResolver().getType(uri),
+                        readBinaryDocument(uri, maxBytes));
+                if (maxBytes != Integer.MAX_VALUE
+                        && (Thread.currentThread().isInterrupted() || isFinishing() || isDestroyed())) return;
+                reader.accept(document);
+            } catch (Throwable throwable) {
+                reportBinaryDocumentReadFailure(throwable);
+            }
+        };
+        if (maxBytes == Integer.MAX_VALUE) read.run();
+        else {
+            try {
+                if (!isFinishing() && !isDestroyed()) boundedDocumentExecutor.execute(read);
+            } catch (Throwable failure) {
+                reportBinaryDocumentReadFailure(failure);
+            }
         }
+    }
+
+    private void reportBinaryDocumentReadFailure(Throwable failure) {
+        try { Log.w(TAG, "Failed to read selected binary document", failure); }
+        catch (Throwable ignored) { }
+        try {
+            runOnUiThread(() -> {
+                try {
+                    if (!isFinishing() && !isDestroyed()) showMessage(DOCUMENT_READ_FAILED);
+                } catch (Throwable ignored) { }
+            });
+        } catch (Throwable ignored) { }
     }
 
     private static Uri selectedDocumentUri(Intent data) {
@@ -1790,7 +1876,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         return uri.getLastPathSegment();
     }
 
-    private byte[] readBinaryDocument(Uri uri) throws java.io.IOException {
+    private byte[] readBinaryDocument(Uri uri, int maxBytes) throws java.io.IOException {
         try (InputStream input = getContentResolver().openInputStream(uri)) {
             if (input == null) {
                 throw new java.io.IOException("Content resolver returned null input stream");
@@ -1799,6 +1885,7 @@ public final class GboardPatchesSettingsActivity extends Activity
             byte[] buffer = new byte[8192];
             int read;
             while ((read = input.read(buffer)) != -1) {
+                if (read > maxBytes - output.size()) throw new java.io.IOException("Selected document exceeds size limit");
                 output.write(buffer, 0, read);
             }
             return output.toByteArray();
@@ -2018,14 +2105,147 @@ public final class GboardPatchesSettingsActivity extends Activity
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 1f));
 
-        toolbarView.addView(backButton);
-        toolbarView.addView(toolbarTitleView);
         toolbarActionsView = new LinearLayout(this);
         toolbarActionsView.setOrientation(LinearLayout.HORIZONTAL);
         toolbarActionsView.setGravity(Gravity.CENTER_VERTICAL);
-        toolbarView.addView(toolbarActionsView);
+
+        // The title row and the search pill share one area; the pill grows out of the search
+        // toggle at its end and pushes the title row away.
+        toolbarSearchArea = new FrameLayout(this);
+        toolbarSearchArea.setLayoutParams(new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                1f));
+        toolbarLeadingRow = new LinearLayout(this);
+        toolbarLeadingRow.setOrientation(LinearLayout.HORIZONTAL);
+        toolbarLeadingRow.setGravity(Gravity.CENTER_VERTICAL);
+        toolbarLeadingRow.setPadding(0, 0, dp(48), 0);
+        toolbarLeadingRow.addView(backButton);
+        toolbarLeadingRow.addView(toolbarTitleView);
+        toolbarLeadingRow.addView(toolbarActionsView);
+        toolbarSearchArea.addView(toolbarLeadingRow, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        toolbarSearchArea.addView(buildSearchPill(), new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(SEARCH_PILL_HEIGHT_DP),
+                Gravity.CENTER_VERTICAL));
+        toolbarSearchArea.addView(buildSearchToggleButton(), new FrameLayout.LayoutParams(
+                dp(48), dp(48), Gravity.END | Gravity.CENTER_VERTICAL));
+        toolbarSearchArea.addOnLayoutChangeListener(
+                (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    if (right - left != oldRight - oldLeft) {
+                        view.post(() -> applySearchMorph(searchMorphProgress));
+                    }
+                });
+
+        toolbarView.addView(toolbarSearchArea);
         toolbarView.addView(buildRestartButton());
         return toolbarView;
+    }
+
+    private ImageView buildToolbarIcon(int icon, int color) {
+        ImageView view = new ImageView(this);
+        view.setImageDrawable(GboardPatchesIcons.create(icon, color,
+                getResources().getDisplayMetrics().density));
+        view.setScaleType(ImageView.ScaleType.CENTER);
+        return view;
+    }
+
+    private View buildSearchToggleButton() {
+        searchToggleButton = buildToolbarIcon(GboardPatchesIcons.SEARCH, palette.textPrimary);
+        searchToggleButton.setBackground(buildRippleDrawable(dp(24)));
+        searchToggleButton.setClickable(true);
+        searchToggleButton.setFocusable(true);
+        String label = text(R.string.gboard_patches_search_hint);
+        searchToggleButton.setContentDescription(label);
+        searchToggleButton.setTooltipText(label);
+        searchToggleButton.setOnClickListener(view -> {
+            if (isSearching()) {
+                hideSearchKeyboard();
+                navigateBack();
+            } else {
+                openSearch();
+            }
+        });
+        return searchToggleButton;
+    }
+
+    private View buildSearchPill() {
+        searchPill = new LinearLayout(this);
+        searchPill.setOrientation(LinearLayout.HORIZONTAL);
+        searchPill.setGravity(Gravity.CENTER_VERTICAL);
+        // Leaves the toggle's room at the end, so the open pill stops just short of it.
+        searchPill.setPadding(dp(12), 0, dp(48 + SEARCH_PILL_GAP_DP), 0);
+        GradientDrawable pillBackground = new GradientDrawable();
+        pillBackground.setColor(palette.surface);
+        searchPill.setBackground(pillBackground);
+        searchPill.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                float circle = view.getHeight();
+                float end = view.getWidth() - (dp(48) - circle) / 2f;
+                float progress = searchMorphProgress;
+                float far = circle + (end - circle) * progress;
+                float near = (circle + dp(SEARCH_PILL_GAP_DP)) * progress;
+                outline.setRoundRect(
+                        Math.round(end - far), 0,
+                        Math.round(end - near), view.getHeight(),
+                        circle / 2f);
+            }
+        });
+        searchPill.setClipToOutline(true);
+        searchPill.setVisibility(View.INVISIBLE);
+
+        ImageView icon = buildToolbarIcon(GboardPatchesIcons.SEARCH, palette.textSecondary);
+        icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        searchPill.addView(icon, new LinearLayout.LayoutParams(dp(24), dp(24)));
+
+        searchField = new EditText(this);
+        searchField.setSingleLine(true);
+        searchField.setBackground(null);
+        searchField.setPadding(dp(8), 0, dp(4), 0);
+        searchField.setTextColor(palette.textPrimary);
+        searchField.setHintTextColor(palette.textSecondary);
+        searchField.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+        searchField.setHint(text(R.string.gboard_patches_search_hint));
+        searchField.setImeOptions(EditorInfo.IME_ACTION_SEARCH | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        searchField.setInputType(InputType.TYPE_CLASS_TEXT
+                | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        searchField.setOnEditorActionListener((view, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                hideSearchKeyboard();
+                return true;
+            }
+            return false;
+        });
+        searchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable text) {
+                onSearchQueryChanged(text.toString());
+            }
+        });
+        searchPill.addView(searchField, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+
+        searchClearButton = buildToolbarIcon(GboardPatchesIcons.CLOSE, palette.textSecondary);
+        searchClearButton.setBackground(buildRippleDrawable(dp(20)));
+        searchClearButton.setClickable(true);
+        searchClearButton.setFocusable(true);
+        searchClearButton.setContentDescription(text(R.string.gboard_patches_search_clear));
+        searchClearButton.setVisibility(View.GONE);
+        searchClearButton.setOnClickListener(view -> {
+            searchField.setText("");
+            showSearchKeyboard();
+        });
+        searchPill.addView(searchClearButton, new LinearLayout.LayoutParams(dp(40), dp(40)));
+        return searchPill;
     }
 
     private View buildRestartButton() {
@@ -2413,6 +2633,229 @@ public final class GboardPatchesSettingsActivity extends Activity
         return settingsOrchestrator.snapshot().getCurrent() == null;
     }
 
+    /** The home-page features search resolves its results through. */
+    List<GboardPatchesSettingsContract.Feature> searchRoots() {
+        ensureFeaturesInitialized();
+        return features;
+    }
+
+    private boolean isSearching() {
+        return searchFeature != null
+                && settingsOrchestrator.snapshot().getCurrent() == searchFeature;
+    }
+
+    /** Opens the search page from the toolbar toggle, with the keyboard up. */
+    private void openSearch() {
+        if (searchFeature == null) {
+            searchFeature = new GboardSettingsSearchFeature(this);
+        }
+        searchFeature.resetEngine();
+        GboardPatchesSettingsOrchestrator.State<GboardPatchesSettingsContract.Feature> state =
+                settingsOrchestrator.snapshot();
+        int searchIndex = state.getBackStack().indexOf(searchFeature);
+        if (searchIndex >= 0) {
+            // Opened again from a result: go back to those results rather than stack a second
+            // search, unwinding the saved scroll positions of the pages left behind.
+            int restoredScrollY = 0;
+            for (int depth = state.getBackStack().size(); depth > searchIndex; depth--) {
+                restoredScrollY = scrollState.leaveFeature(false);
+            }
+            requestScrollPositionOnNextScreenApply(restoredScrollY);
+            List<GboardPatchesSettingsContract.Feature> path =
+                    new ArrayList<GboardPatchesSettingsContract.Feature>(
+                            state.getBackStack().subList(0, searchIndex + 1));
+            applyOrchestration(settingsOrchestrator.accept(
+                    GboardPatchesSettingsOrchestrator.Event.replacePath(path)));
+        } else if (state.getCurrent() != searchFeature) {
+            searchFeature.setQuery("");
+            searchField.setText("");
+            searchResults.clearCache();
+            openFeature(searchFeature);
+        }
+        setSearchOpen(true, true);
+        showSearchKeyboard();
+    }
+
+    private void onSearchQueryChanged(String query) {
+        if (searchFeature == null || !isSearching() || query.equals(searchFeature.getQuery())) {
+            return;
+        }
+        searchFeature.setQuery(query);
+        searchClearButton.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
+        // No scroll request: results fold in place rather than jumping back to the top.
+        initializeFeaturesAndRenderSafely();
+    }
+
+    /** Opens the page holding {@code result}; back returns to the search results. */
+    void openSearchResult(GboardSettingsSearchEngine.Result result) {
+        List<GboardPatchesSettingsContract.Feature> featurePath = result.getFeaturePath();
+        if (featurePath.isEmpty()) {
+            return;
+        }
+        hideSearchKeyboard();
+        GboardPatchesSettingsContract.Feature target = featurePath.get(featurePath.size() - 1);
+        searchHighlightTarget = null;
+        if (result.getEntry().isPage()) {
+            // Enter the feature as its home or group row does: some, like Developer options,
+            // launch Gboard's own screen instead of opening a page here.
+            pendingSearchHighlightTitle = null;
+            runSafely("open search result", () -> target.openRootEntry(this));
+            return;
+        }
+        pendingSearchHighlightTitle = result.getTitle();
+        openFeature(target);
+    }
+
+    /**
+     * Opens or closes the toolbar search pill. The pill grows out of the toggle's circle to the
+     * whole toolbar while the back button and title slide away ahead of it, and back again.
+     */
+    private void setSearchOpen(boolean open, boolean animate) {
+        if (searchPill == null || open == searchMorphOpen) {
+            return;
+        }
+        searchMorphOpen = open;
+        String label = text(open
+                ? R.string.gboard_patches_search_close
+                : R.string.gboard_patches_search_hint);
+        searchToggleButton.setImageDrawable(GboardPatchesIcons.create(
+                open ? GboardPatchesIcons.CLOSE : GboardPatchesIcons.SEARCH,
+                palette.textPrimary,
+                getResources().getDisplayMetrics().density));
+        searchToggleButton.setContentDescription(label);
+        searchToggleButton.setTooltipText(label);
+        if (searchMorphAnimator != null) {
+            searchMorphAnimator.cancel();
+        }
+        float target = open ? 1f : 0f;
+        if (!animate) {
+            applySearchMorph(target);
+            return;
+        }
+        searchMorphAnimator = ValueAnimator.ofFloat(searchMorphProgress, target);
+        searchMorphAnimator.setDuration(Math.round(
+                SEARCH_MORPH_DURATION_MS * Math.abs(target - searchMorphProgress)));
+        searchMorphAnimator.setInterpolator(new PathInterpolator(0.2f, 0f, 0f, 1f));
+        searchMorphAnimator.addUpdateListener(
+                animation -> applySearchMorph((float) animation.getAnimatedValue()));
+        searchMorphAnimator.start();
+    }
+
+    private void applySearchMorph(float progress) {
+        searchMorphProgress = progress;
+        if (searchPill == null || toolbarSearchArea == null) {
+            return;
+        }
+        int width = toolbarSearchArea.getWidth();
+        searchPill.setVisibility(progress > 0f ? View.VISIBLE : View.INVISIBLE);
+        searchPill.setAlpha(Math.min(1f, progress / SEARCH_MORPH_FADE));
+        searchPill.invalidateOutline();
+        toolbarLeadingRow.setTranslationX(-progress * Math.max(0, width - dp(48)));
+        toolbarLeadingRow.setAlpha(1f - progress);
+        toolbarLeadingRow.setVisibility(progress >= 1f ? View.INVISIBLE : View.VISIBLE);
+    }
+
+    /** Opens the toolbar search pill only on the search page; called before each screen apply. */
+    private void syncSearchChrome() {
+        if (searchField == null) {
+            return;
+        }
+        boolean searching = isSearching();
+        setSearchOpen(searching, true);
+        searchClearButton.setVisibility(searching && searchField.length() > 0
+                ? View.VISIBLE
+                : View.GONE);
+        if (searching) {
+            headerCardView.setVisibility(View.GONE);
+        }
+        if (!searching && searchField.hasFocus()) {
+            hideSearchKeyboard();
+        }
+    }
+
+    /** Remembers the rendered row a search result asked to highlight. */
+    private void noteRenderedRow(GboardPatchesSettingsContract.Row row, View rowView) {
+        if (pendingSearchHighlightTitle == null || searchHighlightTarget != null
+                || row == null || row.getTitle() == null) {
+            return;
+        }
+        if (pendingSearchHighlightTitle.equals(row.getTitle().toString())) {
+            searchHighlightTarget = rowView;
+        }
+    }
+
+    /** Scrolls to and briefly tints the row a search result opened, once its page is laid out. */
+    private void applySearchHighlight() {
+        View target = searchHighlightTarget;
+        pendingSearchHighlightTitle = null;
+        searchHighlightTarget = null;
+        if (target == null || contentScrollView == null) {
+            return;
+        }
+        ScrollView scrollView = contentScrollView;
+        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        scrollView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        scrollView.post(() -> scrollToAndFlash(scrollView, target));
+                    }
+                });
+        scrollView.requestLayout();
+    }
+
+    private void scrollToAndFlash(ScrollView scrollView, View target) {
+        if (!target.isAttachedToWindow()) {
+            return;
+        }
+        Rect bounds = new Rect();
+        target.getDrawingRect(bounds);
+        scrollView.offsetDescendantRectToMyCoords(target, bounds);
+        scrollView.smoothScrollTo(0, Math.max(0, bounds.top - dp(SEARCH_HIGHLIGHT_TOP_MARGIN_DP)));
+
+        GradientDrawable highlight = new GradientDrawable();
+        highlight.setColor(palette.accent);
+        highlight.setCornerRadius(dp(16));
+        highlight.setAlpha(SEARCH_HIGHLIGHT_ALPHA);
+        target.setForeground(highlight);
+        ValueAnimator fade = ValueAnimator.ofInt(SEARCH_HIGHLIGHT_ALPHA, 0);
+        fade.setStartDelay(SEARCH_HIGHLIGHT_DELAY_MS);
+        fade.setDuration(SEARCH_HIGHLIGHT_FADE_MS);
+        fade.addUpdateListener(animation -> {
+            int alpha = (int) animation.getAnimatedValue();
+            highlight.setAlpha(alpha);
+            if (alpha == 0 && target.getForeground() == highlight) {
+                target.setForeground(null);
+            }
+        });
+        fade.start();
+    }
+
+    private void showSearchKeyboard() {
+        if (searchField == null) {
+            return;
+        }
+        searchField.requestFocus();
+        searchField.setSelection(searchField.length());
+        searchField.post(() -> {
+            InputMethodManager inputMethodManager = getSystemService(InputMethodManager.class);
+            if (inputMethodManager != null) {
+                inputMethodManager.showSoftInput(searchField, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+    }
+
+    private void hideSearchKeyboard() {
+        if (searchField == null) {
+            return;
+        }
+        InputMethodManager inputMethodManager = getSystemService(InputMethodManager.class);
+        if (inputMethodManager != null) {
+            inputMethodManager.hideSoftInputFromWindow(searchField.getWindowToken(), 0);
+        }
+        searchField.clearFocus();
+    }
+
     private void updateToolbarChrome(boolean scrolled) {
         if (toolbarView == null || toolbarTitleView == null) {
             return;
@@ -2722,8 +3165,10 @@ public final class GboardPatchesSettingsActivity extends Activity
             requestScrollPositionOnNextScreenApply(
                     scrollState.leaveFeature(returningToRoot));
         }
-        return applyOrchestration(settingsOrchestrator.accept(
+        boolean exitRequested = applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.back()));
+        setSearchOpen(isSearching(), true);
+        return exitRequested;
     }
 
     private void registerBackCallback() {
@@ -3109,6 +3554,17 @@ public final class GboardPatchesSettingsActivity extends Activity
     }
 
     private void applyScreen(GboardPatchesSettingsContract.Screen screen) {
+        syncSearchChrome();
+        if (isSearching()) {
+            toolbarTitleView.setText(screen.getToolbarTitle());
+            applyToolbarActions(screen.getToolbarActions());
+            contentColumn.setPadding(dp(16), 0, dp(16), dp(16));
+            searchResults.apply(screen);
+            toolbarTitleForced = false;
+            finishScreenApply();
+            return;
+        }
+        searchResults.detach();
         boolean rootScreen = isShowingRootScreen();
         observeRestartRequiredRows(screen);
         toolbarTitleView.setText(screen.getToolbarTitle());
@@ -3132,14 +3588,18 @@ public final class GboardPatchesSettingsActivity extends Activity
         List<GboardPatchesSettingsContract.Section> sections = screen.getSections();
         GboardPatchesSettingsContract.Row masterToggle =
                 rootScreen ? null : findMasterToggle(sections);
-        if (masterToggle != null && screen.isMasterToggleFirst()) {
-            panelContainer.addView(buildMasterSwitchCard(masterToggle, screen.getToolbarTitle()));
+        View masterSwitchCard = masterToggle == null
+                ? null
+                : buildMasterSwitchCard(masterToggle, screen.getToolbarTitle());
+        noteRenderedRow(masterToggle, masterSwitchCard);
+        if (masterSwitchCard != null && screen.isMasterToggleFirst()) {
+            panelContainer.addView(masterSwitchCard);
         }
         for (GboardPatchesSettingsContract.StatusBlock statusBlock : screen.getStatusBlocks()) {
             panelContainer.addView(createStatusBlockView(statusBlock));
         }
-        if (masterToggle != null && !screen.isMasterToggleFirst()) {
-            panelContainer.addView(buildMasterSwitchCard(masterToggle, screen.getToolbarTitle()));
+        if (masterSwitchCard != null && !screen.isMasterToggleFirst()) {
+            panelContainer.addView(masterSwitchCard);
         }
         for (int index = 0; index < sections.size(); index++) {
             GboardPatchesSettingsContract.Section section = sections.get(index);
@@ -3176,11 +3636,16 @@ public final class GboardPatchesSettingsActivity extends Activity
             screenActionContainer.setVisibility(View.VISIBLE);
         }
         toolbarTitleForced = fullBleed;
+        finishScreenApply();
+    }
+
+    private void finishScreenApply() {
         int requestedScrollY = consumeRequestedScrollPositionOnNextScreenApply();
         if (requestedScrollY >= 0) {
             scrollContentToPositionAfterLayout(requestedScrollY);
         }
         updateToolbarChrome(currentScrollY() > dp(TOOLBAR_SCROLLED_THRESHOLD_DP));
+        applySearchHighlight();
     }
 
     private void observeRestartRequiredRows(GboardPatchesSettingsContract.Screen screen) {
@@ -4049,6 +4514,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         for (int index = 0; index < count; index++) {
             GboardPatchesSettingsContract.Row item = items.get(index);
             View rowView = createRowView(item);
+            noteRenderedRow(item, rowView);
             if (item instanceof GboardPatchesSettingsContract.CustomViewRow) {
                 applySegmentGap(rowView, index);
             } else {
@@ -4263,6 +4729,23 @@ public final class GboardPatchesSettingsActivity extends Activity
                 ColorStateList.valueOf(blendAlpha(palette.accent, RIPPLE_ACCENT_ALPHA)),
                 shape,
                 null);
+    }
+
+    /**
+     * Gives a row its list-position surface like {@link #applySegmentPosition}, easing an existing
+     * segment surface into its new corners instead of swapping it. Leaves layout params alone, for
+     * rows held in a {@link GboardFoldFrame}.
+     */
+    private void morphSegmentPosition(View rowView, int index, int count, boolean animate) {
+        Drawable background = rowView.getBackground();
+        if (background instanceof RippleDrawable ripple
+                && ripple.getNumberOfLayers() > 0
+                && ripple.getDrawable(0) instanceof SegmentShapeDrawable shape) {
+            shape.morphRadii(segmentRadii(index, count),
+                    animate ? GboardFoldFrame.DURATION_MS : 0L, GboardFoldFrame.EASING);
+            return;
+        }
+        rowView.setBackground(buildSegmentBackground(index, count, false));
     }
 
     private float[] segmentRadii(int index, int count) {
@@ -4798,6 +5281,214 @@ public final class GboardPatchesSettingsActivity extends Activity
         }
     }
 
+    /**
+     * Owns the search page while it shows and changes it in place as the query changes: rows that
+     * stop matching fold away under a clip so those below slide up, new matches unfold, and the
+     * count, hint and no-results card fold in and out. Row views are cached by result key, so a row
+     * coming back is not built again.
+     */
+    private final class SearchResultsList {
+        private LinearLayout root;
+        private LinearLayout list;
+        private GboardFoldFrame hintFrame;
+        private GboardFoldFrame statusFrame;
+        private GboardFoldFrame titleFrame;
+        private TextView hintView;
+        private TextView titleView;
+        private final Map<String, View> rowCache = new HashMap<String, View>();
+        private final Map<GboardFoldFrame, String> frameKeys =
+                new HashMap<GboardFoldFrame, String>();
+
+        void clearCache() {
+            rowCache.clear();
+        }
+
+        void detach() {
+            if (list != null) {
+                for (int index = 0; index < list.getChildCount(); index++) {
+                    ((GboardFoldFrame) list.getChildAt(index)).cancelAnimations();
+                }
+            }
+            GboardFoldFrame[] headerFrames = { hintFrame, statusFrame, titleFrame };
+            for (GboardFoldFrame frame : headerFrames) {
+                if (frame != null) {
+                    frame.cancelAnimations();
+                }
+            }
+            root = null;
+            list = null;
+            hintFrame = null;
+            statusFrame = null;
+            titleFrame = null;
+            hintView = null;
+            titleView = null;
+            frameKeys.clear();
+        }
+
+        void apply(GboardPatchesSettingsContract.Screen screen) {
+            boolean animate = root != null && root.getParent() == panelContainer
+                    && root.isAttachedToWindow();
+            if (!animate) {
+                attach(screen);
+            }
+            GboardPatchesSettingsContract.Section section =
+                    screen.getSections().isEmpty() ? null : screen.getSections().get(0);
+            List<GboardPatchesSettingsContract.Row> rows = section == null
+                    ? Collections.<GboardPatchesSettingsContract.Row>emptyList()
+                    : section.getItems();
+            String hint = section != null && rows.isEmpty() ? section.getDescription() : null;
+            String title = rows.isEmpty() ? null : section.getTitle();
+            GboardPatchesSettingsContract.StatusBlock status =
+                    screen.getStatusBlocks().isEmpty() ? null : screen.getStatusBlocks().get(0);
+
+            if (hint != null) {
+                hintView.setText(hint);
+            }
+            hintFrame.fold(!TextUtils.isEmpty(hint), animate, null);
+            if (status != null && !statusFrame.isOpen()) {
+                LinearLayout holder = verticalHolder();
+                holder.addView(createStatusBlockView(status));
+                statusFrame.setContent(holder);
+            }
+            statusFrame.fold(status != null, animate, null);
+            if (title != null) {
+                titleView.setText(title);
+            }
+            titleFrame.fold(!TextUtils.isEmpty(title), animate, null);
+            applyRows(rows, animate);
+        }
+
+        private void attach(GboardPatchesSettingsContract.Screen screen) {
+            detach();
+            root = buildSectionColumn();
+            hintView = buildSectionSummary("", false);
+            // Built before its text is known, which would otherwise leave it hidden.
+            hintView.setVisibility(View.VISIBLE);
+            hintFrame = foldFrame(hintView);
+            statusFrame = foldFrame(null);
+            titleView = buildSectionTitle("");
+            titleFrame = foldFrame(titleView);
+            list = buildSegmentList();
+            root.addView(hintFrame);
+            root.addView(statusFrame);
+            root.addView(titleFrame);
+            root.addView(list);
+
+            applyPanelStyle(screen.getPanelStyle());
+            panelContainer.removeAllViews();
+            panelContainer.addView(root);
+            screenActionContainer.removeAllViews();
+            screenActionContainer.setVisibility(View.GONE);
+        }
+
+        private GboardFoldFrame foldFrame(View content) {
+            GboardFoldFrame frame = new GboardFoldFrame(GboardPatchesSettingsActivity.this);
+            if (content != null) {
+                LinearLayout holder = verticalHolder();
+                holder.addView(content);
+                frame.setContent(holder);
+            }
+            frame.fold(false, false, null);
+            frame.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            return frame;
+        }
+
+        private LinearLayout verticalHolder() {
+            LinearLayout holder = new LinearLayout(GboardPatchesSettingsActivity.this);
+            holder.setOrientation(LinearLayout.VERTICAL);
+            return holder;
+        }
+
+        private void applyRows(List<GboardPatchesSettingsContract.Row> rows, boolean animate) {
+            List<String> newKeys = new ArrayList<String>(rows.size());
+            Map<String, GboardPatchesSettingsContract.Row> rowsByKey =
+                    new HashMap<String, GboardPatchesSettingsContract.Row>();
+            for (GboardPatchesSettingsContract.Row row : rows) {
+                String key = row instanceof GboardSettingsSearchFeature.ResultRow resultRow
+                        ? resultRow.getKey()
+                        : String.valueOf(row.getTitle());
+                newKeys.add(key);
+                rowsByKey.put(key, row);
+            }
+
+            Map<String, GboardFoldFrame> existing = new HashMap<String, GboardFoldFrame>();
+            List<String> keptInOldOrder = new ArrayList<String>();
+            for (int index = 0; index < list.getChildCount(); index++) {
+                GboardFoldFrame frame = (GboardFoldFrame) list.getChildAt(index);
+                String key = frameKeys.get(frame);
+                existing.put(key, frame);
+                if (rowsByKey.containsKey(key)) {
+                    keptInOldOrder.add(key);
+                }
+            }
+            List<String> keptInNewOrder = new ArrayList<String>();
+            for (String key : newKeys) {
+                if (existing.containsKey(key)) {
+                    keptInNewOrder.add(key);
+                }
+            }
+            if (!keptInOldOrder.equals(keptInNewOrder)) {
+                // Rows trading places would need a move animation; lay them out afresh instead.
+                animate = false;
+            }
+            if (!animate) {
+                for (GboardFoldFrame frame : existing.values()) {
+                    frame.cancelAnimations();
+                }
+                list.removeAllViews();
+                frameKeys.clear();
+                existing.clear();
+            }
+
+            for (Map.Entry<String, GboardFoldFrame> entry : existing.entrySet()) {
+                GboardFoldFrame frame = entry.getValue();
+                if (!rowsByKey.containsKey(entry.getKey()) && frame.isOpen()) {
+                    frame.fold(false, true, () -> {
+                        frameKeys.remove(frame);
+                        if (list != null) {
+                            list.removeView(frame);
+                        }
+                    });
+                }
+            }
+
+            int insertAt = 0;
+            List<GboardFoldFrame> shown = new ArrayList<GboardFoldFrame>(newKeys.size());
+            for (String key : newKeys) {
+                GboardFoldFrame frame = existing.get(key);
+                if (frame == null) {
+                    frame = new GboardFoldFrame(GboardPatchesSettingsActivity.this);
+                    frame.setContent(rowView(key, rowsByKey.get(key)));
+                    frame.fold(false, false, null);
+                    frameKeys.put(frame, key);
+                    list.addView(frame, insertAt, new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT));
+                }
+                if (!frame.isOpen()) {
+                    frame.fold(true, animate, null);
+                }
+                insertAt = list.indexOfChild(frame) + 1;
+                shown.add(frame);
+            }
+            for (int index = 0; index < shown.size(); index++) {
+                GboardFoldFrame frame = shown.get(index);
+                frame.setGap(index == 0 ? 0 : dp(SEGMENT_GAP_DP), animate);
+                morphSegmentPosition(frame.getContent(), index, shown.size(), animate);
+            }
+        }
+
+        private View rowView(String key, GboardPatchesSettingsContract.Row row) {
+            View view = rowCache.get(key);
+            if (view == null) {
+                view = createRowView(row);
+                rowCache.put(key, view);
+            }
+            return view;
+        }
+    }
+
     private static final class SegmentShapeDrawable extends GradientDrawable {
         private final float[] baseRadii;
         private final float[] currentRadii = new float[8];
@@ -4806,6 +5497,7 @@ public final class GboardPatchesSettingsActivity extends Activity
         private final int pressedColor;
         private final long durationMs;
         private ValueAnimator animator;
+        private ValueAnimator radiiAnimator;
         private float progress;
         private boolean pressed;
 
@@ -4858,6 +5550,32 @@ public final class GboardPatchesSettingsActivity extends Activity
             animator.addUpdateListener(animation ->
                     applyProgress((float) animation.getAnimatedValue()));
             animator.start();
+        }
+
+        /** Moves to the corners of another list position, so a row turning first or last eases. */
+        void morphRadii(float[] targetRadii, long morphDurationMs, TimeInterpolator easing) {
+            if (radiiAnimator != null) {
+                radiiAnimator.cancel();
+                radiiAnimator = null;
+            }
+            if (morphDurationMs <= 0L) {
+                System.arraycopy(targetRadii, 0, baseRadii, 0, baseRadii.length);
+                applyProgress(progress);
+                return;
+            }
+            float[] fromRadii = baseRadii.clone();
+            radiiAnimator = ValueAnimator.ofFloat(0f, 1f);
+            radiiAnimator.setDuration(morphDurationMs);
+            radiiAnimator.setInterpolator(easing);
+            radiiAnimator.addUpdateListener(animation -> {
+                float fraction = animation.getAnimatedFraction();
+                for (int index = 0; index < baseRadii.length; index++) {
+                    baseRadii[index] = fromRadii[index]
+                            + (targetRadii[index] - fromRadii[index]) * fraction;
+                }
+                applyProgress(progress);
+            });
+            radiiAnimator.start();
         }
 
         private void applyProgress(float value) {

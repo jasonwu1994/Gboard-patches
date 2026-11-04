@@ -1,5 +1,5 @@
 {
-  "version": "4.1.1",
+  "version": "4.2.0",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -279,7 +279,7 @@
     },
     {
       "name": "G Logo on Spacebar",
-      "description": "在空白鍵顯示 G Logo，並隱藏語言名稱\nShow the G Logo on the spacebar and hide the language label.",
+      "description": "自訂空白鍵圖示、圖片、顏色及大小，並隱藏語言名稱\nChoose a built-in or imported spacebar image, its colors and size, and hide the language label.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
