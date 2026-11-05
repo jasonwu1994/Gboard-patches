@@ -72,6 +72,6 @@ class GboardLongPressQuickActionsPatchContractTest {
         const val LONG_PRESS_DESCRIPTION =
             "在英文 QWERTY 與注音鍵盤加入全選、復原、複製、剪下、貼上與重做長按快捷鍵\n" +
                 "Add Select all, Undo, Copy, Cut, Paste, and Redo long-press shortcuts " +
-                "to English QWERTY and Zhuyin."
+                "to English QWERTY and Zhuyin.\nAjouter les raccourcis par appui long Tout sélectionner, Annuler, Copier, Couper, Coller et Rétablir au clavier QWERTY anglais et au clavier Zhuyin."
     }
 }

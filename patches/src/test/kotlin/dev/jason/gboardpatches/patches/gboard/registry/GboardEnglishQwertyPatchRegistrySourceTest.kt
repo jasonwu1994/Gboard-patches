@@ -15,12 +15,14 @@ class GboardEnglishQwertyPatchRegistrySourceTest {
 
         assertTrue(source.contains("val gboardEnglishQwertySlideUppercaseTogglePatch = gboardPublicResourcePatch("))
         assertTrue(source.contains("name = \"English QWERTY Up-Flick Uppercase\""))
-        assertTrue(
-            source.contains(
-                "description = \"英文 QWERTY 鍵盤上滑大小寫\\n" +
-                    "Flick up on the English QWERTY keyboard to toggle uppercase and lowercase.\""
-            )
-        )
+        assertTrue(source.contains("description = \"英文 QWERTY 鍵盤上滑大小寫\\n\" +"))
+        assertTrue(source.contains(
+            "\"Flick up on the English QWERTY keyboard to toggle uppercase and lowercase.\\n\" +",
+        ))
+        assertTrue(source.contains(
+            "\"Balayer vers le haut sur le clavier QWERTY anglais pour basculer entre " +
+                "majuscules et minuscules.\"",
+        ))
         assertFalse(source.contains("name = \"English QWERTY Slide Uppercase Toggle\""))
         assertFalse(source.contains("name = \"English QWERTY Slide Symbols\""))
         assertFalse(source.contains("slide-up and slide-down symbol input"))

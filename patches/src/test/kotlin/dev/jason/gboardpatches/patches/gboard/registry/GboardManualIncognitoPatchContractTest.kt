@@ -16,7 +16,7 @@ class GboardManualIncognitoPatchContractTest {
         assertEquals("Incognito Mode Toggle", patch.name)
         assertEquals(
             "在 Access Point 工具列新增無痕模式切換按鈕，並可設定無痕模式下是否啟用剪貼簿與語音輸入\n" +
-                "Add an Incognito toggle to the Access Point toolbar and configure clipboard and voice typing availability while Incognito mode is active.",
+                "Add an Incognito toggle to the Access Point toolbar and configure clipboard and voice typing availability while Incognito mode is active.\nAjouter une bascule Navigation privée à la barre d’outils Access Point et configurer la disponibilité du presse-papiers et de la saisie vocale lorsque le mode Navigation privée est actif.",
             patch.description,
         )
         assertTrue(patch.default)

@@ -23,7 +23,7 @@ class GboardFloatingWebSearchPatchContractTest {
         assertTrue(patch.default)
         assertEquals(
             "直接從 Gboard 開啟懸浮網頁，快速搜尋需要的資訊。\n" +
-                "Open a floating web page directly from Gboard to quickly search for the information you need.",
+                "Open a floating web page directly from Gboard to quickly search for the information you need.\nOuvrir une page web flottante directement depuis Gboard pour rechercher rapidement l’information dont vous avez besoin.",
             patch.description,
         )
         assertTrue(patch.dependencies.any { it === gboardPatchesSettingsPatch })
