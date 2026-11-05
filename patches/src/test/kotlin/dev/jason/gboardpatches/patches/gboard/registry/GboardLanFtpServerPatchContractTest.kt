@@ -98,7 +98,7 @@ class GboardLanFtpServerPatchContractTest {
     private companion object {
         const val LAN_FTP_DESCRIPTION =
             "新增區域網路 FTP 伺服器，支援檔案瀏覽、傳輸與下載續傳\n" +
-                "Add a LAN FTP server with file browsing, transfers, and download resume."
+                "Add a LAN FTP server with file browsing, transfers, and download resume.\nAjouter un serveur FTP LAN avec navigation de fichiers, transferts et reprise des téléchargements."
         const val CATALOG_PATH =
             "patches/src/main/resources/gboard/gboard-port-product-catalog.json"
         const val BINDINGS_PATH =

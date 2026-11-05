@@ -116,7 +116,7 @@ class GboardLatinGlobePatchContractTest {
         const val LATIN_GLOBE_DESCRIPTION =
             "新增英文鍵盤地球鍵忽略時間覆寫，可獨立控制輸入後切語言延遲\n" +
                 "Add an independent English globe key ignore interval override for " +
-                "post-typing language-switch delay."
+                "post-typing language-switch delay.\nAjouter un réglage indépendant pour l’intervalle d’ignorance de la touche globe du clavier anglais, afin de contrôler le délai de changement de langue après la saisie."
         const val BINDINGS_PROFILE_PATH =
             "patches/src/main/resources/gboard/gboard-version-bindings.json"
     }

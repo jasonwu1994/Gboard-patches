@@ -46,10 +46,17 @@ public final class GboardSettingsTextTest {
                 R.string.gboard_patches_custom_theme_source_chooser_title));
         Assert.assertEquals("選擇要匯入的主題", GboardSettingsText.get(context,
                 R.string.gboard_patches_custom_theme_choose_import));
+
+        GboardPatchesSettings.preferences(context).edit()
+                .putString(GboardPatchesSettings.PREF_KEY_SETTINGS_UI_LANGUAGE,
+                        GboardSettingsLocaleManager.LANGUAGE_FRENCH)
+                .commit();
+        Assert.assertEquals("Paramètres des patches", GboardSettingsText.get(context,
+                R.string.gboard_patches_header_title));
     }
 
     @Test
-    public void authoritativeCopyResolvesBothLocalesWithoutCallerFallback() {
+    public void authoritativeCopyResolvesAllLocalesWithoutCallerFallback() {
         Assert.assertEquals(
                 "Patch settings",
                 GboardSettingsText.resolveStableTextForTesting(
@@ -60,6 +67,11 @@ public final class GboardSettingsTextTest {
                 GboardSettingsText.resolveStableTextForTesting(
                         R.string.gboard_patches_header_title,
                         "zh-Hant"));
+        Assert.assertEquals(
+                "Paramètres des patches",
+                GboardSettingsText.resolveStableTextForTesting(
+                        R.string.gboard_patches_header_title,
+                        "fr"));
     }
 
     @Test
@@ -71,11 +83,11 @@ public final class GboardSettingsTextTest {
                         "zh-TW",
                         "繁體中文"));
         Assert.assertEquals(
-                "System default (English)",
+                "Valeur par défaut du système (Français)",
                 GboardSettingsText.resolveStableTextForTesting(
                         R.string.gboard_patches_language_system_value,
                         "fr-FR",
-                        "English"));
+                        "Français"));
     }
 
     @Test
@@ -113,10 +125,22 @@ public final class GboardSettingsTextTest {
                         R.plurals.gboard_patches_minutes,
                         "zh-Hant",
                         2));
+        Assert.assertEquals(
+                "1 minute",
+                GboardSettingsText.resolveStableQuantityForTesting(
+                        R.plurals.gboard_patches_minutes,
+                        "fr",
+                        1));
+        Assert.assertEquals(
+                "2 minutes",
+                GboardSettingsText.resolveStableQuantityForTesting(
+                        R.plurals.gboard_patches_minutes,
+                        "fr",
+                        2));
     }
 
     @Test
-    public void everyGeneratedSettingsStringHasEnglishAndTraditionalChineseCoverage()
+    public void everyGeneratedSettingsStringHasEnglishTraditionalChineseAndFrenchCoverage()
             throws Exception {
         for (Field field : R.string.class.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers()) || field.getType() != int.class) {
@@ -129,6 +153,9 @@ public final class GboardSettingsTextTest {
             Assert.assertNotNull(
                     field.getName() + " missing zh-Hant settings text",
                     GboardSettingsText.resolveStableTextForTesting(resId, "zh-Hant"));
+            Assert.assertNotNull(
+                    field.getName() + " missing French settings text",
+                    GboardSettingsText.resolveStableTextForTesting(resId, "fr"));
         }
     }
 }
