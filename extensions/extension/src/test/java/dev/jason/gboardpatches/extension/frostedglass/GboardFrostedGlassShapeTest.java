@@ -3,6 +3,8 @@ package dev.jason.gboardpatches.extension.frostedglass;
 import static org.junit.Assert.*;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.drawable.Drawable;
@@ -34,6 +36,19 @@ public class GboardFrostedGlassShapeTest {
             assertEquals(77, f.theme.getAlpha());
             assertSame(f.original, ((LayerDrawable) f.root.getBackground()).getDrawable(0));
             assertFalse(f.root.getClipToOutline());
+        }
+    }
+
+    @Test public void softwareSnapshotDrawsThemeWithoutTheBlurRenderNode() throws Exception {
+        try (Fixture f = new Fixture(0, 0, 0, 0)) {
+            f.apply(255);
+            Drawable background = f.root.getBackground();
+            background.setBounds(0, 0, 1000, 600);
+            Bitmap bitmap = Bitmap.createBitmap(1000, 600, Bitmap.Config.ARGB_8888);
+            bitmap.eraseColor(Color.WHITE);
+            background.draw(new Canvas(bitmap));
+            assertEquals(Color.BLACK, bitmap.getPixel(500, 300));
+            bitmap.recycle();
         }
     }
 

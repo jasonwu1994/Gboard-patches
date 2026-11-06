@@ -42,6 +42,13 @@ public class GboardFrostedGlassNavigationTest {
         }
     }
 
+    @Test public void softwareSnapshotDrawsTintWithoutTheBlurRenderNode() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.apply();
+            assertEquals(178, Color.red(f.drawPixel(f.navigationSurface()::draw, 500, 950)), 1);
+        }
+    }
+
     @Test public void hidingRestoresStockPaintAndThemeAlpha() throws Exception {
         try (Fixture f = new Fixture()) {
             f.apply();
