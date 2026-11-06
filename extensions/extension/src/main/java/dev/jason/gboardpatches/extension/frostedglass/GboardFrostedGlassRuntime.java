@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.extension.frostedglass;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -877,13 +878,31 @@ public final class GboardFrostedGlassRuntime {
                 && shape.bounds.right == decor.getWidth() && shape.bounds.bottom == decor.getHeight();
     }
 
+    /**
+     * BackgroundBlurDrawable needs a RenderNode and throws on a software Canvas, such as
+     * Gboard's CopyImageView keyboard snapshot. Draw only the fallback in that case.
+     */
+    private static class HardwareBlurLayerDrawable extends LayerDrawable {
+        private final Drawable softwareFallback;
+
+        HardwareBlurLayerDrawable(Drawable[] layers, Drawable softwareFallback) {
+            super(layers);
+            this.softwareFallback = softwareFallback;
+        }
+
+        @Override public void draw(Canvas canvas) {
+            if (canvas.isHardwareAccelerated()) super.draw(canvas);
+            else if (softwareFallback != null) softwareFallback.draw(canvas);
+        }
+    }
+
     /** Preserve the theme outline, except at a validated internal navigation join. */
-    private static final class ThemeBlurBackground extends LayerDrawable {
+    private static final class ThemeBlurBackground extends HardwareBlurLayerDrawable {
         private final Drawable theme;
         private GboardFrostedGlassShape joinedShape;
 
         ThemeBlurBackground(Drawable theme, Drawable blur) {
-            super(theme == null ? new Drawable[]{blur} : new Drawable[]{theme, blur});
+            super(theme == null ? new Drawable[]{blur} : new Drawable[]{theme, blur}, theme);
             this.theme = theme;
         }
 
@@ -1396,7 +1415,7 @@ public final class GboardFrostedGlassRuntime {
                     blur = nextBlur;
                     // BackgroundBlurDrawable cuts a transparent hole for the compositor.
                     // Draw the tint after that hole, as the keyboard's child surfaces do.
-                    surface = new LayerDrawable(new Drawable[]{blur, tint});
+                    surface = new HardwareBlurLayerDrawable(new Drawable[]{blur, tint}, tint);
                     surface.setBounds(nextBounds);
                     bounds.set(nextBounds);
                     radius = radiusPx;
