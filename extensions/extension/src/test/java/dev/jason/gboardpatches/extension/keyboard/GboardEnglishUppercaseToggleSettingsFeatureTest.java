@@ -36,7 +36,7 @@ public final class GboardEnglishUppercaseToggleSettingsFeatureTest {
         Assert.assertEquals(
                 "Flicking up on lowercase letters outputs uppercase, and flicking up on uppercase letters outputs lowercase.",
                 enabledRow.getSummary());
-        Assert.assertTrue(enabledRow.isChecked());
+        Assert.assertFalse(enabledRow.isChecked());
         Assert.assertTrue(enabledRow.isEnabled());
     }
 
@@ -52,8 +52,8 @@ public final class GboardEnglishUppercaseToggleSettingsFeatureTest {
                 findToggleRow(screen.getRows(), "Enable English Up-Flick Uppercase");
         Assert.assertNotNull(enabledRow);
 
-        enabledRow.getToggleAction().accept(false);
-        Assert.assertFalse(GboardEnglishUppercaseToggleSettings.readEnabled(preferences));
+        enabledRow.getToggleAction().accept(true);
+        Assert.assertTrue(GboardEnglishUppercaseToggleSettings.readEnabled(preferences));
     }
 
     @Test

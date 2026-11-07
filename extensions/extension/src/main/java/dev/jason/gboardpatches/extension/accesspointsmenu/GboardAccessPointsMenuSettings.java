@@ -7,7 +7,7 @@ import dev.jason.gboardpatches.extension.flagsettings.GboardBooleanFlagSettings;
 public final class GboardAccessPointsMenuSettings {
     public static final String PREF_KEY_ENABLED =
             "pref_access_points_menu_redesign_enabled";
-    public static final boolean DEFAULT_ENABLED = false;
+    public static final boolean DEFAULT_ENABLED = true;
 
     private GboardAccessPointsMenuSettings() {
     }

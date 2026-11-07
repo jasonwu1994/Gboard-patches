@@ -32,7 +32,17 @@ final class LanFtpBoundedServerContext extends DefaultFtpServerContext {
                 30L,
                 TimeUnit.SECONDS,
                 new LanFtpControlQueueLimiter(
-                        maxPendingEvents, maxControlConnections));
+                        maxPendingEvents, maxControlConnections)) {
+            // Shutdown signals only cover existing workers. Finish each admitted submission
+            // before publishing shutdown so it cannot create a worker that misses the signal.
+            @Override public synchronized void execute(Runnable task) {
+                super.execute(task);
+            }
+
+            @Override public synchronized void shutdown() {
+                super.shutdown();
+            }
+        };
     }
 
     @Override public synchronized ThreadPoolExecutor getThreadPoolExecutor() {

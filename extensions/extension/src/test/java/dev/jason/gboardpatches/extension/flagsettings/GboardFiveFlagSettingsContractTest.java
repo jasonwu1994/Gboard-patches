@@ -58,8 +58,8 @@ public final class GboardFiveFlagSettingsContractTest {
 
         Assert.assertEquals("pref_access_points_menu_redesign_enabled",
                 GboardAccessPointsMenuSettings.PREF_KEY_ENABLED);
-        Assert.assertFalse(GboardAccessPointsMenuSettings.DEFAULT_ENABLED);
-        Assert.assertFalse(GboardAccessPointsMenuSettings.readEnabled(preferences));
+        Assert.assertTrue(GboardAccessPointsMenuSettings.DEFAULT_ENABLED);
+        Assert.assertTrue(GboardAccessPointsMenuSettings.readEnabled(preferences));
 
         Assert.assertEquals("pref_force_split_keyboard_enabled",
                 GboardSplitKeyboardSettings.PREF_KEY_ENABLED);

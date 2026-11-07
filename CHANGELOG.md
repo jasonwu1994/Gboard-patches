@@ -1,3 +1,51 @@
+## [4.3.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0...v4.3.0-dev.1) (2026-11-06)
+
+### ✨ New Features
+
+* **Gboard:** add an FAQ section to the Frosted Glass page, with links for when the effect isn't working and for flickering on Pixel phones.
+* **Gboard:** change the defaults of two settings: English Up-Flick Uppercase is now off and the Access Points menu style is now on. Settings you have already saved are kept.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix the keyboard closing by itself with Frosted Glass enabled ("Software rendering doesn't support drawRenderNode"). If blur fails to draw, the keyboard now falls back to its theme.
+* **Gboard:** make "Extend to navigation bar" work on Android 15 and below. The navigation bar follows the keyboard's transparency, without blur.
+* **Gboard:** make "Extend to navigation bar" work with narrower docked keyboards, such as one-handed mode.
+
+### ✨ 新功能
+
+* **Gboard:** 在「磨砂玻璃」頁面新增 FAQ 區塊，提供「為什麼磨砂玻璃沒有效果？」和「為什麼 Pixel 手機輸入文字時會閃爍？」的說明連結。
+* **Gboard:** 調整兩項設定的預設值：「英文鍵盤上滑大小寫」改為關閉，「Access Points 選單樣式」改為開啟。已儲存的設定不受影響。
+
+### 🐛 修復
+
+* **Gboard:** 修復啟用磨砂玻璃後鍵盤自行關閉的問題（`Software rendering doesn't support drawRenderNode`）。模糊效果繪製失敗時，鍵盤會改回使用主題背景。
+* **Gboard:** 修復「延伸到導覽列」在 Android 15 以下沒有效果的問題。導覽列會跟隨鍵盤的透明度，但沒有模糊效果。
+* **Gboard:** 修復「延伸到導覽列」在單手模式等較窄的固定式鍵盤上沒有效果的問題。
+
+## [4.2.0](https://github.com/jasonwu1994/Gboard-patches/compare/v4.1.1...v4.2.0) (2026-11-03)
+
+### ✨ New Features
+
+* **Gboard:** add an option to automatically select all text before copying or cutting when nothing is selected, available through the toolbar, long-press shortcuts, and globe-key drag gestures.
+* **Gboard:** update morphe-patcher to **v2.1.0**.
+* **Gboard:** add a search button to the Patches settings page to quickly find settings.
+* **Gboard:** extend the G Logo on Spacebar patch with custom image support, a full-color Google G icon, and adjustable icon sizes.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix paste shortcuts from the toolbar, long-press actions, and globe-key drag gestures in terminal input fields such as Termux.
+
+### ✨ 新功能
+
+* **Gboard:** 新增「未選取文字時自動全選」選項，支援透過工具列、長按及地球鍵拖曳快捷操作，全選並複製或剪下文字。
+* **Gboard:** 將 morphe-patcher 更新至 **v2.1.0**。
+* **Gboard:** 在 Patches 設定頁面新增搜尋按鈕，方便快速尋找設定項目。
+* **Gboard:** 「G Logo on Spacebar」Patch 新增自訂圖片與「Google G（全彩）」圖示，並支援自訂圖示大小。
+
+### 🐛 修復
+
+* **Gboard:** 修復工具列、長按及地球鍵拖曳快捷貼上在 Termux 等終端機輸入介面中無法正常運作的問題。
+
 ## [4.2.0-dev.5](https://github.com/jasonwu1994/Gboard-patches/compare/v4.2.0-dev.4...v4.2.0-dev.5) (2026-11-03)
 
 ### ✨ New Features
