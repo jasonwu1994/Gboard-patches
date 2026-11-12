@@ -334,6 +334,52 @@ class GboardPackageRenameTransformTest {
     }
 
     @Test
+    fun `custom target package renames every selected attribute`() {
+        val custom = "com.example.keyboard"
+        val manifest = loadManifest()
+
+        val result = applyGboardPackageRename(manifest, loadSettingsDocuments(), custom)
+
+        assertEquals(GboardPackageRenameResult.RENAMED, result)
+        assertEquals(custom, manifest.documentElement.getAttribute("package"))
+        gboardPackageRenameMappings(custom).forEach { mapping ->
+            assertEquals(0, mappingAttributes(manifest, mapping, mapping.originalValue).size)
+            assertEquals(1, mappingAttributes(manifest, mapping, mapping.renamedValue).size)
+        }
+        assertFalse(serialize(manifest).contains(FINAL_PACKAGE))
+    }
+
+    @Test
+    fun `custom target package is idempotent and rejects a different renamed root`() {
+        val custom = "com.touchtype.swiftkey"
+        val manifest = loadManifest()
+        val settings = loadSettingsDocuments()
+        applyGboardPackageRename(manifest, settings, custom)
+
+        assertEquals(
+            GboardPackageRenameResult.ALREADY_RENAMED,
+            applyGboardPackageRename(manifest, settings, custom),
+        )
+        try {
+            applyGboardPackageRename(manifest, settings, "com.example.other")
+            fail("Expected a different target package to be rejected")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message.orEmpty().contains("Unexpected Gboard manifest package"))
+        }
+    }
+
+    @Test
+    fun `target package validation accepts android package names only`() {
+        listOf("com.example.keyboard", "com.touchtype.swiftkey", "a.b", "My.App_1.x9")
+            .forEach { assertTrue(it, isValidGboardTargetPackageName(it)) }
+        listOf(
+            null, "", "single", "1com.example", "com..example", "com.example.", ".com.example",
+            "com.exa mple", "com.example-app", "com.1example", "com.google.android.inputmethod.latin",
+            "a." + "b".repeat(300),
+        ).forEach { assertFalse(it.toString(), isValidGboardTargetPackageName(it)) }
+    }
+
+    @Test
     fun `standalone package rename removes required split markers but retains split inventory`() {
         val manifest = loadManifest()
         val root = manifest.documentElement
