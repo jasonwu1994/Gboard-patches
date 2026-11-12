@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gboard Patches Extension</string>
+    <string name="accessibility_service_label">Gboard Patches Context Bridge</string>
+    <string name="accessibility_service_description">Ermöglicht Gboard Patches den Zugriff auf UI-Kontext wie Chat-Namen für intelligentere Automatisierungen.</string>
+</resources>

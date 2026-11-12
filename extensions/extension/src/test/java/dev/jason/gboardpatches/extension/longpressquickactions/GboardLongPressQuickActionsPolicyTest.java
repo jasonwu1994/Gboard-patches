@@ -38,6 +38,12 @@ public final class GboardLongPressQuickActionsPolicyTest {
                 "Redo", 0);
         assertPlan(0x7f0b18a9, "Y", -0x27a3, 0x7f0804bd,
                 "Redo", 0);
+        assertPlan(0x7f0b19db, "g", -0x27f1, 0x7f0803c0,
+                "Toggle case", 0);
+        assertPlan(0x7f0b18e4, "G", -0x27f1, 0x7f0803c0,
+                "Toggle case", 0);
+        assertPlan(0x7f0b1aba, null, -0x27f1, 0x7f0803c0,
+                "Toggle case", 0);
     }
 
     @Test

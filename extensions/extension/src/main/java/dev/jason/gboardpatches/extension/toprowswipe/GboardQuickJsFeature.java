@@ -439,7 +439,7 @@ final class GboardQuickJsFeature {
                 GboardTopRowSwipeSettings.defaultJavaScriptRuntimeLimits());
     }
 
-    private static void executeSlotScript(GboardTarget target,
+    static void executeSlotScript(GboardTarget target,
             InputMethodService inputMethodService,
             InputConnection launchInputConnection,
             QuickJsSlotKey slotKey,

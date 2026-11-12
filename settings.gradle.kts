@@ -1,12 +1,5 @@
 rootProject.name = "gboard-patches"
 
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
 pluginManagement {
     repositories {
         gradlePluginPortal()

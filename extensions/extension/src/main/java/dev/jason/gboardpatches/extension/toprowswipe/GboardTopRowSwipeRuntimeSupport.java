@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-final class GboardTopRowSwipeRuntimeSupport {
+public final class GboardTopRowSwipeRuntimeSupport {
     static final int PRIMARY_LABEL_VIEW_ID = 0x7f0b05f5;
     static final int PLAIN_TEXT_KEYCODE = -0x2719;
     static final String[] TOP_ROW_SLOT_VIEW_NAMES = {
@@ -169,7 +169,7 @@ final class GboardTopRowSwipeRuntimeSupport {
         }
     }
 
-    static int topRowSlotIndexForView(View view) {
+    public static int topRowSlotIndexForView(View view) {
         String viewName = safeViewName(view);
         if (viewName == null) {
             return -1;
@@ -197,8 +197,9 @@ final class GboardTopRowSwipeRuntimeSupport {
             return false;
         }
         for (int index = 0; index < ENGLISH_QWERTY_TOP_ROW_LABELS.length; index++) {
-            if (!ENGLISH_QWERTY_TOP_ROW_LABELS[index]
-                    .equals(asciiLowercase(labels.get(index)))) {
+            String label = asciiLowercase(labels.get(index));
+            String expected = ENGLISH_QWERTY_TOP_ROW_LABELS[index];
+            if (!expected.equals(label) && !(index == 5 && "z".equals(label))) {
                 return false;
             }
         }

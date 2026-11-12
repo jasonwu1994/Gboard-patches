@@ -1665,7 +1665,7 @@
           "contribution_id": "long_press_editing_shortcuts.soft_key",
           "anchor_family_id": "soft_key_bind",
           "phase": "before_stock",
-          "order": 300,
+          "order": 800,
           "required_bindings": [
             "soft_key_bind",
             "soft_key_metadata_type"
