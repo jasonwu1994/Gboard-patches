@@ -5,6 +5,7 @@ import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -103,6 +104,16 @@ public final class GboardWebClipboardCaptureBootstrap {
         if (clipData == null || isWebClipboardEcho(clipData)) {
             return;
         }
+        boolean imageSyncEnabled = WebClipboardPreferences.isImageSyncEnabled(
+                WebClipboardPreferences.preferences(context));
+        if (imageSyncEnabled) {
+            Uri imageUri = resolveImageUri(clipData);
+            if (imageUri != null) {
+                dispatchImageIngress(context, runtimeLookup.config, imageUri,
+                        resolveImageMime(clipData, context, imageUri));
+                return;
+            }
+        }
         CharSequence text = currentClipboardText(context, clipData);
         if (text == null) {
             return;
@@ -196,6 +207,95 @@ public final class GboardWebClipboardCaptureBootstrap {
                     label == null ? "" : label);
         } catch (Throwable ignored) {
             return false;
+        }
+    }
+
+    static boolean isWhitelistedImageMime(String mime) {
+        if (mime == null) {
+            return false;
+        }
+        String clean = mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(java.util.Locale.ROOT);
+        return "image/png".equals(clean)
+                || "image/jpeg".equals(clean)
+                || "image/jpg".equals(clean)
+                || "image/webp".equals(clean)
+                || "image/gif".equals(clean);
+    }
+
+    private static Uri resolveImageUri(ClipData clipData) {
+        try {
+            if (clipData == null) {
+                return null;
+            }
+            for (int i = 0; i < clipData.getItemCount(); i++) {
+                ClipData.Item item = clipData.getItemAt(i);
+                if (item == null) {
+                    continue;
+                }
+                Uri uri = item.getUri();
+                if (uri == null && item.getIntent() != null) {
+                    uri = item.getIntent().getData();
+                }
+                if (uri != null && ("content".equalsIgnoreCase(uri.getScheme()) || "file".equalsIgnoreCase(uri.getScheme()))) {
+                    return uri;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static String resolveImageMime(ClipData clipData, Context context, Uri uri) {
+        try {
+            if (clipData != null && clipData.getDescription() != null) {
+                for (int i = 0; i < clipData.getDescription().getMimeTypeCount(); i++) {
+                    String mime = clipData.getDescription().getMimeType(i);
+                    if (isWhitelistedImageMime(mime)) {
+                        return mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(java.util.Locale.ROOT);
+                    }
+                }
+            }
+            if (context != null && uri != null && "content".equalsIgnoreCase(uri.getScheme())) {
+                String type = context.getContentResolver().getType(uri);
+                if (isWhitelistedImageMime(type)) {
+                    return type.replaceAll("[\\r\\n]", "").trim().toLowerCase(java.util.Locale.ROOT);
+                }
+            }
+            if (uri != null && uri.getPath() != null) {
+                String lower = uri.getPath().toLowerCase(java.util.Locale.ROOT);
+                if (lower.endsWith(".png")) return "image/png";
+                if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+                if (lower.endsWith(".webp")) return "image/webp";
+                if (lower.endsWith(".gif")) return "image/gif";
+            }
+        } catch (Throwable ignored) {
+        }
+        return "image/png";
+    }
+
+    private static void dispatchImageIngress(Context context, RuntimeConfig config,
+            Uri uri, String mime) {
+        if (uri == null || config == null) {
+            return;
+        }
+        String uriString = uri.toString();
+        String hash = sha256Hex(uriString);
+        long now = SystemClock.elapsedRealtime();
+        if (hash.equals(lastDispatchedHash)
+                && now - lastDispatchedElapsedMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
+            return;
+        }
+        try {
+            boolean accepted = ClipboardSyncLoopbackIngressClient.submitPhoneImage(
+                    mime,
+                    uriString,
+                    config.port,
+                    config.loopbackIngressToken);
+            if (accepted) {
+                lastDispatchedHash = hash;
+                lastDispatchedElapsedMs = SystemClock.elapsedRealtime();
+            }
+        } catch (Throwable ignored) {
         }
     }
 

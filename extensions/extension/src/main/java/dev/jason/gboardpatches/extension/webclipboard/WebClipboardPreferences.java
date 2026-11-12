@@ -16,11 +16,14 @@ public final class WebClipboardPreferences {
     public static final String PREF_KEY_PAIRING_CODE = "pref_web_clipboard_pairing_code";
     public static final String PREF_KEY_LOOPBACK_INGRESS_TOKEN =
             "pref_web_clipboard_loopback_ingress_token";
+    public static final String PREF_KEY_IMAGE_SYNC_ENABLED =
+            "pref_web_clipboard_image_sync_enabled";
 
     public static final boolean DEFAULT_ENABLED = false;
     public static final int DEFAULT_PORT = 8080;
     public static final boolean DEFAULT_RUNTIME_ACTIVE = false;
     public static final boolean DEFAULT_PAIRING_REQUIRED = true;
+    public static final boolean DEFAULT_IMAGE_SYNC_ENABLED = true;
     public static final String DEFAULT_PAIRING_CODE = "0000";
     public static final String DEFAULT_LOOPBACK_INGRESS_TOKEN = "";
 
@@ -63,6 +66,10 @@ public final class WebClipboardPreferences {
         if (!preferences.contains(PREF_KEY_PAIRING_REQUIRED)) {
             editor = ensureEditor(editor, preferences);
             editor.putBoolean(PREF_KEY_PAIRING_REQUIRED, DEFAULT_PAIRING_REQUIRED);
+        }
+        if (!preferences.contains(PREF_KEY_IMAGE_SYNC_ENABLED)) {
+            editor = ensureEditor(editor, preferences);
+            editor.putBoolean(PREF_KEY_IMAGE_SYNC_ENABLED, DEFAULT_IMAGE_SYNC_ENABLED);
         }
 
         Object rawPairingCode = preferences.getAll().get(PREF_KEY_PAIRING_CODE);
@@ -185,6 +192,23 @@ public final class WebClipboardPreferences {
             return;
         }
         preferences.edit().putBoolean(PREF_KEY_PAIRING_REQUIRED, required).commit();
+    }
+
+    public static boolean isImageSyncEnabled(SharedPreferences preferences) {
+        ensureDefaults(preferences);
+        if (preferences == null) {
+            return DEFAULT_IMAGE_SYNC_ENABLED;
+        }
+        Object rawValue = preferences.getAll().get(PREF_KEY_IMAGE_SYNC_ENABLED);
+        Boolean value = readBooleanObject(rawValue);
+        return value != null ? value.booleanValue() : DEFAULT_IMAGE_SYNC_ENABLED;
+    }
+
+    public static void setImageSyncEnabled(SharedPreferences preferences, boolean enabled) {
+        if (preferences == null) {
+            return;
+        }
+        preferences.edit().putBoolean(PREF_KEY_IMAGE_SYNC_ENABLED, enabled).commit();
     }
 
     public static String getPairingCode(SharedPreferences preferences) {
