@@ -100,6 +100,18 @@
         <translation locale="en">Extend frosted glass into the bottom navigation area and adjust navigation button colors; turn this off if the buttons are hard to see or the bottom area displays incorrectly.</translation>
         <translation locale="zh-Hant">讓磨砂玻璃延伸到底部導覽區並調整導覽按鈕顏色；若導覽按鈕看不清楚或底部顯示異常，可關閉。</translation>
     </string>
+    <string name="gboard_patches_frosted_glass_faq_section">
+        <translation locale="en">FAQ</translation>
+        <translation locale="zh-Hant">FAQ</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_faq_not_working_title">
+        <translation locale="en">Why isn\'t Frosted Glass working?</translation>
+        <translation locale="zh-Hant">為什麼磨砂玻璃沒有效果？</translation>
+    </string>
+    <string name="gboard_patches_frosted_glass_faq_flickering_title">
+        <translation locale="en">Why do I see flickering while typing on Pixel phones?</translation>
+        <translation locale="zh-Hant">為什麼 Pixel 手機輸入文字時會閃爍？</translation>
+    </string>
     <string name="gboard_patches_activity_title">
         <translation locale="en">Patches</translation>
         <translation locale="zh-Hant">Patches</translation>

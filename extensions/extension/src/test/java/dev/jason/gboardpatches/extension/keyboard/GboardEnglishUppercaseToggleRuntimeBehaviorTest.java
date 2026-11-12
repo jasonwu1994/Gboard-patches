@@ -37,10 +37,10 @@ public final class GboardEnglishUppercaseToggleRuntimeBehaviorTest {
         ThrowingSharedPreferences preferences = new ThrowingSharedPreferences();
         preferences.values.put(
                 GboardEnglishUppercaseToggleSettings.PREF_KEY_ENABLED,
-                "false");
+                "true");
         setApplicationContext(new SharedPreferencesContext(preferences));
 
-        Assert.assertTrue(GboardEnglishUppercaseToggleRuntime.isEnabled());
+        Assert.assertFalse(GboardEnglishUppercaseToggleRuntime.isEnabled());
     }
 
     @Test

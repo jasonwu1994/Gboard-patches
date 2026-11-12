@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 public final class GboardEnglishUppercaseToggleSettings {
     public static final String PREF_FILE = "gboard_english_uppercase_toggle";
     public static final String PREF_KEY_ENABLED = "pref_english_uppercase_toggle_enabled";
-    public static final boolean DEFAULT_ENABLED = true;
+    public static final boolean DEFAULT_ENABLED = false;
 
     private GboardEnglishUppercaseToggleSettings() {
     }

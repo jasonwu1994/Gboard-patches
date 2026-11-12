@@ -12,13 +12,13 @@ import java.util.Set;
 
 public final class GboardEnglishUppercaseToggleSettingsTest {
     @Test
-    public void ensureDefaultsSeedsEnabledToggle() {
+    public void ensureDefaultsSeedsDisabledToggle() {
         InMemorySharedPreferences preferences = new InMemorySharedPreferences();
 
         GboardEnglishUppercaseToggleSettings.ensureDefaults(preferences);
 
         Assert.assertEquals(
-                Boolean.TRUE,
+                Boolean.FALSE,
                 preferences.values.get(GboardEnglishUppercaseToggleSettings.PREF_KEY_ENABLED));
     }
 

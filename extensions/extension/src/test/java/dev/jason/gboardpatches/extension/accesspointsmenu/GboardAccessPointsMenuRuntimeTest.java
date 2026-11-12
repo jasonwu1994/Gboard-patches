@@ -20,6 +20,9 @@ public class GboardAccessPointsMenuRuntimeTest {
     @Test public void mirroredBodyAndFullKeyboardLayoutUseLiveLocalPreferences() {
         SharedPreferences prefs = RuntimeEnvironment.getApplication().getSharedPreferences("menu1853", 0);
         prefs.edit().clear().commit();
+        assertEquals("An unset preference uses the redesigned menu",
+                0x7f0b070d, GboardAccessPointsMenuRuntime.selectBody(0x7f0b070c, prefs));
+        prefs.edit().putBoolean(GboardAccessPointsMenuSettings.PREF_KEY_ENABLED, false).commit();
         assertEquals(0x7f0b070c, GboardAccessPointsMenuRuntime.selectBody(0x7f0b070d, prefs));
         prefs.edit().putBoolean(GboardAccessPointsMenuSettings.PREF_KEY_ENABLED, true).commit();
         assertEquals(0x7f0b070d, GboardAccessPointsMenuRuntime.selectBody(0x7f0b070c, prefs));

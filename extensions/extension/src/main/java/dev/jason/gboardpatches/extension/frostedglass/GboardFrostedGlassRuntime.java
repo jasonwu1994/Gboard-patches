@@ -33,6 +33,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
 import androidx.annotation.RequiresApi;
 
@@ -57,11 +59,19 @@ public final class GboardFrostedGlassRuntime {
     private static final int TARGET_SURFACE = 1;
     private static final int TARGET_KEY = 2;
     private static final int TARGET_ACTION_KEY = 4;
+    // Gboard paints its own strip in InputView from this SDK; below it the strip is the
+    // system-drawn Window navigation color (ewx.ak and rra.f share this gate).
+    private static final int STOCK_STRIP_SDK = 36;
+    private static final int OPAQUE = 255;
     private static final Map<Window, State> STATES = new WeakHashMap<>();
     private static final Map<Window, Boolean> CONFIGURED_EXCLUSIONS = new WeakHashMap<>();
     private static final AtomicBoolean HIDDEN_API_READY = new AtomicBoolean();
     private static volatile WeakReference<InputMethodService> activeService =
             new WeakReference<>(null);
+    // A failed draw ends that keyboard session. Only a backend that keeps failing is abandoned
+    // for the rest of this process, so one transient failure cannot end the glass for good.
+    private static final int MAX_BLUR_DRAW_FAILURES = 3;
+    private static final AtomicInteger BLUR_DRAW_FAILURES = new AtomicInteger();
 
     private GboardFrostedGlassRuntime() {
     }
@@ -189,10 +199,10 @@ public final class GboardFrostedGlassRuntime {
         cleanupStep(() -> cancelFallback(state));
         cleanupStep(() -> detachObservers(state));
         cancelHideRestore(state);
-        Runnable restore = () -> {
+        Runnable restore = () -> cleanupStep(() -> {
             state.hideRestore = null;
             if (state.hiding && isCurrent(window, state)) disable(window);
-        };
+        });
         state.hideRestore = restore;
         state.hideRestoreHost = decor;
         decor.postDelayed(restore, delay);
@@ -261,11 +271,11 @@ public final class GboardFrostedGlassRuntime {
     private static void scheduleFallback(View host, Window window, Context context,
             State state, long generation) {
         cancelFallback(state);
-        Runnable second = () -> {
+        Runnable second = () -> cleanupStep(() -> {
             state.fallback = null;
             if (!state.ready) reapplyAfterLayout(window, context, state, generation);
-        };
-        Runnable first = () -> {
+        });
+        Runnable first = () -> cleanupStep(() -> {
             state.fallback = null;
             if (state.ready) return;
             reapplyAfterLayout(window, context, state, generation);
@@ -273,7 +283,7 @@ public final class GboardFrostedGlassRuntime {
                 state.fallback = second;
                 host.postDelayed(second, SECOND_FALLBACK_MS - FIRST_FALLBACK_MS);
             }
-        };
+        });
         state.fallback = first;
         state.fallbackHost = host;
         host.postDelayed(first, FIRST_FALLBACK_MS);
@@ -442,6 +452,7 @@ public final class GboardFrostedGlassRuntime {
                 if (canUseBackgroundBlur(context) && isBoundedSurface(window)
                         && canUseWindowShape(window, root, shape, state.location)) {
                     applyWindowBlur(window, root, shape, radiusPx, customOpacity, state);
+                    reconcileWindowStrip(window, root, customOpacity, state);
                     state.ready = true;
                     return;
                 }
@@ -464,6 +475,7 @@ public final class GboardFrostedGlassRuntime {
                 return;
             }
             applyWindowBlur(window, root, shape, radiusPx, customOpacity, state);
+            reconcileWindowStrip(window, root, customOpacity, state);
             state.ready = true;
         } catch (Throwable ignored) {
             disable(window);
@@ -536,6 +548,9 @@ public final class GboardFrostedGlassRuntime {
             Drawable theme = state.localBlurDrawable != null
                     ? state.localOriginalBackground : root == null ? null : root.getBackground();
             resolveNavigation(root, theme, state);
+            if (state.navigation.blurFailureListener == null) {
+                state.navigation.blurFailureListener = blurFailureListener(window, state);
+            }
             navigationApplied = state.navigation.update(root, state.navInput, state.navTint, radiusPx);
             if (!navigationApplied && state.navInput != null && NavigationSurface.supportsTint(state.navTint)
                     && !"strip backdrop unavailable".equals(state.navReason)) {
@@ -568,7 +583,9 @@ public final class GboardFrostedGlassRuntime {
             // refresh is re-styled by the rra.f hook; layouts (configuration/inset changes)
             // re-assert it here. A stable frame performs no Window reads or writes.
             if (wantGlass) {
-                if (!Boolean.TRUE.equals(state.seamlessGlass) || state.structurePass == state.pass) {
+                if (!Boolean.TRUE.equals(state.seamlessGlass) || state.seamlessWindowAlpha >= 0
+                        || state.structurePass == state.pass) {
+                    state.seamlessWindowAlpha = -1;
                     if (!GboardSeamlessNavBarRuntime.onFrostedSurfaceApplied(window)) {
                         // Keep the panel blur, but do not retry an unsupported Window every draw.
                         // A later show/configure/layout refresh may admit navigation again.
@@ -580,12 +597,88 @@ public final class GboardFrostedGlassRuntime {
                     }
                     state.seamlessGlass = Boolean.TRUE;
                 }
-            } else if (!Boolean.FALSE.equals(state.seamlessGlass)) {
-                GboardSeamlessNavBarRuntime.restore(window);
-                state.seamlessGlass = Boolean.FALSE;
+            } else if (applied) {
+                reconcileWindowStrip(window, root, customOpacity, state);
+            } else {
+                releaseWindowNavigation(window, state);
             }
         }
         return applied;
+    }
+
+    /**
+     * Below {@link #STOCK_STRIP_SDK} a docked keyboard usually has no InputView padding to take
+     * over, so the opaque strip is the Window color. Follow the panel's alpha there; a system-drawn
+     * strip keeps its color but has no local blur. A stable frame performs no Window writes.
+     */
+    private static void reconcileWindowStrip(Window window, View root, int customOpacity, State state) {
+        int alpha = state.navigationEnabled ? windowStripAlpha(root, customOpacity, state) : -1;
+        if (alpha < 0) {
+            releaseWindowNavigation(window, state);
+            return;
+        }
+        if (Boolean.TRUE.equals(state.seamlessGlass) && state.seamlessWindowAlpha == alpha
+                && state.structurePass != state.pass) {
+            return;
+        }
+        if (GboardSeamlessNavBarRuntime.onWindowStripApplied(window, alpha)) {
+            state.seamlessGlass = Boolean.TRUE;
+            state.seamlessWindowAlpha = alpha;
+            return;
+        }
+        // Keep the panel, but do not retry an unsupported Window on every draw.
+        state.navigationEnabled = false;
+        releaseWindowNavigation(window, state);
+    }
+
+    private static void releaseWindowNavigation(Window window, State state) {
+        state.seamlessWindowAlpha = -1;
+        if (Boolean.FALSE.equals(state.seamlessGlass)) return;
+        GboardSeamlessNavBarRuntime.restore(window);
+        state.seamlessGlass = Boolean.FALSE;
+    }
+
+    /** The alpha the Window strip should take, or -1 when stock should keep it. */
+    private static int windowStripAlpha(View root, int customOpacity, State state) {
+        if (!NavigationSurface.usesWindowStrip(root)) return -1;
+        Drawable theme = state.localBlurDrawable != null
+                ? state.localOriginalBackground : root.getBackground();
+        int alpha = customOpacity >= 0 ? customOpacity
+                : effectiveAlpha(navigationTint(root, theme, state));
+        return alpha >= 0 && alpha < OPAQUE ? alpha : -1;
+    }
+
+    private static int effectiveAlpha(Drawable drawable) {
+        if (drawable == null) return -1;
+        int alpha = drawable.getAlpha();
+        if (drawable instanceof GradientDrawable gradient && gradient.getColor() != null) {
+            int color = gradient.getColor().getColorForState(gradient.getState(),
+                    gradient.getColor().getDefaultColor());
+            return Math.round(alpha * Color.alpha(color) / (float) OPAQUE);
+        }
+        return alpha;
+    }
+
+    /** Holds the Window weakly: a State is the value of a WeakHashMap keyed by it. */
+    private static Consumer<Throwable> blurFailureListener(Window window, State state) {
+        WeakReference<Window> reference = new WeakReference<>(window);
+        return failure -> {
+            // The panel and the strip can both fail in one frame; that is one failed session.
+            if (!state.blurDrawFailureCounted) {
+                state.blurDrawFailureCounted = true;
+                BLUR_DRAW_FAILURES.incrementAndGet();
+            }
+            Window current = reference.get();
+            View decor = current == null ? null : current.getDecorView();
+            // Called from draw: leave restoring the View tree to the next message.
+            if (decor != null) {
+                decor.post(() -> cleanupStep(() -> {
+                    if (isCurrent(current, state)) disable(current);
+                }));
+            }
+            Log.w(TAG, "blur drawable failed to draw; using the theme for this keyboard session",
+                    failure);
+        };
     }
 
     /** Resolves the navigation admission and tint once per apply pass. */
@@ -658,7 +751,8 @@ public final class GboardFrostedGlassRuntime {
             // composite as a new theme source or stack another blur layer on it.
             if (state.localBlurDrawable != null
                     && (state.localBlurView != keyboardRoot
-                    || keyboardRoot.getBackground() != state.localCombinedBackground)) {
+                    || keyboardRoot.getBackground() != state.localCombinedBackground
+                    || movedToAnotherWindow(keyboardRoot, state.localBlurWindowToken))) {
                 restoreLocalBackground(state);
             }
             Drawable original = state.localBlurView == keyboardRoot
@@ -672,6 +766,7 @@ public final class GboardFrostedGlassRuntime {
             if (state.navigationEnabled && state.navigationJoined) {
                 resolveNavigation(keyboardRoot, original, state);
                 joined = state.navInput != null && NavigationSurface.supportsTint(state.navTint)
+                        && keyboardRoot.getWidth() == state.navInput.getWidth()
                         && shape.bounds.left == 0 && shape.bounds.top == 0
                         && shape.bounds.right == keyboardRoot.getWidth()
                         && shape.bounds.bottom == keyboardRoot.getHeight()
@@ -715,9 +810,11 @@ public final class GboardFrostedGlassRuntime {
                 }
                 ThemeBlurBackground combined = new ThemeBlurBackground(original, (Drawable) blurDrawable);
                 combined.updateBounds(shape, keyboardRoot.getWidth(), keyboardRoot.getHeight(), joined);
+                combined.setBlurFailureListener(blurFailureListener(window, state));
                 keyboardRoot.setBackground(combined);
                 keyboardRoot.invalidate();
                 state.localBlurView = keyboardRoot;
+                state.localBlurWindowToken = keyboardRoot.getWindowToken();
                 state.localBlurDrawable = blurDrawable;
                 state.localOriginalBackground = original;
                 state.localCombinedBackground = combined;
@@ -799,6 +896,7 @@ public final class GboardFrostedGlassRuntime {
     private static Object createBackgroundBlurDrawable(View target, int radiusPx,
             GboardFrostedGlassShape shape)
             throws ReflectiveOperationException {
+        if (BLUR_DRAW_FAILURES.get() >= MAX_BLUR_DRAW_FAILURES) return null;
         Method getViewRoot = View.class.getDeclaredMethod("getViewRootImpl");
         getViewRoot.setAccessible(true);
         Object viewRoot = getViewRoot.invoke(target);
@@ -817,6 +915,16 @@ public final class GboardFrostedGlassRuntime {
         setVisible.setAccessible(true);
         setVisible.invoke(drawable, true, false);
         return drawable;
+    }
+
+    /**
+     * A blur drawable reports to the ViewRootImpl that created it, and the Window token is unique
+     * per ViewRootImpl. A root re-added to a new one must get a new drawable; a momentarily
+     * detached root has no token and keeps what it has.
+     */
+    private static boolean movedToAnotherWindow(View view, Object token) {
+        Object current = view.getWindowToken();
+        return current != null && current != token;
     }
 
     private static void configureBlurDrawable(Object drawable, int radiusPx,
@@ -878,25 +986,30 @@ public final class GboardFrostedGlassRuntime {
     }
 
     /** Preserve the theme outline, except at a validated internal navigation join. */
-    private static final class ThemeBlurBackground extends LayerDrawable {
+    private static final class ThemeBlurBackground extends GboardFrostedGlassLayerDrawable {
         private final Drawable theme;
-        private GboardFrostedGlassShape joinedShape;
+        private Path joinedPath;
 
         ThemeBlurBackground(Drawable theme, Drawable blur) {
-            super(theme == null ? new Drawable[]{blur} : new Drawable[]{theme, blur});
+            super(theme == null ? new Drawable[]{blur} : new Drawable[]{theme, blur}, blur);
             this.theme = theme;
         }
 
         void updateBounds(GboardFrostedGlassShape shape, int width, int height, boolean joined) {
-            joinedShape = joined ? shape : null;
+            joinedPath = joined ? shape.path(0, 0) : null;
             setLayerInset(getNumberOfLayers() - 1, shape.bounds.left, shape.bounds.top,
                     width - shape.bounds.right, height - shape.bounds.bottom);
         }
 
         @Override public void getOutline(Outline outline) {
-            if (joinedShape != null) outline.setPath(joinedShape.path(0, 0));
-            else if (theme != null) theme.getOutline(outline);
-            else outline.setEmpty();
+            try {
+                if (joinedPath != null) outline.setPath(joinedPath);
+                else if (theme != null) theme.getOutline(outline);
+                else outline.setEmpty();
+            } catch (Throwable ignored) {
+                // Runs during the View traversal, outside every lifecycle boundary.
+                outline.setEmpty();
+            }
         }
     }
 
@@ -1167,6 +1280,7 @@ public final class GboardFrostedGlassRuntime {
             if (blur instanceof Drawable drawable) cleanupStep(() -> drawable.setVisible(false, false));
         }
         state.localBlurView = null;
+        state.localBlurWindowToken = null;
         state.localBlurDrawable = null;
         state.localOriginalBackground = null;
         state.localCombinedBackground = null;
@@ -1356,6 +1470,8 @@ public final class GboardFrostedGlassRuntime {
         private Drawable tint;
         private Drawable blur;
         private LayerDrawable surface;
+        private Object windowToken;
+        Consumer<Throwable> blurFailureListener;
         private final Rect bounds = new Rect();
         private final Rect nextBounds = new Rect();
         private int radius;
@@ -1379,7 +1495,7 @@ public final class GboardFrostedGlassRuntime {
                         ? g.getColor() : null;
                 nextBounds.set(0, target.getHeight() - target.getPaddingBottom(),
                         target.getWidth(), target.getHeight());
-                if (input != target || source != theme) {
+                if (input != target || source != theme || movedToAnotherWindow(target, windowToken)) {
                     clear();
                     Drawable nextTint = theme.getConstantState().newDrawable().mutate();
                     if (nextTint instanceof GradientDrawable g) {
@@ -1390,13 +1506,17 @@ public final class GboardFrostedGlassRuntime {
                             radiusPx, GboardFrostedGlassShape.rectangle(nextBounds));
                     if (nextBlur == null) return false;
                     input = target;
+                    windowToken = target.getWindowToken();
                     originalWillNotDraw = target.willNotDraw();
                     source = theme;
                     tint = nextTint;
                     blur = nextBlur;
                     // BackgroundBlurDrawable cuts a transparent hole for the compositor.
                     // Draw the tint after that hole, as the keyboard's child surfaces do.
-                    surface = new LayerDrawable(new Drawable[]{blur, tint});
+                    GboardFrostedGlassLayerDrawable layers = new GboardFrostedGlassLayerDrawable(
+                            new Drawable[]{blur, tint}, blur);
+                    layers.setBlurFailureListener(blurFailureListener);
+                    surface = layers;
                     surface.setBounds(nextBounds);
                     bounds.set(nextBounds);
                     radius = radiusPx;
@@ -1460,17 +1580,21 @@ public final class GboardFrostedGlassRuntime {
                 if (view.getClass().getName().equals(
                         "com.google.android.libraries.inputmethod.inputview.InputView")) {
                     int padding = view.getPaddingBottom();
-                    if (padding <= 0 || padding >= view.getHeight() || view.getBackground() != null
-                            || view.getWidth() != root.getWidth()) {
+                    if (padding <= 0 || padding >= view.getHeight() || view.getBackground() != null) {
                         rejectReason = "InputView padding=" + padding + " height=" + view.getHeight()
-                                + " background=" + (view.getBackground() != null)
-                                + " width=" + view.getWidth() + "/" + root.getWidth();
+                                + " background=" + (view.getBackground() != null);
                         return null;
                     }
                     root.getLocationInWindow(rootLocation);
                     view.getLocationInWindow(inputLocation);
-                    if (rootLocation[0] != inputLocation[0]
-                            || rootLocation[1] - inputLocation[1] + root.getHeight()
+                    // One-handed and other narrow panels sit inside the full-width strip.
+                    int left = rootLocation[0] - inputLocation[0];
+                    if (left < 0 || left + root.getWidth() > view.getWidth()) {
+                        rejectReason = "root outside InputView: left=" + left
+                                + " width=" + root.getWidth() + "/" + view.getWidth();
+                        return null;
+                    }
+                    if (rootLocation[1] - inputLocation[1] + root.getHeight()
                             != view.getHeight() - padding) {
                         rejectReason = "root not adjacent: rootY=" + rootLocation[1]
                                 + " inputY=" + inputLocation[1] + " rootH=" + root.getHeight()
@@ -1496,12 +1620,30 @@ public final class GboardFrostedGlassRuntime {
             return null;
         }
 
+        /** True when a docked keyboard's strip is the system-drawn Window navigation color. */
+        static boolean usesWindowStrip(View root) {
+            if (Build.VERSION.SDK_INT >= STOCK_STRIP_SDK || root == null
+                    || !KEYBOARD_ROOT_TAG.equals(root.getTag())) {
+                return false;
+            }
+            android.view.ViewParent parent = root.getParent();
+            while (parent instanceof View view) {
+                if (view.getClass().getName().equals(
+                        "com.google.android.libraries.inputmethod.inputview.InputView")) {
+                    return view.getPaddingBottom() == 0;
+                }
+                parent = view.getParent();
+            }
+            return false;
+        }
+
         void clear() {
             View target = input;
             LayerDrawable oldSurface = surface;
             Drawable oldBlur = blur;
             boolean restoreWillNotDraw = originalWillNotDraw;
             input = null;
+            windowToken = null;
             source = null;
             tint = null;
             blur = null;
@@ -1543,6 +1685,7 @@ public final class GboardFrostedGlassRuntime {
         View localBlurView;
         Object localRenderNode;
         Object localBlurDrawable;
+        Object localBlurWindowToken;
         Drawable localOriginalBackground;
         Drawable localCombinedBackground;
         boolean windowBackgroundChanged;
@@ -1577,6 +1720,9 @@ public final class GboardFrostedGlassRuntime {
         Drawable navTint;
         // null: not yet reconciled with the Window navigation styling in this session.
         Boolean seamlessGlass;
+        // >= 0: the Window navigation color carries this alpha instead of an overlay strip.
+        int seamlessWindowAlpha = -1;
+        boolean blurDrawFailureCounted;
         String navReason = "";
         boolean hiding;
         Runnable hideRestore;
@@ -1600,14 +1746,16 @@ public final class GboardFrostedGlassRuntime {
         for (Map.Entry<View, LayoutSnapshot> entry : state.originalLayouts.entrySet()) {
             View view = entry.getKey();
             LayoutSnapshot snapshot = entry.getValue();
-            ViewGroup.LayoutParams params = view.getLayoutParams();
-            if (params == null) continue;
-            params.height = snapshot.height;
-            if (params instanceof android.widget.FrameLayout.LayoutParams frame
-                    && snapshot.frameGravity != null) {
-                frame.gravity = snapshot.frameGravity;
-            }
-            view.setLayoutParams(params);
+            cleanupStep(() -> {
+                ViewGroup.LayoutParams params = view.getLayoutParams();
+                if (params == null) return;
+                params.height = snapshot.height;
+                if (params instanceof android.widget.FrameLayout.LayoutParams frame
+                        && snapshot.frameGravity != null) {
+                    frame.gravity = snapshot.frameGravity;
+                }
+                view.setLayoutParams(params);
+            });
         }
         state.originalLayouts.clear();
     }

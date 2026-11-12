@@ -100,7 +100,10 @@ public final class GboardSeamlessNavBarRuntime {
             int nav = fields.nav.getInt(original);
             int divider = fields.divider.getInt(original);
             boolean light = fields.light.getBoolean(original);
-            if (state.glass) {
+            if (state.windowStripAlpha >= 0) {
+                nav = translucent(nav, state.windowStripAlpha);
+                divider = translucent(divider, state.windowStripAlpha);
+            } else {
                 nav = divider = Color.TRANSPARENT;
                 light = dayIcons(window, light);
             }
@@ -135,19 +138,8 @@ public final class GboardSeamlessNavBarRuntime {
         if (window == null || !GboardFlagRuntimeContext.isUserUnlocked(window.getContext())) return false;
         try {
             State state = stateFor(window);
-            boolean starting = !state.glass;
-            if (starting) state.captureWindow(window);
-            state.glass = true;
-            if (starting && state.original != null && state.method != null) {
-                Object owner = state.owner == null ? null : state.owner.get();
-                if (owner != null) {
-                    Object params = beforeApplyNavBar(window, owner, state.method, state.original);
-                    REPLAYING.set(true);
-                    try { state.method.invoke(owner, window, params); }
-                    catch (ReflectiveOperationException ignored) { /* Retain the local glass overlay. */ }
-                    finally { REPLAYING.remove(); }
-                }
-            }
+            state.windowStripAlpha = -1;
+            acquire(window, state);
             applyWindow(window, state, Color.TRANSPARENT, Color.TRANSPARENT,
                     dayIcons(window, stockLightIcons(state)));
             return true;
@@ -155,6 +147,53 @@ public final class GboardSeamlessNavBarRuntime {
             restore(window);
             return false;
         }
+    }
+
+    /**
+     * Called when the panel has glass but its strip is the system-drawn Window color. Stock keeps
+     * the color and the icon contrast it chose; only an opaque color takes {@code alpha}, and no
+     * layout flags are added, because nothing here takes over any InputView paint.
+     */
+    public static boolean onWindowStripApplied(Window window, int alpha) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false;
+        if (window == null || !GboardFlagRuntimeContext.isUserUnlocked(window.getContext())) return false;
+        try {
+            State state = stateFor(window);
+            state.windowStripAlpha = alpha;
+            acquire(window, state);
+            applyWindow(window, state, translucent(stockNav(state), alpha),
+                    translucent(stockDivider(state), alpha), stockLightIcons(state));
+            return true;
+        } catch (Throwable ignored) {
+            restore(window);
+            return false;
+        }
+    }
+
+    private static void acquire(Window window, State state) throws ReflectiveOperationException {
+        boolean starting = !state.glass;
+        if (starting) state.captureWindow(window);
+        state.glass = true;
+        if (!starting || state.original == null || state.method == null) return;
+        Object owner = state.owner == null ? null : state.owner.get();
+        if (owner == null) return;
+        Object params = beforeApplyNavBar(window, owner, state.method, state.original);
+        REPLAYING.set(true);
+        try { state.method.invoke(owner, window, params); }
+        catch (ReflectiveOperationException ignored) { /* Retain the local glass overlay. */ }
+        finally { REPLAYING.remove(); }
+    }
+
+    private static int translucent(int color, int alpha) {
+        return Color.alpha(color) == 255 ? (color & 0x00ffffff) | (alpha << 24) : color;
+    }
+
+    private static int stockNav(State state) throws ReflectiveOperationException {
+        return state.original == null ? state.nav : paramsFor(state.original.getClass()).nav.getInt(state.original);
+    }
+
+    private static int stockDivider(State state) throws ReflectiveOperationException {
+        return state.original == null ? state.divider : paramsFor(state.original.getClass()).divider.getInt(state.original);
     }
 
     private static boolean stockLightIcons(State state) {
@@ -179,7 +218,7 @@ public final class GboardSeamlessNavBarRuntime {
         if (window.isNavigationBarContrastEnforced()) window.setNavigationBarContrastEnforced(false);
         View decor = window.getDecorView();
         int flags = decor.getSystemUiVisibility();
-        if (state.glass && Build.VERSION.SDK_INT < 36) {
+        if (state.glass && state.windowStripAlpha < 0 && Build.VERSION.SDK_INT < 36) {
             state.addedUiFlags |= EDGE_FLAGS & ~flags;
             if ((flags & EDGE_FLAGS) != EDGE_FLAGS) decor.setSystemUiVisibility(flags | EDGE_FLAGS);
         } else if (state.addedUiFlags != 0) {
@@ -287,6 +326,8 @@ public final class GboardSeamlessNavBarRuntime {
         boolean contrast, stockLightIcons;
         boolean glass, addedDrawsBackground;
         int addedUiFlags;
+        // >= 0: the strip is the Window color at this alpha; < 0: an overlay owns a clear Window.
+        int windowStripAlpha = -1;
         WeakReference<Object> owner;
         Method method;
         Object original;
