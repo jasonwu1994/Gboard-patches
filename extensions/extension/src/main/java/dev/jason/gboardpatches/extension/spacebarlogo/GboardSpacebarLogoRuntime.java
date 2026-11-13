@@ -115,7 +115,7 @@ public final class GboardSpacebarLogoRuntime {
                 rememberLabelVisibility(label);
                 label.setVisibility(View.INVISIBLE);
             }
-            ImageView overlay = ensureOverlay(root, settings.sizeDp);
+            ImageView overlay = ensureOverlay(root, settings.sizePercent);
             overlay.setImageDrawable(drawable);
             overlay.setVisibility(View.VISIBLE);
         } catch (Throwable throwable) {
@@ -129,10 +129,10 @@ public final class GboardSpacebarLogoRuntime {
                 && view.getId() == bindings.spacebarViewId ? (ViewGroup) view : null;
     }
 
-    private static ImageView ensureOverlay(ViewGroup root, int sizeDp) {
+    private static ImageView ensureOverlay(ViewGroup root, int sizePercent) {
         ImageView existing = findOverlay(root);
         if (existing instanceof SizedOverlay sized) {
-            sized.setSizeDp(sizeDp);
+            sized.setSizePercent(sizePercent);
             return sized;
         }
         SizedOverlay overlay = new SizedOverlay(root);
@@ -147,7 +147,7 @@ public final class GboardSpacebarLogoRuntime {
         root.addView(
                 overlay,
                 new FrameLayout.LayoutParams(1, 1, Gravity.CENTER));
-        overlay.setSizeDp(sizeDp);
+        overlay.setSizePercent(sizePercent);
         return overlay;
     }
 
@@ -176,10 +176,14 @@ public final class GboardSpacebarLogoRuntime {
         }
     }
 
-    /** Only sizes the decorative child; never changes the space key's own geometry. */
+    /**
+     * Only sizes the decorative child; never changes the space key's own geometry. The box is
+     * the key's inner area scaled by the percent, and FIT_CENTER keeps the image's aspect ratio,
+     * so 100% touches the key's height (or width, for very wide images).
+     */
     private static final class SizedOverlay extends ImageView implements View.OnLayoutChangeListener {
         private final ViewGroup root;
-        private int requestedSizePx;
+        private int sizePercent = GboardSpacebarLogoContract.DEFAULT_SIZE_PERCENT;
 
         SizedOverlay(ViewGroup root) {
             super(root.getContext());
@@ -187,27 +191,25 @@ public final class GboardSpacebarLogoRuntime {
             root.addOnLayoutChangeListener(this);
         }
 
-        void setSizeDp(int sizeDp) {
-            requestedSizePx = Math.max(1, Math.round(sizeDp
-                    * root.getResources().getDisplayMetrics().density));
+        void setSizePercent(int sizePercent) {
+            this.sizePercent = GboardSpacebarLogoContract.normalizeSizePercent(sizePercent);
             fitWithinKey();
         }
 
         private void fitWithinKey() {
-            int sizePx = requestedSizePx;
-            if (root.getWidth() > 0) {
-                sizePx = Math.min(sizePx, Math.max(1,
-                        root.getWidth() - root.getPaddingLeft() - root.getPaddingRight()));
-            }
-            if (root.getHeight() > 0) {
-                sizePx = Math.min(sizePx, Math.max(1,
-                        root.getHeight() - root.getPaddingTop() - root.getPaddingBottom()));
-            }
+            // Before the key's first layout the box stays 1 px; the layout listener sizes it.
+            int width = scaled(root.getWidth() - root.getPaddingLeft() - root.getPaddingRight());
+            int height = scaled(root.getHeight() - root.getPaddingTop() - root.getPaddingBottom());
             ViewGroup.LayoutParams params = getLayoutParams();
-            if (params != null && (params.width != sizePx || params.height != sizePx)) {
-                params.width = params.height = sizePx;
+            if (params != null && (params.width != width || params.height != height)) {
+                params.width = width;
+                params.height = height;
                 setLayoutParams(params);
             }
+        }
+
+        private int scaled(int innerPx) {
+            return innerPx <= 0 ? 1 : Math.max(1, Math.round(innerPx * sizePercent / 100f));
         }
 
         @Override public void onLayoutChange(View view, int left, int top, int right, int bottom,
@@ -250,7 +252,7 @@ public final class GboardSpacebarLogoRuntime {
         public final String iconValue;
         public final String customImage;
         public final boolean customImageTint;
-        public final int sizeDp;
+        public final int sizePercent;
 
         public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
                 String iconValue) {
@@ -260,18 +262,18 @@ public final class GboardSpacebarLogoRuntime {
         public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
                 String iconValue, String customImage, boolean customImageTint) {
             this(enabled, useFixedColor, color, iconValue, customImage, customImageTint,
-                    GboardSpacebarLogoContract.DEFAULT_SIZE_DP);
+                    GboardSpacebarLogoContract.DEFAULT_SIZE_PERCENT);
         }
 
         public SettingsSnapshot(boolean enabled, boolean useFixedColor, int color,
-                String iconValue, String customImage, boolean customImageTint, int sizeDp) {
+                String iconValue, String customImage, boolean customImageTint, int sizePercent) {
             this.enabled = enabled;
             this.useFixedColor = useFixedColor;
             this.color = color;
             this.iconValue = GboardSpacebarLogoContract.normalizeIcon(iconValue);
             this.customImage = GboardSpacebarLogoContract.boundedImageValue(customImage);
             this.customImageTint = customImageTint;
-            this.sizeDp = GboardSpacebarLogoContract.normalizeSizeDp(sizeDp);
+            this.sizePercent = GboardSpacebarLogoContract.normalizeSizePercent(sizePercent);
         }
 
         public boolean shouldTint() {

@@ -23,7 +23,9 @@ public final class GboardSpacebarLogoSettings {
     public static final String PREF_KEY_ICON = "pref_spacebar_logo_icon";
     public static final String PREF_KEY_IMAGE = "pref_spacebar_logo_image";
     public static final String PREF_KEY_IMAGE_TINT = "pref_spacebar_logo_image_tint";
-    public static final String PREF_KEY_SIZE_DP = "pref_spacebar_logo_size_dp";
+    public static final String PREF_KEY_SIZE_PERCENT = "pref_spacebar_logo_size_percent";
+    /** Read only to convert settings and backups saved with the earlier dp scale. */
+    public static final String PREF_KEY_LEGACY_SIZE_DP = "pref_spacebar_logo_size_dp";
     public static final boolean DEFAULT_ENABLED = false;
     public static final String DEFAULT_COLOR_HEX = "#4285F4";
     public static final String COLOR_VALUE_AUTO = "AUTO";
@@ -92,22 +94,34 @@ public final class GboardSpacebarLogoSettings {
         return Boolean.TRUE.equals(raw) || "true".equalsIgnoreCase(String.valueOf(raw));
     }
 
-    public static int readSizeDp(SharedPreferences preferences) {
-        return sizeDpValue(preferences == null ? null : preferences.getAll().get(PREF_KEY_SIZE_DP));
+    public static int readSizePercent(SharedPreferences preferences) {
+        return sizePercentValue(preferences == null ? null : preferences.getAll());
     }
 
-    private static int sizeDpValue(Object raw) {
-        if (raw instanceof Integer value) return GboardSpacebarLogoContract.normalizeSizeDp(value);
+    private static int sizePercentValue(Map<String, ?> values) {
+        if (values == null) return GboardSpacebarLogoContract.DEFAULT_SIZE_PERCENT;
+        Integer percent = storedInt(values.get(PREF_KEY_SIZE_PERCENT));
+        if (percent != null) return GboardSpacebarLogoContract.normalizeSizePercent(percent);
+        Integer legacyDp = storedInt(values.get(PREF_KEY_LEGACY_SIZE_DP));
+        if (legacyDp != null) return GboardSpacebarLogoContract.sizePercentFromLegacyDp(legacyDp);
+        return GboardSpacebarLogoContract.DEFAULT_SIZE_PERCENT;
+    }
+
+    private static Integer storedInt(Object raw) {
+        if (raw instanceof Integer value) return value;
         if (raw instanceof String value) {
-            try { return GboardSpacebarLogoContract.normalizeSizeDp(Integer.parseInt(value.trim())); }
+            try { return Integer.valueOf(value.trim()); }
             catch (NumberFormatException ignored) { }
         }
-        return GboardSpacebarLogoContract.DEFAULT_SIZE_DP;
+        return null;
     }
 
-    public static boolean writeSizeDp(SharedPreferences preferences, int sizeDp) {
-        return preferences != null && GboardSpacebarLogoContract.isValidSizeDp(sizeDp)
-                && preferences.edit().putInt(PREF_KEY_SIZE_DP, sizeDp).commit();
+    public static boolean writeSizePercent(SharedPreferences preferences, int sizePercent) {
+        return preferences != null && GboardSpacebarLogoContract.isValidSizePercent(sizePercent)
+                && preferences.edit()
+                        .putInt(PREF_KEY_SIZE_PERCENT, sizePercent)
+                        .remove(PREF_KEY_LEGACY_SIZE_DP)
+                        .commit();
     }
 
 
@@ -136,6 +150,12 @@ public final class GboardSpacebarLogoSettings {
             }
             if (!preferences.contains(PREF_KEY_ICON)) {
                 editor.putString(PREF_KEY_ICON, DEFAULT_ICON);
+                changed = true;
+            }
+            if (preferences.contains(PREF_KEY_LEGACY_SIZE_DP)) {
+                // An existing percent value wins over the earlier dp value.
+                editor.putInt(PREF_KEY_SIZE_PERCENT, readSizePercent(preferences))
+                        .remove(PREF_KEY_LEGACY_SIZE_DP);
                 changed = true;
             }
             if (changed) editor.commit();
@@ -245,8 +265,8 @@ public final class GboardSpacebarLogoSettings {
         catch (Throwable failure) { logWarningSafely("Failed to change spacebar image color mode", failure); return false; }
     }
 
-    public static boolean writeSizeDp(Context context, int sizeDp) {
-        try { return writeAndRefresh(context, writeSizeDp(GboardPatchesSettings.preferencesOrNull(context), sizeDp)); }
+    public static boolean writeSizePercent(Context context, int sizePercent) {
+        try { return writeAndRefresh(context, writeSizePercent(GboardPatchesSettings.preferencesOrNull(context), sizePercent)); }
         catch (Throwable failure) { logWarningSafely("Failed to change spacebar image size", failure); return false; }
     }
 
@@ -368,7 +388,7 @@ public final class GboardSpacebarLogoSettings {
                     GboardSpacebarLogoContract.normalizeIcon(rawIcon instanceof String text ? text : null),
                     GboardSpacebarLogoContract.boundedImageValue(rawImage instanceof String text ? text : null),
                     Boolean.TRUE.equals(rawTint) || "true".equalsIgnoreCase(String.valueOf(rawTint)),
-                    sizeDpValue(values.get(PREF_KEY_SIZE_DP)));
+                    sizePercentValue(values));
         } catch (Throwable throwable) {
             logWarningSafely("Failed to read spacebar logo settings", throwable);
             return disabledSnapshot();

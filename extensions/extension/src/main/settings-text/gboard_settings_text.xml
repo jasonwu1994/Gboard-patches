@@ -3733,8 +3733,8 @@
         <translation locale="zh-Hant">更換圖片</translation>
     </string>
     <string name="gboard_patches_spacebar_image_import_summary">
-        <translation locale="en">PNG, WebP or JPEG, up to 8 MB. The image is fitted to the spacebar and saved at up to 96 pixels.</translation>
-        <translation locale="zh-Hant">支援 8 MB 以內的 PNG、WebP 或 JPEG。圖片會按比例縮小，以最長邊 96 像素保存。</translation>
+        <translation locale="en">PNG, WebP or JPEG, up to 8 MB. Larger images are scaled down to fit 1024 × 256 pixels.</translation>
+        <translation locale="zh-Hant">支援 8 MB 以內的 PNG、WebP 或 JPEG。較大的圖片會按比例縮小到 1024 × 256 像素以內。</translation>
     </string>
     <string name="gboard_patches_spacebar_image_tint">
         <translation locale="en">Apply a single color</translation>
@@ -3769,19 +3769,23 @@
         <translation locale="zh-Hant">圖示大小</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_summary">
-        <translation locale="en">Resize all spacebar icons. Large sizes fit within the space key.</translation>
-        <translation locale="zh-Hant">調整所有空白鍵圖示的大小；較大的尺寸會限制在空白鍵內。</translation>
+        <translation locale="en">Resize all spacebar icons as a share of the space key.</translation>
+        <translation locale="zh-Hant">以空白鍵大小的百分比調整所有空白鍵圖示。</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_default">
-        <translation locale="en">24 dp (default)</translation>
-        <translation locale="zh-Hant">24 dp (預設)</translation>
+        <translation locale="en">60% (default)</translation>
+        <translation locale="zh-Hant">60% (預設)</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_max">
+        <translation locale="en">100% (largest)</translation>
+        <translation locale="zh-Hant">100% (最大)</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_hint">
-        <translation locale="en">12–40 dp (default: 24)</translation>
-        <translation locale="zh-Hant">12–40 dp (預設 24)</translation>
+        <translation locale="en">10–100% (default: 60)</translation>
+        <translation locale="zh-Hant">10–100% (預設 60)</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_invalid">
-        <translation locale="en">Enter a size between 12 and 40 dp.</translation>
-        <translation locale="zh-Hant">請輸入 12 至 40 dp 的尺寸。</translation>
+        <translation locale="en">Enter a size between 10 and 100%.</translation>
+        <translation locale="zh-Hant">請輸入 10 至 100% 的尺寸。</translation>
     </string>
 </settings-text>

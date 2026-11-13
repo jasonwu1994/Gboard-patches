@@ -38,15 +38,74 @@ public class GboardSpacebarLogoImagesTest {
     @Test public void importFitsAspectRatioAndPreservesTransparencyAndColor() throws Exception {
         Bitmap source = Bitmap.createBitmap(600, 300, Bitmap.Config.ARGB_8888);
         source.eraseColor(Color.RED);
-        for (int y = 0; y < 300; y++) for (int x = 0; x < 150; x++) source.setPixel(x, y, Color.TRANSPARENT);
+        // Transparent inside the artwork's bounds (not a full border), so nothing is cropped.
+        for (int y = 0; y < 150; y++) for (int x = 0; x < 150; x++) source.setPixel(x, y, Color.TRANSPARENT);
         String encoded = GboardSpacebarLogoImages.importImage(bytes(source, Bitmap.CompressFormat.PNG));
         byte[] png = Base64.getDecoder().decode(encoded);
         Bitmap result = BitmapFactory.decodeByteArray(png, 0, png.length);
-        assertEquals(96, result.getWidth());
-        assertEquals(48, result.getHeight());
+        // Height-bound: 300 px tall fits the 256 px box height.
+        assertEquals(512, result.getWidth());
+        assertEquals(256, result.getHeight());
         assertEquals(0, Color.alpha(result.getPixel(1, 1)));
-        assertEquals(Color.RED, result.getPixel(80, 24));
-        assertTrue(png.length <= GboardSpacebarLogoContract.MAX_PNG_BYTES);
+        assertEquals(Color.RED, result.getPixel(400, 128));
+        assertTrue(png.length <= GboardSpacebarLogoContract.MAX_IMAGE_BYTES);
+    }
+
+    @Test public void wideImagesAreBoundByTheBoxWidth() throws Exception {
+        Bitmap source = Bitmap.createBitmap(4000, 500, Bitmap.Config.ARGB_8888);
+        source.eraseColor(Color.BLUE);
+        byte[] stored = Base64.getDecoder().decode(
+                GboardSpacebarLogoImages.importImage(bytes(source, Bitmap.CompressFormat.PNG)));
+        BitmapFactory.Options bounds = decodeBounds(stored);
+        assertEquals(1024, bounds.outWidth);
+        assertEquals(128, bounds.outHeight);
+        assertEquals(1f, GboardSpacebarLogoImages.fitScale(1024, 256), 0f);
+        assertEquals(1f, GboardSpacebarLogoImages.fitScale(10, 10), 0f);
+    }
+
+    @Test public void photosTooLargeForPngFallBackToBoundedWebpThatStillRenders() throws Exception {
+        Bitmap source = Bitmap.createBitmap(2048, 512, Bitmap.Config.ARGB_8888);
+        java.util.Random random = new java.util.Random(7);
+        for (int y = 0; y < 512; y++) {
+            for (int x = 0; x < 2048; x++) source.setPixel(x, y, 0xFF000000 | random.nextInt(0xFFFFFF));
+        }
+        String encoded = GboardSpacebarLogoImages.importImage(bytes(source, Bitmap.CompressFormat.PNG));
+        byte[] stored = Base64.getDecoder().decode(encoded);
+        BitmapFactory.Options bounds = decodeBounds(stored);
+        assertEquals("image/webp", bounds.outMimeType);
+        assertEquals(1024, bounds.outWidth);
+        assertEquals(256, bounds.outHeight);
+        assertTrue(stored.length <= GboardSpacebarLogoContract.MAX_IMAGE_BYTES);
+        assertTrue(encoded.length() <= GboardSpacebarLogoContract.MAX_BASE64_LENGTH);
+        BitmapDrawable drawable = (BitmapDrawable) GboardSpacebarLogoImages.customDrawable(
+                context.getResources(), encoded);
+        assertNotNull(drawable);
+        assertEquals(1024, drawable.getBitmap().getWidth());
+    }
+
+    @Test public void transparentMarginsAreCroppedOnImportAndForOlderStoredImages() throws Exception {
+        // A square canvas whose artwork only fills rows 52..203, like a padded logo PNG.
+        Bitmap padded = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888);
+        for (int y = 52; y <= 203; y++) for (int x = 0; x < 256; x++) padded.setPixel(x, y, Color.YELLOW);
+        byte[] stored = Base64.getDecoder().decode(
+                GboardSpacebarLogoImages.importImage(bytes(padded, Bitmap.CompressFormat.PNG)));
+        BitmapFactory.Options bounds = decodeBounds(stored);
+        assertEquals(256, bounds.outWidth);
+        assertEquals(152, bounds.outHeight);
+
+        // A value saved by an earlier build, still padded, is cropped when it is decoded.
+        String earlier = Base64.getEncoder().encodeToString(bytes(padded, Bitmap.CompressFormat.PNG));
+        Bitmap shown = ((BitmapDrawable) GboardSpacebarLogoImages.customDrawable(
+                context.getResources(), earlier)).getBitmap();
+        assertEquals(256, shown.getWidth());
+        assertEquals(152, shown.getHeight());
+        assertEquals(Color.YELLOW, shown.getPixel(128, 76));
+
+        Bitmap empty = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888);
+        assertSame(empty, GboardSpacebarLogoImages.trimTransparentBorders(empty));
+        Bitmap opaque = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888);
+        opaque.eraseColor(Color.BLACK);
+        assertSame(opaque, GboardSpacebarLogoImages.trimTransparentBorders(opaque));
     }
 
     @Test public void jpegAndWebpBecomeStaticPngWithoutEnlarging() throws Exception {
@@ -148,7 +207,8 @@ public class GboardSpacebarLogoImagesTest {
         assertTrue(snapshot(true, GboardSpacebarLogoContract.ICON_HEART, "", false).shouldTint());
     }
 
-    @Test public void sizeRefreshFitsTheKeyAndReleasesItsLayoutListenerWhenDisabled() throws Exception {
+    @Test public void sizePercentScalesTheKeyInnerBoxAndReleasesItsLayoutListenerWhenDisabled()
+            throws Exception {
         int spaceId = View.generateViewId(), labelId = View.generateViewId();
         var bindings = new GboardSpacebarLogoRuntime.ViewBindings(spaceId, labelId, 0, 0, 0);
         FrameLayout spacebar = newSpacebar();
@@ -157,37 +217,40 @@ public class GboardSpacebarLogoImagesTest {
         label.setId(labelId);
         spacebar.addView(label);
         String png = image(Color.RED);
-        float density = context.getResources().getDisplayMetrics().density;
-        var size32 = new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false, 0,
-                GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, png, false, 32);
-        GboardSpacebarLogoRuntime.afterSoftKeyBound(spacebar, true, size32, bindings);
+        var half = new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false, 0,
+                GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, png, false, 50);
+        GboardSpacebarLogoRuntime.afterSoftKeyBound(spacebar, true, half, bindings);
         ImageView overlay = (ImageView) spacebar.getChildAt(1);
-        assertEquals(Math.round(32 * density), overlay.getLayoutParams().width);
-        spacebar.layout(0, 0, 300, 18);
-        assertEquals(18, overlay.getLayoutParams().width);
-        assertEquals(18, overlay.getLayoutParams().height);
-        spacebar.setLayoutParams(new FrameLayout.LayoutParams(300, 200));
-        spacebar.layout(0, 0, 300, 200);
-        assertEquals(Math.round(32 * density), overlay.getLayoutParams().width);
+        assertEquals(ImageView.ScaleType.FIT_CENTER, overlay.getScaleType());
+        spacebar.setLayoutParams(new FrameLayout.LayoutParams(300, 40));
+        spacebar.layout(0, 0, 300, 40);
+        assertEquals(150, overlay.getLayoutParams().width);
+        assertEquals(20, overlay.getLayoutParams().height);
+        spacebar.setPadding(10, 4, 10, 4);
+        spacebar.setLayoutParams(new FrameLayout.LayoutParams(320, 48));
+        spacebar.layout(0, 0, 320, 48);
+        assertEquals(150, overlay.getLayoutParams().width);
+        assertEquals(20, overlay.getLayoutParams().height);
         GboardSpacebarLogoRuntime.refreshBoundSpacebars(
                 new GboardSpacebarLogoRuntime.SettingsSnapshot(true, true, Color.RED,
-                        GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR, "", false, 28));
+                        GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR, "", false, 100));
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         overlay = (ImageView) spacebar.getChildAt(1);
-        assertEquals(Math.round(28 * density), overlay.getLayoutParams().width);
-        assertEquals(300, spacebar.getWidth());
-        assertEquals(200, spacebar.getHeight());
-        int priorSize = overlay.getLayoutParams().width;
+        assertEquals(320, spacebar.getWidth());
+        assertEquals(48, spacebar.getHeight());
+        assertEquals(300, overlay.getLayoutParams().width);
+        assertEquals(40, overlay.getLayoutParams().height);
+        int priorWidth = overlay.getLayoutParams().width;
         GboardSpacebarLogoRuntime.refreshBoundSpacebars(snapshot(false,
                 GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, png, false));
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         assertEquals(1, spacebar.getChildCount());
         assertEquals(View.VISIBLE, label.getVisibility());
         spacebar.layout(0, 0, 300, 8);
-        assertEquals(priorSize, overlay.getLayoutParams().width);
-        assertEquals(24, snapshot(true, GboardSpacebarLogoContract.ICON_GOOGLE_G, "", false).sizeDp);
-        assertEquals(24, new GboardSpacebarLogoRuntime.SettingsSnapshot(true, true, 0,
-                GboardSpacebarLogoContract.ICON_GOOGLE_G, "", false, Integer.MAX_VALUE).sizeDp);
+        assertEquals(priorWidth, overlay.getLayoutParams().width);
+        assertEquals(60, snapshot(true, GboardSpacebarLogoContract.ICON_GOOGLE_G, "", false).sizePercent);
+        assertEquals(100, new GboardSpacebarLogoRuntime.SettingsSnapshot(true, true, 0,
+                GboardSpacebarLogoContract.ICON_GOOGLE_G, "", false, Integer.MAX_VALUE).sizePercent);
     }
 
     private FrameLayout newSpacebar() {
@@ -206,6 +269,13 @@ public class GboardSpacebarLogoImagesTest {
         Bitmap bitmap = Bitmap.createBitmap(12, 12, Bitmap.Config.ARGB_8888);
         bitmap.eraseColor(color);
         return GboardSpacebarLogoImages.importImage(bytes(bitmap, Bitmap.CompressFormat.PNG));
+    }
+
+    private static BitmapFactory.Options decodeBounds(byte[] data) {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, bounds);
+        return bounds;
     }
 
     private static byte[] bytes(Bitmap bitmap, Bitmap.CompressFormat format) {

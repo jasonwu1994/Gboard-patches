@@ -181,11 +181,11 @@ public final class GboardSpacebarLogoSettingsFeature
                             GboardPatchesSettingsContract.refresh(host);
                         })));
             }
-            int sizeDp = GboardSpacebarLogoSettings.readSizeDp(preferences);
+            int sizePercent = GboardSpacebarLogoSettings.readSizePercent(preferences);
             rows.add(new GboardPatchesSettingsContract.SelectorRow(
                     textOrFallback(R.string.gboard_patches_spacebar_logo_size_title, "Icon size"),
-                    textOrFallback(R.string.gboard_patches_spacebar_logo_size_summary, ""), sizeDp + " dp", true,
-                    () -> runSafely("choose spacebar image size", () -> showSizeDialog(host, hostContext, sizeDp))));
+                    textOrFallback(R.string.gboard_patches_spacebar_logo_size_summary, ""), sizePercent + "%", true,
+                    () -> runSafely("choose spacebar image size", () -> showSizeDialog(host, hostContext, sizePercent))));
             return new GboardPatchesSettingsContract.Screen(
                     entryTitle, headerBadge, entryTitle, "", Collections.emptyList(),
                     Collections.singletonList(new GboardPatchesSettingsContract.Section(sectionAppearance, rows)),
@@ -244,20 +244,21 @@ public final class GboardSpacebarLogoSettingsFeature
 
     private void showSizeDialog(GboardPatchesSettingsContract.FeatureHost host, Context hostContext, int currentSize) {
         String title = textOrFallback(R.string.gboard_patches_spacebar_logo_size_title, "Icon size");
-        String[] values = {"12", "24", "30", "40", "CUSTOM"};
-        String[] labels = {"12 dp", textOrFallback(R.string.gboard_patches_spacebar_logo_size_default, "24 dp (default)"),
-                "30 dp", "40 dp", colorLabels[colorLabels.length - 1]};
+        String[] values = {"30", "60", "80", "100", "CUSTOM"};
+        String[] labels = {"30%", textOrFallback(R.string.gboard_patches_spacebar_logo_size_default, "60% (default)"),
+                "80%", textOrFallback(R.string.gboard_patches_spacebar_logo_size_max, "100% (largest)"),
+                colorLabels[colorLabels.length - 1]};
         java.util.function.IntConsumer save = value -> runSafely("save image size", () -> {
-            if (!GboardSpacebarLogoContract.isValidSizeDp(value)) {
+            if (!GboardSpacebarLogoContract.isValidSizePercent(value)) {
                 GboardPatchesSettingsContract.showMessage(host,
-                        textOrFallback(R.string.gboard_patches_spacebar_logo_size_invalid, "Enter 12 to 40 dp."));
-            } else if (GboardSpacebarLogoSettings.writeSizeDp(hostContext, value)) {
+                        textOrFallback(R.string.gboard_patches_spacebar_logo_size_invalid, "Enter a size between 10 and 100%."));
+            } else if (GboardSpacebarLogoSettings.writeSizePercent(hostContext, value)) {
                 GboardPatchesSettingsContract.refresh(host);
             }
         });
         GboardPatchesSettingsContract.showChoiceDialog(host, title, labels, values,
                 Integer.toString(currentSize), "CUSTOM", () -> GboardPatchesSettingsContract.showPositiveIntegerDialog(
-                        host, title, textOrFallback(R.string.gboard_patches_spacebar_logo_size_hint, "12–40 dp"),
+                        host, title, textOrFallback(R.string.gboard_patches_spacebar_logo_size_hint, "10–100% (default: 60)"),
                         currentSize, save::accept), value -> save.accept(Integer.parseInt(value)));
     }
 

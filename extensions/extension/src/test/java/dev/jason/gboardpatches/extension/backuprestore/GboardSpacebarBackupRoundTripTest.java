@@ -43,14 +43,14 @@ public class GboardSpacebarBackupRoundTripTest {
                 .putString(GboardSpacebarLogoSettings.PREF_KEY_COLOR_SELECTION, "CUSTOM")
                 .putString(GboardSpacebarLogoSettings.PREF_KEY_CUSTOM_COLOR, "#CC123456").commit());
         assertTrue(GboardSpacebarLogoSettings.writeImageTint(core, true));
-        assertTrue(GboardSpacebarLogoSettings.writeSizeDp(core, 30));
+        assertTrue(GboardSpacebarLogoSettings.writeSizePercent(core, 75));
         Map<String, ?> expected = core.getAll();
 
         String json = GboardPatchesBackupManager.exportBackup(stores);
         JSONObject entries = coreEntries(json);
         assertEquals("string", entries.getJSONObject(GboardSpacebarLogoSettings.PREF_KEY_IMAGE).getString("type"));
         assertEquals(image, entries.getJSONObject(GboardSpacebarLogoSettings.PREF_KEY_IMAGE).getString("value"));
-        assertEquals("int", entries.getJSONObject(GboardSpacebarLogoSettings.PREF_KEY_SIZE_DP).getString("type"));
+        assertEquals("int", entries.getJSONObject(GboardSpacebarLogoSettings.PREF_KEY_SIZE_PERCENT).getString("type"));
         assertFalse(json.contains("content://"));
 
         core.edit().clear().commit();
@@ -61,7 +61,7 @@ public class GboardSpacebarBackupRoundTripTest {
         var restored = GboardPatchesBackupManager.restoreBackup(stores, json, Set.of("gboard-patches.core"));
         assertTrue(restored.isSuccess());
         assertEquals(expected, core.getAll());
-        assertEquals(30, GboardSpacebarLogoSettings.readSizeDp(core));
+        assertEquals(75, GboardSpacebarLogoSettings.readSizePercent(core));
         assertTrue(GboardSpacebarLogoSettings.readImageTint(core));
         assertArrayEquals(Base64.getDecoder().decode(image),
                 Base64.getDecoder().decode(GboardSpacebarLogoSettings.readImage(core)));
@@ -77,7 +77,7 @@ public class GboardSpacebarBackupRoundTripTest {
         Map<String, SharedPreferences> stores = stores();
         SharedPreferences core = stores.get(GboardPatchesSettings.PREF_FILE);
         GboardSpacebarLogoSettings.writeImage(core, image(Color.RED));
-        GboardSpacebarLogoSettings.writeSizeDp(core, 27);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 68);
         core.edit().putString(GboardSpacebarLogoSettings.PREF_KEY_COLOR, "AUTO").commit();
         for (String icon : new String[] {GboardSpacebarLogoSettings.ICON_GOOGLE_G,
                 GboardSpacebarLogoSettings.ICON_GOOGLE_G_COLOR, GboardSpacebarLogoSettings.ICON_HEART,
@@ -89,7 +89,7 @@ public class GboardSpacebarBackupRoundTripTest {
             assertTrue(GboardPatchesBackupManager.restoreBackup(stores, json).isSuccess());
             assertEquals(expected, core.getAll());
             assertEquals(icon, GboardSpacebarLogoSettings.readIcon(core));
-            assertEquals(27, GboardSpacebarLogoSettings.readSizeDp(core));
+            assertEquals(68, GboardSpacebarLogoSettings.readSizePercent(core));
             assertEquals("AUTO", GboardSpacebarLogoSettings.readColorHex(core));
             assertFalse(GboardSpacebarLogoSettings.readImageTint(core));
         }
@@ -102,50 +102,65 @@ public class GboardSpacebarBackupRoundTripTest {
         String oldBackup = GboardPatchesBackupManager.exportBackup(stores);
         GboardSpacebarLogoSettings.writeImage(core, image(Color.RED));
         GboardSpacebarLogoSettings.writeImageTint(core, true);
-        GboardSpacebarLogoSettings.writeSizeDp(core, 40);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 100);
         assertTrue(GboardPatchesBackupManager.restoreBackup(stores, oldBackup).isSuccess());
         assertEquals(GboardSpacebarLogoSettings.ICON_HEART, GboardSpacebarLogoSettings.readIcon(core));
         assertEquals("", GboardSpacebarLogoSettings.readImage(core));
         assertFalse(GboardSpacebarLogoSettings.readImageTint(core));
-        assertEquals(24, GboardSpacebarLogoSettings.readSizeDp(core));
+        assertEquals(60, GboardSpacebarLogoSettings.readSizePercent(core));
+    }
+
+    @Test public void earlierDpBackupsConvertWithFortyDpAsFullSize() throws Exception {
+        Map<String, SharedPreferences> stores = stores();
+        SharedPreferences core = stores.get(GboardPatchesSettings.PREF_FILE);
+        core.edit().putString(GboardSpacebarLogoSettings.PREF_KEY_ICON, GboardSpacebarLogoSettings.ICON_HEART).commit();
+        for (String key : new String[] {"pref_spacebar_logo_size_dp", "pref_spacebar_g_logo_size_dp"}) {
+            JSONObject backup = new JSONObject(GboardPatchesBackupManager.exportBackup(stores));
+            JSONArray modules = backup.getJSONObject("sections").getJSONObject("gboardPatches").getJSONArray("modules");
+            modules.getJSONObject(0).getJSONObject("entries").put(key,
+                    new JSONObject().put("type", "int").put("value", "24"));
+            GboardSpacebarLogoSettings.writeSizePercent(core, 100);
+            assertTrue(GboardPatchesBackupManager.restoreBackup(stores, backup.toString()).isSuccess());
+            assertEquals(key, 60, GboardSpacebarLogoSettings.readSizePercent(core));
+        }
     }
 
     @Test public void alternateCoreSpacebarKeysRestoreIntoTheCurrentSettings() throws Exception {
         Map<String, SharedPreferences> stores = stores();
         SharedPreferences core = stores.get(GboardPatchesSettings.PREF_FILE);
         GboardSpacebarLogoSettings.writeImage(core, image(Color.RED));
-        GboardSpacebarLogoSettings.writeSizeDp(core, 30);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 75);
         Map<String, ?> expected = core.getAll();
         String portable = GboardPatchesBackupManager.exportBackup(stores)
                 .replace("pref_spacebar_logo_", "pref_spacebar_g_logo_");
         core.edit().clear().commit();
         assertTrue(GboardPatchesBackupManager.restoreBackup(stores, portable).isSuccess());
         assertEquals(expected, core.getAll());
-        assertEquals(30, GboardSpacebarLogoSettings.readSizeDp(core));
+        assertEquals(75, GboardSpacebarLogoSettings.readSizePercent(core));
         assertFalse(GboardSpacebarLogoSettings.readImage(core).isEmpty());
     }
 
     @Test public void currentCoreKeysTakePrecedenceOverAnAlternateSpelling() throws Exception {
         Map<String, SharedPreferences> stores = stores();
         SharedPreferences core = stores.get(GboardPatchesSettings.PREF_FILE);
-        GboardSpacebarLogoSettings.writeSizeDp(core, 27);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 68);
         JSONObject backup = new JSONObject(GboardPatchesBackupManager.exportBackup(stores));
         JSONArray modules = backup.getJSONObject("sections").getJSONObject("gboardPatches").getJSONArray("modules");
-        modules.getJSONObject(0).getJSONObject("entries").put("pref_spacebar_g_logo_size_dp",
-                new JSONObject().put("type", "int").put("value", "40"));
+        modules.getJSONObject(0).getJSONObject("entries").put("pref_spacebar_g_logo_size_percent",
+                new JSONObject().put("type", "int").put("value", "100"));
         core.edit().clear().commit();
         assertTrue(GboardPatchesBackupManager.restoreBackup(stores, backup.toString()).isSuccess());
-        assertEquals(27, GboardSpacebarLogoSettings.readSizeDp(core));
+        assertEquals(68, GboardSpacebarLogoSettings.readSizePercent(core));
     }
 
     @Test public void restoringCoreRefreshesTheBoundSpacebarWithoutARestart() throws Exception {
         SharedPreferences core = context.getSharedPreferences(GboardPatchesSettings.PREF_FILE, Context.MODE_PRIVATE);
         core.edit().clear().putBoolean(GboardSpacebarLogoSettings.PREF_KEY_ENABLED, true).commit();
         GboardSpacebarLogoSettings.writeImage(core, image(Color.GREEN));
-        GboardSpacebarLogoSettings.writeSizeDp(core, 30);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 75);
         String backup = GboardPatchesBackupManager.exportBackup(context);
         GboardSpacebarLogoSettings.writeImage(core, image(Color.BLUE));
-        GboardSpacebarLogoSettings.writeSizeDp(core, 12);
+        GboardSpacebarLogoSettings.writeSizePercent(core, 30);
         android.app.Activity activity = org.robolectric.Robolectric.buildActivity(android.app.Activity.class).setup().get();
         android.widget.FrameLayout root = new android.widget.FrameLayout(activity);
         activity.setContentView(root);
@@ -157,13 +172,14 @@ public class GboardSpacebarBackupRoundTripTest {
                 spaceId, labelId, 0, 0, 0);
         dev.jason.gboardpatches.extension.spacebarlogo.GboardSpacebarLogoRuntime.afterSoftKeyBound(
                 root, true, GboardSpacebarLogoSettings.snapshot(context), bindings);
-        assertEquals(Math.round(12 * context.getResources().getDisplayMetrics().density),
-                root.getChildAt(1).getLayoutParams().width);
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
+        int innerWidth = root.getWidth() - root.getPaddingLeft() - root.getPaddingRight();
+        assertTrue(innerWidth > 0);
+        assertEquals(Math.round(innerWidth * 30 / 100f), root.getChildAt(1).getLayoutParams().width);
         assertTrue(GboardPatchesBackupManager.restoreBackup(context, backup, Set.of("gboard-patches.core")).isSuccess());
         Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
-        assertEquals(30, GboardSpacebarLogoSettings.readSizeDp(core));
-        assertEquals(Math.round(30 * context.getResources().getDisplayMetrics().density),
-                root.getChildAt(1).getLayoutParams().width);
+        assertEquals(75, GboardSpacebarLogoSettings.readSizePercent(core));
+        assertEquals(Math.round(innerWidth * 75 / 100f), root.getChildAt(1).getLayoutParams().width);
         Bitmap bitmap = ((BitmapDrawable) ((android.widget.ImageView) root.getChildAt(1)).getDrawable()).getBitmap();
         assertEquals(Color.GREEN, bitmap.getPixel(15, 6));
     }
