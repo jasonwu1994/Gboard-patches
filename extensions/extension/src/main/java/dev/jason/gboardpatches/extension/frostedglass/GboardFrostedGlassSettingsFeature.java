@@ -18,6 +18,10 @@ import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 public final class GboardFrostedGlassSettingsFeature
         implements GboardPatchesSettingsContract.Feature {
     private static final String TAG = "GboardPatches";
+    private static final String FAQ_NOT_WORKING_URL =
+            "https://github.com/jasonwu1994/Gboard-patches/issues/68";
+    private static final String FAQ_FLICKERING_URL =
+            "https://github.com/jasonwu1994/Gboard-patches/issues/58";
     private final String entryTitle;
     private final String entrySummary;
     private final String headerBadge;
@@ -44,6 +48,9 @@ public final class GboardFrostedGlassSettingsFeature
     private final String keyOpacitySummary;
     private final String seamlessTitle;
     private final String seamlessSummary;
+    private final String faqSection;
+    private final String faqNotWorkingTitle;
+    private final String faqFlickeringTitle;
 
     public GboardFrostedGlassSettingsFeature(Context context) {
         entryTitle = text(context, R.string.gboard_patches_frosted_glass_title);
@@ -72,6 +79,9 @@ public final class GboardFrostedGlassSettingsFeature
         keyOpacitySummary = text(context, R.string.gboard_patches_frosted_glass_key_opacity_summary);
         seamlessTitle = text(context, R.string.gboard_patches_frosted_glass_seamless_nav_bar_title);
         seamlessSummary = text(context, R.string.gboard_patches_frosted_glass_seamless_nav_bar_summary);
+        faqSection = text(context, R.string.gboard_patches_frosted_glass_faq_section);
+        faqNotWorkingTitle = text(context, R.string.gboard_patches_frosted_glass_faq_not_working_title);
+        faqFlickeringTitle = text(context, R.string.gboard_patches_frosted_glass_faq_flickering_title);
     }
 
     private static String text(Context context, int resourceId) {
@@ -150,14 +160,36 @@ public final class GboardFrostedGlassSettingsFeature
                     entryTitle,
                     "",
                     Collections.emptyList(),
-                    Collections.singletonList(new GboardPatchesSettingsContract.Section(
-                            sectionTitle,
-                            rows)),
+                    java.util.Arrays.asList(
+                            new GboardPatchesSettingsContract.Section(sectionTitle, rows),
+                            faqSection(host)),
                     GboardPatchesSettingsContract.RefreshPolicy.none(),
                     GboardPatchesSettingsContract.PanelStyle.FLAT);
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to render frosted glass settings", throwable);
             return errorScreen();
+        }
+    }
+
+    /** Stays enabled while the glass is off: these answer why it has no effect. */
+    private GboardPatchesSettingsContract.Section faqSection(
+            GboardPatchesSettingsContract.FeatureHost host) {
+        return new GboardPatchesSettingsContract.Section(faqSection, java.util.Arrays.asList(
+                faqRow(host, faqNotWorkingTitle, FAQ_NOT_WORKING_URL),
+                faqRow(host, faqFlickeringTitle, FAQ_FLICKERING_URL)));
+    }
+
+    private static GboardPatchesSettingsContract.Row faqRow(
+            GboardPatchesSettingsContract.FeatureHost host, String title, String url) {
+        return new GboardPatchesSettingsContract.ActionRow(title, "", true,
+                () -> openFaq(host, url));
+    }
+
+    private static void openFaq(GboardPatchesSettingsContract.FeatureHost host, String url) {
+        try {
+            GboardPatchesSettingsContract.openExternalUrl(host, url);
+        } catch (Throwable failure) {
+            Log.w(TAG, "Unable to open the frosted glass FAQ", failure);
         }
     }
 

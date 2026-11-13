@@ -68,6 +68,17 @@ public class GboardFrostedGlassFailureTest {
         }
     }
 
+    @Test public void missingOemApiDuringWindowStripFailsClosed() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.window.setNavigationBarDividerColor(Color.CYAN);
+            ThrowingWindow.rejectMissingApi = true;
+            assertFalse(GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77));
+            assertEquals(Color.CYAN, f.window.getNavigationBarDividerColor());
+            assertTrue(f.window.isNavigationBarContrastEnforced());
+            assertFalse(GboardSeamlessNavBarRuntime.isReplaying());
+        }
+    }
+
     @Test public void layoutObserverFailureCannotEscapeTheTraversal() throws Exception {
         try (Fixture f = new Fixture()) {
             GboardFrostedGlassRuntime.onWindowShown(f.ime);

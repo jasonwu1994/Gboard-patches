@@ -71,6 +71,90 @@ public class GboardSeamlessNavBarRuntimeTest {
         }
     }
 
+    @Test public void windowStripOnlyChangesAlphaAndLeavesGeometryAndIconsToStock() throws Exception {
+        try (Fixture f = new Fixture()) {
+            int height = f.window.getAttributes().height;
+            Params original = f.params(true);
+            f.apply(original);
+            assertTrue(GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77));
+            assertTrue("Starting replays the stock palette", f.controller.replayed);
+            Params actual = f.controller.last;
+            assertNotSame(original, actual);
+            assertEquals(Color.argb(77, 0x12, 0x34, 0x56), actual.a);
+            assertEquals(Color.argb(77, 0x65, 0x43, 0x21), actual.b);
+            assertSame(original.c, actual.c);
+            assertSame(original.d, actual.d);
+            assertEquals("Icon contrast stays stock", original.e, actual.e);
+            assertEquals(actual.a, f.window.getNavigationBarColor());
+            assertEquals(actual.b, f.window.getNavigationBarDividerColor());
+            assertFalse(f.window.isNavigationBarContrastEnforced());
+            assertEquals(0, f.window.getDecorView().getSystemUiVisibility()
+                    & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+            assertEquals(height, f.window.getAttributes().height);
+            assertEquals(0xff123456, original.a);
+        }
+    }
+
+    @Test public void aLaterStockRefreshKeepsTheWindowStripAlpha() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77);
+            Params refreshed = new Params(0xff00ff00, 0xff00ff00, OptionalInt.empty(),
+                    OptionalInt.empty(), true);
+            Params actual = f.apply(refreshed);
+            assertEquals(Color.argb(77, 0, 255, 0), actual.a);
+            assertEquals(actual.a, f.window.getNavigationBarColor());
+            assertTrue(actual.e);
+        }
+    }
+
+    @Test public void windowStripLeavesAlreadyTranslucentStockColorsAlone() throws Exception {
+        try (Fixture f = new Fixture()) {
+            Params translucent = new Params(0x80123456, Color.TRANSPARENT, OptionalInt.empty(),
+                    OptionalInt.empty(), false);
+            f.apply(translucent);
+            GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77);
+            assertEquals(0x80123456, f.window.getNavigationBarColor());
+            assertEquals(Color.TRANSPARENT, f.window.getNavigationBarDividerColor());
+        }
+    }
+
+    @Test public void windowStripRestoresTheStockPaletteAndContrast() throws Exception {
+        try (Fixture f = new Fixture()) {
+            Params original = f.params(true);
+            f.apply(original);
+            GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77);
+            GboardSeamlessNavBarRuntime.restore(f.window);
+            assertSame(original, f.controller.last);
+            assertEquals(original.a, f.window.getNavigationBarColor());
+            assertEquals(original.b, f.window.getNavigationBarDividerColor());
+            assertTrue(f.window.isNavigationBarContrastEnforced());
+        }
+    }
+
+    @Test public void switchingBetweenOverlayAndWindowStripOwnsOnlyTheRightBits() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.apply(f.params(true));
+            GboardSeamlessNavBarRuntime.onFrostedSurfaceApplied(f.window);
+            assertEquals(Color.TRANSPARENT, f.window.getNavigationBarColor());
+            assertTrue((f.window.getDecorView().getSystemUiVisibility()
+                    & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION) != 0);
+            GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77);
+            assertEquals(Color.argb(77, 0x12, 0x34, 0x56), f.window.getNavigationBarColor());
+            assertEquals(0, f.window.getDecorView().getSystemUiVisibility()
+                    & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+            GboardSeamlessNavBarRuntime.onFrostedSurfaceApplied(f.window);
+            assertEquals(Color.TRANSPARENT, f.window.getNavigationBarColor());
+        }
+    }
+
+    @Test public void lockedUserCannotStartAWindowStrip() throws Exception {
+        try (Fixture f = new Fixture()) {
+            Shadows.shadowOf(f.users).setUserUnlocked(false);
+            assertFalse(GboardSeamlessNavBarRuntime.onWindowStripApplied(f.window, 77));
+            assertTrue(f.window.isNavigationBarContrastEnforced());
+        }
+    }
+
     @Test public void withoutAGlassSurfaceSolidThemesKeepAllStockWindowStyling() throws Exception {
         try (Fixture f = new Fixture()) {
             Params original = f.params(true);
