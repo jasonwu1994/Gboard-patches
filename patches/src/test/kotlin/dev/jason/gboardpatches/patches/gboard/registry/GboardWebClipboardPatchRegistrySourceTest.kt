@@ -110,7 +110,7 @@ class GboardWebClipboardPatchRegistrySourceTest {
         const val WEB_CLIPBOARD_DESCRIPTION =
             "新增手機自架的 Web Clipboard，支援瀏覽器同步、配對碼與快速設定開關\n" +
                 "Add the phone-hosted Web Clipboard with browser sync, pairing, and a " +
-                "Quick Settings Tile."
+                "Quick Settings Tile.\nAjouter le presse-papiers web hébergé sur le téléphone avec synchronisation par navigateur, appairage et une tuile de réglages rapides."
         const val BINDINGS_JSON_PATH =
             "patches/src/main/resources/gboard/gboard-version-bindings.json"
         const val BINDINGS_KOTLIN_PATH =

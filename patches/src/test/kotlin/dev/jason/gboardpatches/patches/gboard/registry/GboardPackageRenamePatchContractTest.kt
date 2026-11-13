@@ -112,7 +112,7 @@ class GboardPackageRenamePatchContractTest {
             "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
                 "Rename the package to dev.jason.com.google.android.inputmethod.latin " +
                 "and allow a custom app name so it can be installed alongside " +
-                "the official Gboard."
+                "the official Gboard.\nRenommer le package en dev.jason.com.google.android.inputmethod.latin et autoriser un nom d’application personnalisé afin de pouvoir l’installer à côté du Gboard officiel."
         const val APP_DISPLAY_NAME_OPTION_KEY = "app_display_name"
         const val APP_DISPLAY_NAME_OPTION_TITLE = "App 名稱 / App name"
         const val APP_DISPLAY_NAME_OPTION_DESCRIPTION = ""

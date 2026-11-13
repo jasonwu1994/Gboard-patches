@@ -102,7 +102,7 @@ class GboardSignatureBypassPatchContractTest {
         const val TARGET_VERSION = "18.5.4.993608717-release-arm64-v8a"
         const val SIGNATURE_BYPASS_DESCRIPTION =
             "攔截 Gboard 的簽章白名單檢查並強制通過\n" +
-                "Bypass Gboard signature whitelist checks and force them to pass."
+                "Bypass Gboard signature whitelist checks and force them to pass.\nContourner les vérifications de liste blanche de signature de Gboard et les forcer à réussir."
         const val SIGNATURE_PATCH_PATH =
             "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/" +
                 "signaturebypass/GboardSignatureBypassBytecodePatch.kt"

@@ -48,15 +48,15 @@ class GboardRuntimePatchesContractTest {
     }
 
     @Test
-    fun `public descriptions match the requested bilingual product copy`() {
+    fun `public descriptions match the requested trilingual product copy`() {
         assertEquals(
             "在主動建議列顯示關閉按鈕\n" +
-                "Show a dismiss button in the proactive suggestions bar.",
+                "Show a dismiss button in the proactive suggestions bar.\nAfficher un bouton de fermeture dans la barre de suggestions proactives.",
             gboardCloseProactiveSuggestionsPatch.description,
         )
         assertEquals(
             "啟用快速插入面板與工具列入口\n" +
-                "Enable the Quick Insert panel and toolbar access point.",
+                "Enable the Quick Insert panel and toolbar access point.\nActiver le panneau Quick Insert et son point d’accès dans la barre d’outils.",
             gboardQuickInsertPatch.description,
         )
     }

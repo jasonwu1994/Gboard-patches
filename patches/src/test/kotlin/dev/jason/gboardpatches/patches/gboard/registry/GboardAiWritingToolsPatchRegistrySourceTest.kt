@@ -40,7 +40,11 @@ class GboardAiWritingToolsPatchRegistrySourceTest {
 
         assertTrue(source.contains("val gboardAiWritingToolsPatch = gboardPublicResourcePatch("))
         assertTrue(source.contains("name = \"AI Writing Tools\""))
-        assertTrue(source.contains("description = \"啟用 AI 撰寫工具，支援所有語言\\nEnable AI writing tools with support for all languages.\""))
+        assertTrue(source.contains("description = \"啟用 AI 撰寫工具，支援所有語言\\n\" +"))
+        assertTrue(source.contains("\"Enable AI writing tools with support for all languages.\\n\" +"))
+        assertTrue(source.contains(
+            "\"Activer les outils d’écriture IA avec prise en charge de toutes les langues.\"",
+        ))
         assertTrue(source.contains("default = true"))
         assertTrue(source.contains("gboardAiWritingToolsFeatureMarkerPatch"))
         assertTrue(source.contains("gboardAiWritingToolsFlagValuePatch"))

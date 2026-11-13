@@ -17,7 +17,7 @@ class GboardSwipeDismissPatchRegistryTest {
         )
         assertTrue(
             gboardSwipeDismissPatch.description.orEmpty().contains(
-                "Swipe down from the suggestions or toolbar to close the keyboard.",
+                "Swipe down from the suggestions or toolbar to close the keyboard.\nBalayer vers le bas depuis les suggestions ou la barre d’outils pour fermer le clavier.",
             ),
         )
         assertEquals(

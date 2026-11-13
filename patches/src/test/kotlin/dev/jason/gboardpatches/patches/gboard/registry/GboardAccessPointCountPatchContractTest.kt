@@ -20,7 +20,7 @@ class GboardAccessPointCountPatchContractTest {
         assertTrue(patch.default)
         assertEquals(
             "自訂 Gboard 頂端工具列項目數量\n" +
-                "Customize the Gboard top toolbar item count.",
+                "Customize the Gboard top toolbar item count.\nPersonnaliser le nombre d’éléments de la barre d’outils supérieure de Gboard.",
             patch.description,
         )
     }
