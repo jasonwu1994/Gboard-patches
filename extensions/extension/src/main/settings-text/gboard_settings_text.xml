@@ -128,14 +128,17 @@
     <string name="gboard_patches_frosted_glass_faq_section">
         <translation locale="en">FAQ</translation>
         <translation locale="zh-Hant">FAQ</translation>
+        <translation locale="fr">FAQ</translation>
     </string>
     <string name="gboard_patches_frosted_glass_faq_not_working_title">
         <translation locale="en">Why isn\'t Frosted Glass working?</translation>
         <translation locale="zh-Hant">為什麼磨砂玻璃沒有效果？</translation>
+        <translation locale="fr">Pourquoi le verre dépoli ne fonctionne-t-il pas ?</translation>
     </string>
     <string name="gboard_patches_frosted_glass_faq_flickering_title">
         <translation locale="en">Why do I see flickering while typing on Pixel phones?</translation>
         <translation locale="zh-Hant">為什麼 Pixel 手機輸入文字時會閃爍？</translation>
+        <translation locale="fr">Pourquoi l’écran scintille-t-il pendant la saisie sur les téléphones Pixel ?</translation>
     </string>
     <string name="gboard_patches_activity_title">
         <translation locale="en">Patches</translation>
