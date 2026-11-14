@@ -28,13 +28,14 @@ class GboardDeveloperOptionsPatchContractSourceTest {
         assertTrue(marker.contains("gboardDeveloperOptionsFeatureMarkerPatch"))
         assertTrue(marker.contains("applyFeatureMarker(DEVELOPER_OPTIONS_FEATURE_MARKER_NAME)"))
         assertTrue(marker.contains("dev.jason.gboardpatches.feature.developer_options"))
-        assertTrue(marker.contains("ensurePackageQueries()"))
-        SUPPORTED_PACKAGES.forEach { packageName ->
-            assertTrue("Marker must query $packageName", marker.contains("\"$packageName\""))
+        assertFalse(marker.contains("ensurePackageQueries()"))
+        assertFalse(marker.contains("<queries>") || marker.contains("\"queries\""))
+        HARDCODED_GBOARD_PACKAGES.forEach { packageName ->
+            assertFalse("Marker must not name $packageName", marker.contains("\"$packageName\""))
         }
 
         val sharedSettingsPatch = readSource(SETTINGS_PATCH_PATH)
-        SUPPORTED_PACKAGES.forEach { packageName ->
+        HARDCODED_GBOARD_PACKAGES.forEach { packageName ->
             assertFalse(
                 "Package visibility must not be globally injected by the shared settings patch",
                 sharedSettingsPatch.contains(packageName),
@@ -111,13 +112,14 @@ class GboardDeveloperOptionsPatchContractSourceTest {
         assertTrue(activity.contains("intent.putExtra(ENTER_PREF_HEADER_EXTRA, headerKeyResourceId)"))
         assertTrue(activity.contains("new ComponentName(packageName, GBOARD_SETTINGS_ACTIVITY_CLASS)"))
         assertTrue(activity.contains("String currentPackage = getPackageName();"))
-        assertTrue(activity.contains("isSupportedTargetPackage(currentPackage)"))
+        assertTrue(activity.contains("if (!GboardPackageIdentity.isSupported(this)) {"))
+        assertFalse(activity.contains("isSupportedTargetPackage("))
         assertTrue(activity.contains("showUnsupportedDeveloperOptionsPackageDialog("))
         assertTrue(activity.contains("tryLaunchUnverifiedDeveloperOptions("))
         assertTrue(activity.contains("catch (Throwable throwable)"))
         assertTrue(activity.contains("getPackageInfo(packageName, 0)"))
-        SUPPORTED_PACKAGES.forEach { packageName ->
-            assertTrue("Activity must support $packageName", activity.contains("\"$packageName\""))
+        HARDCODED_GBOARD_PACKAGES.forEach { packageName ->
+            assertFalse("Activity must not name $packageName", activity.contains("\"$packageName\""))
         }
 
         assertFalse(activity.contains(":android:show_fragment"))
@@ -173,7 +175,8 @@ class GboardDeveloperOptionsPatchContractSourceTest {
         const val ORCHESTRATOR_PATH =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
                 "GboardPatchesSettingsOrchestrator.java"
-        val SUPPORTED_PACKAGES = listOf(
+        /** Support is decided by GboardPackageIdentity, not by a list of package names. */
+        val HARDCODED_GBOARD_PACKAGES = listOf(
             "com.google.android.inputmethod.latin",
             "com.google.android.inputmethod.latin.jason.dev",
             "dev.jason.com.google.android.inputmethod.latin",

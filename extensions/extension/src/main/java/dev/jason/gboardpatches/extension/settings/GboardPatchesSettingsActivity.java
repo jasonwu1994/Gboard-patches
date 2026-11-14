@@ -84,16 +84,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
+import dev.jason.gboardpatches.extension.packagerename.GboardPackageIdentity;
 import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.BuildConfig;
 import dev.jason.gboardpatches.extension.backuprestore.GboardExportFileNames;
@@ -110,12 +109,6 @@ public final class GboardPatchesSettingsActivity extends Activity
             "com.google.android.apps.inputmethod.latin.preference.SettingsActivity";
     private static final String SUPPORTED_DEVELOPER_OPTIONS_TARGET_VERSION =
             "18.5.4.993608717-release-arm64-v8a";
-    private static final String GBOARD_PACKAGE_STABLE =
-            "com.google.android.inputmethod.latin";
-    private static final String GBOARD_PACKAGE_JASON_DEV =
-            "com.google.android.inputmethod.latin.jason.dev";
-    private static final String GBOARD_PACKAGE_REVERSED_DEV =
-            "dev.jason.com.google.android.inputmethod.latin";
     private static final String LIVE_TRANSCRIBE_PACKAGE_NAME =
             "com.google.audio.hearing.visualization.accessibility.scribe";
     private static final String SPEECH_SERVICES_PACKAGE_NAME =
@@ -406,7 +399,7 @@ public final class GboardPatchesSettingsActivity extends Activity
             return;
         }
         String currentPackage = getPackageName();
-        if (!isSupportedTargetPackage(currentPackage)) {
+        if (!GboardPackageIdentity.isSupported(this)) {
             showUnsupportedDeveloperOptionsPackageDialog(currentPackage, headerKeyResourceId);
             return;
         }
@@ -501,25 +494,20 @@ public final class GboardPatchesSettingsActivity extends Activity
     }
 
     private List<String> targetSettingsPackages() {
-        Set<String> packageNames = new LinkedHashSet<String>();
-        String currentPackage = getPackageName();
+        return ownTargetSettingsPackages(getPackageName());
+    }
+
+    /** The patched app only ever opens its own Gboard settings, never another installed copy. */
+    static List<String> ownTargetSettingsPackages(String currentPackage) {
+        List<String> packageNames = new ArrayList<String>();
         if (currentPackage != null && !currentPackage.isEmpty()) {
             packageNames.add(currentPackage);
         }
-        packageNames.add(GBOARD_PACKAGE_STABLE);
-        packageNames.add(GBOARD_PACKAGE_JASON_DEV);
-        packageNames.add(GBOARD_PACKAGE_REVERSED_DEV);
-        return new ArrayList<String>(packageNames);
+        return packageNames;
     }
 
     static boolean isSupportedDeveloperOptionsTargetVersion(String versionName) {
         return SUPPORTED_DEVELOPER_OPTIONS_TARGET_VERSION.equals(versionName);
-    }
-
-    private static boolean isSupportedTargetPackage(String packageName) {
-        return GBOARD_PACKAGE_STABLE.equals(packageName)
-                || GBOARD_PACKAGE_JASON_DEV.equals(packageName)
-                || GBOARD_PACKAGE_REVERSED_DEV.equals(packageName);
     }
 
     @Override

@@ -440,9 +440,6 @@ public final class GboardAdvancedVoiceSettingsFeature
     private static List<String> targetPackageNames(Context context) {
         List<String> packageNames = new ArrayList<String>();
         addPackageName(packageNames, context == null ? null : context.getPackageName());
-        addPackageName(packageNames, "com.google.android.inputmethod.latin");
-        addPackageName(packageNames, "com.google.android.inputmethod.latin.jason.dev");
-        addPackageName(packageNames, "dev.jason.com.google.android.inputmethod.latin");
         return packageNames;
     }
 

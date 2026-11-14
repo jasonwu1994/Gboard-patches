@@ -281,7 +281,7 @@ Shows a dismiss button in the proactive suggestions bar.
 <details>
   <summary><code>Package Rename</code></summary>
 
-  Renames the patched package so it can be installed alongside the official Gboard app.
+  Rename the package to a configurable name (default <code>dev.jason.com.google.android.inputmethod.latin</code>) and allow a custom app name so it can be installed alongside the official Gboard.
 </details>
 
 ### Taiwan-focused Features

@@ -1,3 +1,13 @@
+## [4.4.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0-dev.1...v4.4.0-dev.2) (2026-11-14)
+
+### ✨ New Features
+
+* **Gboard:** add support for custom package names in Package Rename.
+
+### ✨ 新功能
+
+* **Gboard:** Package Rename 新增自訂套件名稱功能。
+
 ## [4.4.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.3.0...v4.4.0-dev.1) (2026-11-12)
 
 ### ✨ New Features
