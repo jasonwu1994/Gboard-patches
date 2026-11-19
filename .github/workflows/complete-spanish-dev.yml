@@ -1,0 +1,86 @@
+name: Complete Spanish settings (dev)
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - ".github/workflows/complete-spanish-dev.yml"
+      - "scripts/gboard_translate_es.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+concurrency:
+  group: gboard-complete-spanish-dev
+  cancel-in-progress: false
+
+jobs:
+  complete-spanish:
+    name: Translate, verify, compile and commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    env:
+      GITHUB_ACTOR: \${{ github.repository_owner }}
+      GITHUB_TOKEN: \${{ secrets.MORPHE_PACKAGES_TOKEN || github.token }}
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+      - name: Install Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Argos offline translation model support
+        run: python -m pip install "argostranslate>=1.10,<2"
+      - name: Translate missing Spanish settings
+        run: python scripts/gboard_translate_es.py --generate
+      - name: Verify all Spanish resources
+        run: python scripts/gboard_translate_es.py --check
+      - name: Install Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Configure Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - name: Generate resources and run extension tests
+        run: ./gradlew --no-daemon :extensions:extension:generateSettingsText :extensions:extension:testDebugUnitTest --stacktrace
+      - name: Build Morphe bundle
+        run: ./gradlew --no-daemon :patches:buildAndroid :patches:generatePatchesList --stacktrace
+      - name: Commit generated Spanish catalog to dev
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add extensions/extension/src/main/settings-text/gboard_settings_text_es.xml
+          if git diff --staged --quiet; then
+            echo "No catalog changes"
+          else
+            git commit -m "feat(gboard): complete Spanish settings translations"
+            git push origin HEAD:dev
+          fi
+      - name: Upload compiled bundle and audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: gboard-patches-spanish-complete-dev
+          path: |
+            patches/build/libs/*.mpp
+            spanish-coverage-report.json
+          if-no-files-found: error
+          retention-days: 10
+      - name: Upload diagnostic reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gboard-spanish-complete-diagnostics
+          path: |
+            spanish-coverage-report.json
+            extensions/extension/build/test-results/
+            extensions/extension/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 10
