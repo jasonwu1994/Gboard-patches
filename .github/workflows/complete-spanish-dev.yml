@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/complete-spanish-dev.yml"
       - "scripts/gboard_translate_es.py"
+      - "extensions/extension/src/test/java/dev/jason/gboardpatches/extension/settings/GboardSettingsTextTest.java"
   workflow_dispatch:
 
 permissions:
