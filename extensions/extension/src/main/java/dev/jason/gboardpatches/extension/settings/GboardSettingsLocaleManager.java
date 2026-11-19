@@ -10,6 +10,7 @@ import java.util.Locale;
 public final class GboardSettingsLocaleManager {
     public static final String LANGUAGE_SYSTEM = "system";
     public static final String LANGUAGE_ENGLISH = "en";
+    public static final String LANGUAGE_SPANISH = "es";
     public static final String LANGUAGE_TRADITIONAL_CHINESE = "zh-Hant";
 
     private GboardSettingsLocaleManager() {
@@ -40,12 +41,16 @@ public final class GboardSettingsLocaleManager {
     public static String resolveEffectiveLanguageTag(String preferenceValue, Locale deviceLocale) {
         String normalizedPreference = normalizePreferenceValue(preferenceValue);
         if (LANGUAGE_ENGLISH.equals(normalizedPreference)
-                || LANGUAGE_TRADITIONAL_CHINESE.equals(normalizedPreference)) {
+                || LANGUAGE_TRADITIONAL_CHINESE.equals(normalizedPreference)
+                || LANGUAGE_SPANISH.equals(normalizedPreference)) {
             return normalizedPreference;
         }
         Locale locale = deviceLocale != null ? deviceLocale : Locale.getDefault();
         if (locale != null && isTraditionalChinese(locale)) {
             return LANGUAGE_TRADITIONAL_CHINESE;
+        }
+        if (locale != null && LANGUAGE_SPANISH.equalsIgnoreCase(locale.getLanguage())) {
+            return LANGUAGE_SPANISH;
         }
         if (locale != null && "en".equalsIgnoreCase(locale.getLanguage())) {
             return LANGUAGE_ENGLISH;
@@ -94,6 +99,9 @@ public final class GboardSettingsLocaleManager {
         if (LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)) {
             return Locale.forLanguageTag(LANGUAGE_TRADITIONAL_CHINESE);
         }
+        if (LANGUAGE_SPANISH.equals(languageTag)) {
+            return Locale.forLanguageTag(LANGUAGE_SPANISH);
+        }
         return Locale.ENGLISH;
     }
 
@@ -117,6 +125,9 @@ public final class GboardSettingsLocaleManager {
         }
         if (LANGUAGE_TRADITIONAL_CHINESE.equals(value)) {
             return LANGUAGE_TRADITIONAL_CHINESE;
+        }
+        if (LANGUAGE_SPANISH.equals(value)) {
+            return LANGUAGE_SPANISH;
         }
         return LANGUAGE_SYSTEM;
     }

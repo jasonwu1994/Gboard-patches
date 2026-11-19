@@ -302,6 +302,10 @@
         <translation locale="en">Traditional Chinese</translation>
         <translation locale="zh-Hant">繁體中文</translation>
     </string>
+    <string name="gboard_patches_language_spanish_label">
+        <translation locale="en">Spanish</translation>
+        <translation locale="zh-Hant">西班牙文</translation>
+    </string>
     <string name="gboard_patches_language_system_value">
         <translation locale="en">System default (%1$s)</translation>
         <translation locale="zh-Hant">跟隨系統（%1$s）</translation>

@@ -10,6 +10,7 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Locale;
 
 import dev.jason.gboardpatches.extension.R;
 
@@ -115,6 +116,48 @@ public final class GboardSettingsTextTest {
                         2));
     }
 
+
+    @Test
+    public void spanishPreferenceRendersTranslatedSettingsAndEnglishFallback() {
+        Context context = RuntimeEnvironment.getApplication();
+        GboardPatchesSettings.preferences(context).edit()
+                .putString(GboardPatchesSettings.PREF_KEY_SETTINGS_UI_LANGUAGE,
+                        GboardSettingsLocaleManager.LANGUAGE_SPANISH)
+                .commit();
+        Assert.assertEquals("es", GboardSettingsText.languageTag(context));
+        Assert.assertEquals("Parches", GboardSettingsText.get(context,
+                R.string.gboard_patches_activity_title));
+        Assert.assertEquals("Preferencias", GboardSettingsText.get(context,
+                R.string.gboard_patches_section_preferences));
+        Assert.assertEquals("Portapapeles", GboardSettingsText.get(context,
+                R.string.gboard_patches_clipboard_title));
+        Assert.assertEquals("Predeterminado del sistema (Español)",
+                GboardSettingsText.resolveStableTextForTesting(
+                        R.string.gboard_patches_language_system_value, "es-PE", "Español"));
+        Assert.assertEquals("2 minutos", GboardSettingsText.resolveStableQuantityForTesting(
+                R.plurals.gboard_patches_minutes, "es-PE", 2));
+        Assert.assertEquals("Create from photo", GboardSettingsText.get(context,
+                R.string.gboard_patches_custom_theme_source_photo));
+    }
+
+    @Test
+    public void spanishSystemLanguageAndExplicitPreferenceAreSupported() {
+        Assert.assertEquals("es",
+                GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
+                        GboardSettingsLocaleManager.LANGUAGE_SYSTEM,
+                        Locale.forLanguageTag("es-PE")));
+        Assert.assertEquals("es",
+                GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
+                        GboardSettingsLocaleManager.LANGUAGE_SPANISH,
+                        Locale.forLanguageTag("en-US")));
+        Assert.assertEquals("en",
+                GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
+                        GboardSettingsLocaleManager.LANGUAGE_SYSTEM,
+                        Locale.forLanguageTag("fr-FR")));
+        Assert.assertEquals("Español", GboardSettingsText.getInLanguage(
+                R.string.gboard_patches_language_spanish_label, "es-ES"));
+    }
+
     @Test
     public void everyGeneratedSettingsStringHasEnglishAndTraditionalChineseCoverage()
             throws Exception {
@@ -129,6 +172,9 @@ public final class GboardSettingsTextTest {
             Assert.assertNotNull(
                     field.getName() + " missing zh-Hant settings text",
                     GboardSettingsText.resolveStableTextForTesting(resId, "zh-Hant"));
+            Assert.assertNotNull(
+                    field.getName() + " missing Spanish text/fallback",
+                    GboardSettingsText.resolveStableTextForTesting(resId, "es"));
         }
     }
 }

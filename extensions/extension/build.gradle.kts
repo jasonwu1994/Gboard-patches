@@ -65,6 +65,9 @@ val generatedSpacebarImageDir = layout.buildDirectory.dir("generated/source/spac
 val settingsTextAuthority = layout.projectDirectory.file(
     "src/main/settings-text/gboard_settings_text.xml"
 )
+val spanishSettingsTextAuthority = layout.projectDirectory.file(
+    "src/main/settings-text/gboard_settings_text_es.xml"
+)
 val generatedSettingsTextResDir = layout.buildDirectory.dir(
     "generated/settingsText/res"
 )
@@ -235,6 +238,7 @@ $renderedChunks
 
 val generateSettingsText = tasks.register("generateSettingsText") {
     inputs.file(settingsTextAuthority)
+    inputs.file(spanishSettingsTextAuthority)
     outputs.dir(generatedSettingsTextResDir)
     outputs.dir(generatedSettingsTextJavaDir)
 
@@ -294,14 +298,81 @@ val generateSettingsText = tasks.register("generateSettingsText") {
         }
         require(entries.isNotEmpty()) { "Settings text authority must not be empty" }
 
+        // Spanish translations are optional overrides; default English remains authoritative.
+        val spanishDocument = documentBuilderFactory.newDocumentBuilder()
+            .parse(spanishSettingsTextAuthority.asFile)
+        val spanishRoot = spanishDocument.documentElement
+        require(spanishRoot.nodeName == "settings-text"
+                && spanishRoot.getAttribute("locale") == "es") {
+            "Spanish settings file must declare locale es"
+        }
+        val entriesByName = entries.associateBy { it.name }
+        val seenSpanish = mutableSetOf<String>()
+        val spanishStrings = mutableMapOf<String, String>()
+        val spanishPlurals = mutableMapOf<String, Map<String, String>>()
+        val formatSpecifiers = Regex("%(?:\\d+\\$)?[a-zA-Z]")
+        fun validateFormatting(name: String, english: String, spanish: String) {
+            val expected = formatSpecifiers.findAll(english).map { it.value }.sorted().toList()
+            val actual = formatSpecifiers.findAll(spanish).map { it.value }.sorted().toList()
+            require(expected == actual) {
+                "Spanish format arguments differ from English: $name"
+            }
+        }
+        spanishRoot.childElements().forEach { spanishEntry ->
+            val name = spanishEntry.getAttribute("name")
+            val base = entriesByName[name]
+                ?: throw GradleException("Unknown Spanish settings text: $name")
+            require(seenSpanish.add(name) && base.type == spanishEntry.nodeName) {
+                "Duplicate or mismatched Spanish settings text: $name"
+            }
+            if (base.type == "string") {
+                require(spanishEntry.childElements().isEmpty()) {
+                    "Spanish strings must contain only text: $name"
+                }
+                val value = spanishEntry.textContent
+                validateFormatting(name, base.translations.getValue("en"), value)
+                spanishStrings[name] = value
+            } else {
+                val validQuantities = base.quantities.toMap()
+                val overrides = mutableMapOf<String, String>()
+                spanishEntry.childElements().forEach { item ->
+                    require(item.nodeName == "item") { "Unknown Spanish plural element: $name" }
+                    val quantity = item.getAttribute("quantity")
+                    val source = validQuantities[quantity]
+                        ?: throw GradleException("Unknown Spanish plural: $name[$quantity]")
+                    require(!overrides.containsKey(quantity)) {
+                        "Duplicate Spanish plural quantity: $name[$quantity]"
+                    }
+                    validateFormatting("$name[$quantity]", source.getValue("en"), item.textContent)
+                    overrides[quantity] = item.textContent
+                }
+                require(overrides.isNotEmpty()) { "Empty Spanish plural: $name" }
+                spanishPlurals[name] = overrides
+            }
+        }
+        val localizedEntries = entries.map { entry ->
+            if (entry.type == "string") {
+                entry.copy(translations = entry.translations + (
+                    "es" to (spanishStrings[entry.name] ?: entry.translations.getValue("en"))
+                ))
+            } else {
+                entry.copy(quantities = entry.quantities.map { (quantity, values) ->
+                    quantity to (values + (
+                        "es" to (spanishPlurals[entry.name]?.get(quantity) ?: values.getValue("en"))
+                    ))
+                })
+            }
+        }
+
         val resRoot = generatedSettingsTextResDir.get().asFile
-        mapOf("en" to "values", "zh-Hant" to "values-b+zh+Hant").forEach { (locale, qualifier) ->
+        mapOf("en" to "values", "zh-Hant" to "values-b+zh+Hant",
+            "es" to "values-es").forEach { (locale, qualifier) ->
             val output = resRoot.resolve("$qualifier/gboard_settings_strings.xml")
             output.parentFile.mkdirs()
             output.writeText(buildString {
                 appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
                 appendLine("<resources>")
-                entries.forEach { entry ->
+                localizedEntries.forEach { entry ->
                     if (entry.type == "string") {
                         append("    <string name=\"")
                         append(entry.name)
@@ -329,8 +400,8 @@ val generateSettingsText = tasks.register("generateSettingsText") {
             }, StandardCharsets.UTF_8)
         }
 
-        val stringEntries = entries.filter { it.type == "string" }
-        val pluralEntries = entries.filter { it.type == "plurals" }
+        val stringEntries = localizedEntries.filter { it.type == "string" }
+        val pluralEntries = localizedEntries.filter { it.type == "plurals" }
         val javaOutput = generatedSettingsTextJavaDir.get().asFile.resolve(
             "dev/jason/gboardpatches/extension/settings/GboardSettingsTextCatalog.java"
         )
@@ -347,14 +418,15 @@ val generateSettingsText = tasks.register("generateSettingsText") {
             appendLine("    private static final Map<Integer, String> ENGLISH = createEnglish();")
             appendLine("    private static final Map<Integer, String> TRADITIONAL_CHINESE =")
             appendLine("            createTraditionalChinese();")
+            appendLine("    private static final Map<Integer, String> SPANISH = createSpanish();")
             appendLine()
             appendLine("    private GboardSettingsTextCatalog() {")
             appendLine("    }")
             appendLine()
             appendLine("    static String template(int resId, String languageTag) {")
-            appendLine("        return \"zh-Hant\".equals(languageTag)")
-            appendLine("                ? TRADITIONAL_CHINESE.get(resId)")
-            appendLine("                : ENGLISH.get(resId);")
+            appendLine("        if (\"zh-Hant\".equals(languageTag)) return TRADITIONAL_CHINESE.get(resId);")
+            appendLine("        if (\"es\".equals(languageTag)) return SPANISH.get(resId);")
+            appendLine("        return ENGLISH.get(resId);")
             appendLine("    }")
             appendLine()
             appendLine("    static String quantityTemplate(int resId, String languageTag, int quantity) {")
@@ -366,9 +438,15 @@ val generateSettingsText = tasks.register("generateSettingsText") {
                 append("        if (resId == R.plurals.")
                 append(entry.name)
                 appendLine(") {")
-                append("            return \"zh-Hant\".equals(languageTag) ? \"")
+                append("            if (\"zh-Hant\".equals(languageTag)) return \"")
                 append(escapeJavaString(other.getValue("zh-Hant")))
-                append("\" : quantity == 1 ? \"")
+                appendLine("\";")
+                append("            if (\"es\".equals(languageTag)) return quantity == 1 ? \"")
+                append(escapeJavaString(one.getValue("es")))
+                append("\" : \"")
+                append(escapeJavaString(other.getValue("es")))
+                appendLine("\";")
+                append("            return quantity == 1 ? \"")
                 append(escapeJavaString(one.getValue("en")))
                 append("\" : \"")
                 append(escapeJavaString(other.getValue("en")))
@@ -380,6 +458,7 @@ val generateSettingsText = tasks.register("generateSettingsText") {
             listOf(
                 "English" to "en",
                 "TraditionalChinese" to "zh-Hant",
+                "Spanish" to "es",
             ).forEach { (methodSuffix, locale) ->
                 appendLine()
                 append("    private static Map<Integer, String> create")

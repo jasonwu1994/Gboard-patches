@@ -8,6 +8,7 @@ import java.util.Locale;
 
 public final class GboardSettingsText {
     private static final String LANGUAGE_ENGLISH = "en";
+    private static final String LANGUAGE_SPANISH = "es";
     private static final String LANGUAGE_TRADITIONAL_CHINESE = "zh-Hant";
 
     private GboardSettingsText() {
@@ -86,7 +87,9 @@ public final class GboardSettingsText {
         }
         Locale formatLocale = LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)
                 ? Locale.TRADITIONAL_CHINESE
-                : Locale.US;
+                : LANGUAGE_SPANISH.equals(languageTag)
+                        ? Locale.forLanguageTag(LANGUAGE_SPANISH)
+                        : Locale.US;
         return String.format(formatLocale, template, args);
     }
 
@@ -104,7 +107,9 @@ public final class GboardSettingsText {
         }
         return isTraditionalChinese(locale)
                 ? LANGUAGE_TRADITIONAL_CHINESE
-                : LANGUAGE_ENGLISH;
+                : locale != null && LANGUAGE_SPANISH.equalsIgnoreCase(locale.getLanguage())
+                        ? LANGUAGE_SPANISH
+                        : LANGUAGE_ENGLISH;
     }
 
     private static Locale extractLocale(Context context) {
@@ -141,6 +146,9 @@ public final class GboardSettingsText {
             Locale locale = Locale.forLanguageTag(languageTag);
             if (isTraditionalChinese(locale)) {
                 return LANGUAGE_TRADITIONAL_CHINESE;
+            }
+            if (LANGUAGE_SPANISH.equalsIgnoreCase(locale.getLanguage())) {
+                return LANGUAGE_SPANISH;
             }
         }
         return LANGUAGE_ENGLISH;
