@@ -18,6 +18,7 @@ import dev.jason.gboardpatches.extension.settings.GboardFeatureGroup;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
+import dev.jason.gboardpatches.extension.shiftdelete.GboardShiftDeleteSettingsFeature;
 import dev.jason.gboardpatches.extension.swipedismiss.GboardSwipeDismissSettingsFeature;
 import dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeSettingsFeature;
 import dev.jason.gboardpatches.extension.websearch.GboardFloatingWebSearchSettingsFeature;
@@ -50,7 +51,8 @@ public final class GboardKeyboardToolsSettingsGroupFeature
                         new GboardFloatingWebSearchSettingsFeature(context),
                         new GboardCalculatorSettingsFeature(context),
                         new GboardSwipeDismissSettingsFeature(context),
-                        new GboardKeypressHapticsSettingsFeature(context)));
+                        new GboardKeypressHapticsSettingsFeature(context),
+                        new GboardShiftDeleteSettingsFeature(context)));
     }
 
     @Override

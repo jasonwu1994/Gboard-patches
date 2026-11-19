@@ -85,6 +85,8 @@ import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplit
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.shiftdelete.gboardShiftDeleteBytecodePatch
+import dev.jason.gboardpatches.patches.gboard.features.shiftdelete.gboardShiftDeleteFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeFeatureMarkerPatch
@@ -294,6 +296,23 @@ val gboardSwipeDismissPatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardSwipeDismissFeatureMarkerPatch,
         gboardSwipeDismissBytecodePatch,
+    )
+}
+
+@Suppress("unused")
+val gboardShiftDeletePatch = gboardPublicResourcePatch(
+    featureId = "shift_backspace_forward_delete",
+    name = "Shift + Backspace Forward Delete",
+    description = "按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。\n" +
+        "Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardShiftDeleteFeatureMarkerPatch,
+        gboardShiftDeleteBytecodePatch,
     )
 }
 
@@ -905,6 +924,7 @@ object GboardPublishedPatchCatalog {
         gboardEditingAccessPointsPatch,
         gboardSimpleCalculatorPatch,
         gboardSwipeDismissPatch,
+        gboardShiftDeletePatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardEmojiSizePatch,

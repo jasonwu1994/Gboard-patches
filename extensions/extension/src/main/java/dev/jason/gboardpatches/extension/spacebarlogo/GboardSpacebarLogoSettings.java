@@ -328,13 +328,9 @@ public final class GboardSpacebarLogoSettings {
 
     public static boolean writeImageTint(SharedPreferences preferences, boolean enabled) {
         if (preferences == null) return false;
+        // AUTO stays AUTO: a single-color image then follows the keyboard theme's icon color.
         synchronized (preferences) {
-            SharedPreferences.Editor editor = preferences.edit().putBoolean(PREF_KEY_IMAGE_TINT, enabled);
-            if (enabled && isAutomaticColor(readColorHex(preferences))) {
-                editor.putString(PREF_KEY_COLOR, DEFAULT_COLOR_HEX)
-                        .putString(PREF_KEY_COLOR_SELECTION, DEFAULT_COLOR_HEX);
-            }
-            return editor.commit();
+            return preferences.edit().putBoolean(PREF_KEY_IMAGE_TINT, enabled).commit();
         }
     }
 

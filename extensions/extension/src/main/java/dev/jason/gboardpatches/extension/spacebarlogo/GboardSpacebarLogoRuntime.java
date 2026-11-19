@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.spacebarlogo;
 
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.Gravity;
@@ -7,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -108,7 +110,12 @@ public final class GboardSpacebarLogoRuntime {
                 return;
             }
             drawable = drawable.mutate();
-            if (settings.shouldTint()) drawable.setTint(settings.color);
+            if (settings.shouldTint()) {
+                drawable.setTint(settings.color);
+            } else if (settings.shouldTintWithThemeColor()) {
+                Integer themeColor = themeIconColor(root, bindings);
+                if (themeColor != null) drawable.setTint(themeColor);
+            }
 
             View label = root.findViewById(bindings.primaryLabelViewId);
             if (label != null) {
@@ -121,6 +128,55 @@ public final class GboardSpacebarLogoRuntime {
         } catch (Throwable throwable) {
             safeRestoreStockAppearance(root, bindings);
             logWarningSafely("Failed to apply spacebar logo", throwable);
+        }
+    }
+
+    /**
+     * The color the keyboard theme gives this space key. Gboard colors key labels at runtime, so
+     * colored themes (for example a blue theme with white labels) are only visible on the label
+     * view; the stock vector resource resolves to a neutral light/dark default. Falls back to the
+     * stock Google G vector, then to null, which keeps the custom image's original colors.
+     */
+    private static Integer themeIconColor(ViewGroup root, ViewBindings bindings) {
+        try {
+            View label = root.findViewById(bindings.primaryLabelViewId);
+            if (label instanceof TextView text) {
+                int labelColor = text.getCurrentTextColor();
+                if (Color.alpha(labelColor) != 0) {
+                    logThemeColor("label", labelColor);
+                    return labelColor;
+                }
+            }
+        } catch (Throwable failure) {
+            logWarningSafely("Space label color is unavailable; trying the stock icon", failure);
+        }
+        try {
+            Drawable stock = root.getContext().getDrawable(
+                    bindings.drawableResourceIdForIcon(GboardSpacebarLogoContract.ICON_GOOGLE_G));
+            Integer color = GboardSpacebarLogoImages.sampleIconColor(stock);
+            if (color == null) {
+                logWarningSafely("Stock spacebar icon has no visible pixels; keeping image colors", null);
+            } else {
+                logThemeColor("stock icon", color);
+            }
+            return color;
+        } catch (Throwable failure) {
+            logWarningSafely("Stock spacebar icon color is unavailable; keeping image colors", failure);
+            return null;
+        }
+    }
+
+    private static String lastThemeColorLog;
+
+    /** Logs only when the source or color changes, so rebinding the same key stays quiet. */
+    private static synchronized void logThemeColor(String source, int color) {
+        try {
+            String message = String.format("Automatic image color from %s: #%08X", source, color);
+            if (!message.equals(lastThemeColorLog)) {
+                lastThemeColorLog = message;
+                Log.i(TAG, message);
+            }
+        } catch (Throwable ignored) {
         }
     }
 
@@ -281,6 +337,13 @@ public final class GboardSpacebarLogoRuntime {
                     && !GboardSpacebarLogoContract.ICON_GOOGLE_G_COLOR.equals(iconValue)
                     && (!GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE.equals(iconValue)
                             || customImageTint);
+        }
+
+        /** A single-color custom image with the automatic color follows the theme's icon color. */
+        public boolean shouldTintWithThemeColor() {
+            return !useFixedColor
+                    && GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE.equals(iconValue)
+                    && customImageTint;
         }
     }
 

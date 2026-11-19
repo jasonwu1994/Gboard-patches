@@ -1,3 +1,13 @@
+## [4.4.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0-dev.2...v4.4.0-dev.3) (2026-11-18)
+
+### ✨ New Features
+
+* **Gboard:** add the Shift + Backspace Forward Delete patch. Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.
+
+### ✨ 新功能
+
+* **Gboard:** 新增「Shift + Backspace Forward Delete」Patch。按住 Shift 再按退格鍵，就能刪除游標右邊的字，就像電腦鍵盤上的 Delete 鍵。
+
 ## [4.4.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0-dev.1...v4.4.0-dev.2) (2026-11-14)
 
 ### ✨ New Features

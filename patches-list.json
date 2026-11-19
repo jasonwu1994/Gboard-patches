@@ -1,5 +1,5 @@
 {
-  "version": "4.4.0-dev.2",
+  "version": "4.4.0-dev.3",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -440,6 +440,18 @@
     {
       "name": "Settings Homepage Override",
       "description": "允許切換新版或舊版 Gboard 設定頁面\nAllow switching between the new and legacy Gboard settings pages.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Shift + Backspace Forward Delete",
+      "description": "按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。\nHold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

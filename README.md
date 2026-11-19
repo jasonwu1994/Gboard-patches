@@ -118,6 +118,12 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 </details>
 
 <details>
+  <summary><code>Shift + Backspace Forward Delete</code></summary>
+
+  Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard. It is off until you turn it on in the Patches settings.
+</details>
+
+<details>
   <summary><code>G Logo on Spacebar</code></summary>
 
   Show a built-in icon or your own PNG, WebP, or JPEG on the spacebar. Keep its original colors or choose a single color, adjust its size, and include imported images in settings backups.

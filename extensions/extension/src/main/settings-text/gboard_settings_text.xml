@@ -3788,4 +3788,16 @@
         <translation locale="en">Enter a size between 10 and 100%.</translation>
         <translation locale="zh-Hant">請輸入 10 至 100% 的尺寸。</translation>
     </string>
+    <string name="gboard_patches_shift_delete_title">
+        <translation locale="en">Shift + Backspace Forward Delete</translation>
+        <translation locale="zh-Hant">Shift+退格向前刪除</translation>
+    </string>
+    <string name="gboard_patches_shift_delete_entry_summary">
+        <translation locale="en">Hold Shift and press Backspace to delete the character after the cursor.</translation>
+        <translation locale="zh-Hant">按住 Shift 再按退格鍵，會刪除游標右邊的字。</translation>
+    </string>
+    <string name="gboard_patches_shift_delete_summary">
+        <translation locale="en">Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard. Hold to repeat; releasing Shift restores backward deletion.</translation>
+        <translation locale="zh-Hant">按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。長按可連續刪除，放開 Shift 後恢復向左刪除。</translation>
+    </string>
 </settings-text>

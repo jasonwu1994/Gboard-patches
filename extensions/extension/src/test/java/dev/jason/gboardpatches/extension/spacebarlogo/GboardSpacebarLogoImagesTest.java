@@ -198,6 +198,79 @@ public class GboardSpacebarLogoImagesTest {
         assertEquals(1, spacebar.getChildCount());
     }
 
+    @Test public void automaticColorTintsSingleColorImageWithTheSpaceLabelThemeColor() throws Exception {
+        int spaceId = View.generateViewId(), labelId = View.generateViewId();
+        // A color resource resolves to a ColorDrawable, standing in for the themed stock G vector.
+        int stockColor = context.getColor(android.R.color.holo_blue_dark);
+        var bindings = new GboardSpacebarLogoRuntime.ViewBindings(
+                spaceId, labelId, android.R.color.holo_blue_dark, 0, 0);
+        FrameLayout spacebar = newSpacebar();
+        spacebar.setId(spaceId);
+        TextView label = new TextView(context);
+        label.setId(labelId);
+        // Gboard colors the label at runtime; a blue theme gives white labels.
+        label.setTextColor(Color.WHITE);
+        spacebar.addView(label);
+        String red = image(Color.RED);
+        var automatic = new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false,
+                Color.TRANSPARENT, GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, red, true);
+        assertFalse(automatic.shouldTint());
+        assertTrue(automatic.shouldTintWithThemeColor());
+        GboardSpacebarLogoRuntime.afterSoftKeyBound(spacebar, true, automatic, bindings);
+        assertEquals(Color.WHITE, centerPixel(((ImageView) spacebar.getChildAt(1)).getDrawable()));
+
+        // A label with no visible color falls back to the stock icon's resolved color.
+        label.setTextColor(Color.TRANSPARENT);
+        GboardSpacebarLogoRuntime.refreshBoundSpacebars(automatic);
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertEquals(stockColor, centerPixel(((ImageView) spacebar.getChildAt(1)).getDrawable()));
+
+        // Original colors and stock icons never take the theme color path.
+        assertFalse(new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false, Color.TRANSPARENT,
+                GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, red, false).shouldTintWithThemeColor());
+        assertFalse(new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false, Color.TRANSPARENT,
+                GboardSpacebarLogoContract.ICON_HEART, "", true).shouldTintWithThemeColor());
+        assertFalse(snapshot(true, GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, red, true)
+                .shouldTintWithThemeColor());
+    }
+
+    @Test public void automaticColorFailuresKeepTheImageColorsAndNeverReachTheHost() throws Exception {
+        int spaceId = View.generateViewId(), labelId = View.generateViewId();
+        // The label is not a TextView, and loading the stock icon (resource 0) throws.
+        var bindings = new GboardSpacebarLogoRuntime.ViewBindings(spaceId, labelId, 0, 0, 0);
+        FrameLayout spacebar = newSpacebar();
+        spacebar.setId(spaceId);
+        View label = new View(context);
+        label.setId(labelId);
+        spacebar.addView(label);
+        var automatic = new GboardSpacebarLogoRuntime.SettingsSnapshot(true, false,
+                Color.TRANSPARENT, GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE, image(Color.RED), true);
+        GboardSpacebarLogoRuntime.afterSoftKeyBound(spacebar, true, automatic, bindings);
+        assertEquals(View.INVISIBLE, label.getVisibility());
+        assertEquals(2, spacebar.getChildCount());
+        assertEquals(Color.RED, centerPixel(((ImageView) spacebar.getChildAt(1)).getDrawable()));
+    }
+
+    @Test public void sampledIconColorIgnoresAntiAliasedEdgesAndKeepsThemeAlpha() {
+        int edge = 0x40112233, body = 0xFF336699;
+        assertEquals(Integer.valueOf(body),
+                GboardSpacebarLogoImages.mostOpaqueColor(new int[] {0, edge, body, body, edge}));
+        assertEquals(Integer.valueOf(0x8A000000),
+                GboardSpacebarLogoImages.mostOpaqueColor(new int[] {0, 0x20000000, 0x8A000000}));
+        assertNull(GboardSpacebarLogoImages.mostOpaqueColor(new int[] {0, 0x00FFFFFF}));
+        assertNull(GboardSpacebarLogoImages.sampleIconColor(null));
+        assertNull(GboardSpacebarLogoImages.sampleIconColor(new android.graphics.drawable.ColorDrawable(0)));
+        assertEquals(Integer.valueOf(body), GboardSpacebarLogoImages.sampleIconColor(
+                new android.graphics.drawable.ColorDrawable(body)));
+    }
+
+    private static int centerPixel(Drawable drawable) {
+        Bitmap rendered = Bitmap.createBitmap(12, 12, Bitmap.Config.ARGB_8888);
+        drawable.setBounds(0, 0, 12, 12);
+        drawable.draw(new Canvas(rendered));
+        return rendered.getPixel(6, 6);
+    }
+
     @Test public void officialColorImageIsPackagedAt96pxAndNeverTinted() {
         BitmapDrawable google = (BitmapDrawable) GboardSpacebarLogoImages.googleDrawable(context.getResources());
         assertNotNull(google);

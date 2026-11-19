@@ -36,7 +36,15 @@ public class GboardSpacebarLogoSettingsRuntimeTest {
         assertTrue(GboardSpacebarLogoSettings.writeImageTint(context, true));
         var snapshot = GboardSpacebarLogoSettings.snapshot(context);
         assertTrue(snapshot.enabled);
+        // Turning single color on keeps AUTO, which follows the space key's theme color.
+        assertEquals(GboardSpacebarLogoSettings.COLOR_VALUE_AUTO,
+                GboardSpacebarLogoSettings.readColorHex(preferences));
+        assertFalse(snapshot.shouldTint());
+        assertTrue(snapshot.shouldTintWithThemeColor());
+        assertTrue(GboardSpacebarLogoSettings.writeColorHex(context, "#34A853"));
+        snapshot = GboardSpacebarLogoSettings.snapshot(context);
         assertTrue(snapshot.shouldTint());
+        assertFalse(snapshot.shouldTintWithThemeColor());
         assertEquals(75, snapshot.sizePercent);
         assertEquals(GboardSpacebarLogoImageData.base64(), snapshot.customImage);
         assertTrue(GboardSpacebarLogoSettings.writeImage(context, snapshot.customImage));

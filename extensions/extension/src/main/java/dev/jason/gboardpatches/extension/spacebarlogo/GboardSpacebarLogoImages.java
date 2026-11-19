@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.extension.spacebarlogo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -15,6 +16,7 @@ import java.util.Base64;
 public final class GboardSpacebarLogoImages {
     public static final int MAX_IMPORT_BYTES = 8 * 1024 * 1024;
     private static final long MAX_SOURCE_PIXELS = 40_000_000L;
+    private static final int THEME_SAMPLE_PX = 48;
     private static Bitmap googleBitmap;
     private static boolean googleLoaded;
     private static String cachedImageValue;
@@ -153,6 +155,46 @@ public final class GboardSpacebarLogoImages {
             }
         }
         return drawable(resources, cachedImage);
+    }
+
+    /**
+     * Draws a themed single-color icon into a small bitmap and returns its color. The icon must
+     * be a fresh instance; it is drawn with new bounds. Returns null when nothing is visible.
+     */
+    public static Integer sampleIconColor(Drawable icon) {
+        if (icon == null) return null;
+        Bitmap bitmap = Bitmap.createBitmap(THEME_SAMPLE_PX, THEME_SAMPLE_PX, Bitmap.Config.ARGB_8888);
+        try {
+            icon.setBounds(0, 0, THEME_SAMPLE_PX, THEME_SAMPLE_PX);
+            icon.draw(new Canvas(bitmap));
+            int[] pixels = new int[THEME_SAMPLE_PX * THEME_SAMPLE_PX];
+            bitmap.getPixels(pixels, 0, THEME_SAMPLE_PX, 0, 0, THEME_SAMPLE_PX, THEME_SAMPLE_PX);
+            return mostOpaqueColor(pixels);
+        } finally {
+            bitmap.recycle();
+        }
+    }
+
+    /**
+     * Averages the pixels that share the highest alpha, so anti-aliased edges do not decide the
+     * color. Keeps that alpha, because stock icons may use a translucent theme color.
+     */
+    static Integer mostOpaqueColor(int[] pixels) {
+        int maxAlpha = 0;
+        for (int pixel : pixels) maxAlpha = Math.max(maxAlpha, pixel >>> 24);
+        if (maxAlpha == 0) return null;
+        long red = 0, green = 0, blue = 0, count = 0;
+        for (int pixel : pixels) {
+            if ((pixel >>> 24) != maxAlpha) continue;
+            red += (pixel >> 16) & 0xFF;
+            green += (pixel >> 8) & 0xFF;
+            blue += pixel & 0xFF;
+            count++;
+        }
+        return (maxAlpha << 24)
+                | ((int) Math.round((double) red / count) << 16)
+                | ((int) Math.round((double) green / count) << 8)
+                | (int) Math.round((double) blue / count);
     }
 
     private static BitmapFactory.Options bounds(byte[] bytes) {

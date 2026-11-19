@@ -1,7 +1,7 @@
 {
-    "created_at":  "2026-11-14T20:55:54",
-    "description":  "### ✨ New Features\n\n* **Gboard:** add support for custom package names in Package Rename.\n\n### ✨ 新功能\n\n* **Gboard:** Package Rename 新增自訂套件名稱功能。",
-    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.4.0-dev.2/patches-4.4.0-dev.2.mpp",
+    "created_at":  "2026-11-19T07:35:35",
+    "description":  "### ✨ New Features\n\n* **Gboard:** add the Shift + Backspace Forward Delete patch. Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.\n\n### ✨ 新功能\n\n* **Gboard:** 新增「Shift + Backspace Forward Delete」Patch。按住 Shift 再按退格鍵，就能刪除游標右邊的字，就像電腦鍵盤上的 Delete 鍵。",
+    "download_url":  "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.4.0-dev.3/patches-4.4.0-dev.3.mpp",
     "signature_download_url":  "",
-    "version":  "4.4.0-dev.2"
+    "version":  "4.4.0-dev.3"
 }

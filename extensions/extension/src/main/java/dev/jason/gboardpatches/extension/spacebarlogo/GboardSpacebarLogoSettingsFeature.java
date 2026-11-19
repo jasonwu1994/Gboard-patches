@@ -158,7 +158,7 @@ public final class GboardSpacebarLogoSettingsFeature
                             R.string.gboard_patches_spacebar_image_original_summary, "This image keeps its original colors."),
                     colorEnabled ? displayColor(color) : textOrFallback(
                             R.string.gboard_patches_spacebar_image_original, "Original colors"), colorEnabled,
-                    () -> showColorDialog(host, hostContext, color, selection, custom, imageSelected)));
+                    () -> showColorDialog(host, hostContext, color, selection, custom)));
             rows.add(new GboardPatchesSettingsContract.ActionRow(
                     textOrFallback(hasImage ? R.string.gboard_patches_spacebar_image_replace
                             : R.string.gboard_patches_spacebar_image_import, "Import image"),
@@ -264,7 +264,7 @@ public final class GboardSpacebarLogoSettingsFeature
 
     private void showColorDialog(GboardPatchesSettingsContract.FeatureHost host,
             Context hostContext, String currentColor, String currentSelection,
-            String customColor, boolean imageSelected) {
+            String customColor) {
         String[] summaries = {
                 colorAutomaticSummary,
                 COLOR_VALUES[1], COLOR_VALUES[2], COLOR_VALUES[3], COLOR_VALUES[4],
@@ -274,9 +274,8 @@ public final class GboardSpacebarLogoSettingsFeature
                 GboardPatchesSettingsContract.showManagedDialog(host,
                     GboardSpacebarLogoDialogs.paletteDialog(
                         hostContext, colorDialogTitle,
-                        Arrays.copyOfRange(colorLabels, imageSelected ? 1 : 0, colorLabels.length),
-                        Arrays.copyOfRange(summaries, imageSelected ? 1 : 0, summaries.length),
-                        Arrays.copyOfRange(COLOR_VALUES, imageSelected ? 1 : 0, COLOR_VALUES.length),
+                        // For a single-color custom image, AUTO follows the space key's theme color.
+                        colorLabels.clone(), summaries, COLOR_VALUES.clone(),
                         currentSelection, GboardSpacebarLogoSettings.COLOR_SELECTION_CUSTOM,
                         () -> showCustomColorDialog(
                                 host, hostContext, currentColor, customColor),
