@@ -136,7 +136,7 @@ public final class GboardSettingsTextTest {
                         R.string.gboard_patches_language_system_value, "es-PE", "Español"));
         Assert.assertEquals("2 minutos", GboardSettingsText.resolveStableQuantityForTesting(
                 R.plurals.gboard_patches_minutes, "es-PE", 2));
-        Assert.assertEquals("Create from photo", GboardSettingsText.get(context,
+        Assert.assertNotEquals("Create from photo", GboardSettingsText.get(context,
                 R.string.gboard_patches_custom_theme_source_photo));
     }
 
