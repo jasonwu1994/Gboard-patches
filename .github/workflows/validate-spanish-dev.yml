@@ -81,6 +81,9 @@ jobs:
           print(f"Valid Spanish overrides: {len(keys)} strings/plural groups")
           PY
 
+      - name: Require complete Spanish catalog and valid technical text
+        run: python3 scripts/gboard_translate_es.py --check
+
       - name: Generate and validate Spanish settings resources
         run: ./gradlew --no-daemon :extensions:extension:generateSettingsText --stacktrace
 

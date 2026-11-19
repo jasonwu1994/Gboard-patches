@@ -140,6 +140,35 @@ public final class GboardSettingsTextTest {
                 R.string.gboard_patches_custom_theme_source_photo));
     }
 
+
+    @Test
+    public void spanishLabelsAndTechnicalReferencesStayLocalized() {
+        Context context = RuntimeEnvironment.getApplication();
+        GboardPatchesSettings.preferences(context).edit()
+                .putString(GboardPatchesSettings.PREF_KEY_SETTINGS_UI_LANGUAGE,
+                        GboardSettingsLocaleManager.LANGUAGE_SPANISH)
+                .commit();
+
+        Assert.assertEquals("Fila superior personalizada", GboardSettingsText.get(context,
+                R.string.gboard_patches_top_row_title));
+        Assert.assertEquals("Columnas del portapapeles", GboardSettingsText.get(context,
+                R.string.gboard_patches_pref_clipboard_columns));
+        Assert.assertEquals("Copia de seguridad y restauración", GboardSettingsText.get(
+                context, R.string.gboard_patches_backup_restore_title));
+        Assert.assertEquals("Desactivado", GboardSettingsText.get(context,
+                R.string.language_models_disabled));
+        Assert.assertEquals("Almacenamiento compartido (/sdcard)", GboardSettingsText.get(
+                context, R.string.gboard_patches_lan_ftp_root_shared));
+        Assert.assertEquals("Intensidad del desenfoque", GboardSettingsText.get(
+                context, R.string.gboard_patches_frosted_glass_radius_title));
+        Assert.assertTrue(GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_payload_present_requirement_summary)
+                .contains("libdictation_jni.so"));
+        Assert.assertFalse(GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_speech_services_present_title)
+                .contains("&quot;"));
+    }
+
     @Test
     public void spanishSystemLanguageAndExplicitPreferenceAreSupported() {
         Assert.assertEquals("es",

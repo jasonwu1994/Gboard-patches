@@ -137,6 +137,9 @@ def coverage(source, spanish):
             original, target = english_text(src), dst.text or ""
             if fmt(original) != fmt(target):
                 errors.append(f"{name}: changed format specifiers")
+            invalid_terms = ("&quot;", "tragaperras", "/tarjeta postal", "Discapacitados", "Aduanas")
+            if any(term in target for term in invalid_terms):
+                errors.append(f"{name}: machine-translation artifact")
             if original == target and re.search(r"[a-zA-Z]{4,}", original):
                 unchanged.append(name)
         else:
