@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 60
     env:
       GITHUB_ACTOR: ${{ github.repository_owner }}
-      GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN || github.token }}
     steps:
       - name: Checkout dev
         uses: actions/checkout@v4
@@ -43,6 +43,43 @@ jobs:
 
       - name: Enable wrapper
         run: chmod +x ./gradlew
+
+      - name: Verify Spanish XML source contract
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          root = Path("extensions/extension/src/main/settings-text")
+          master = ET.parse(root / "gboard_settings_text.xml").getroot()
+          overlay = ET.parse(root / "gboard_settings_text_es.xml").getroot()
+          assert overlay.tag == "settings-text" and overlay.attrib.get("locale") == "es"
+          english = {el.attrib["name"]: el for el in master}
+          keys = set()
+          formats = lambda s: sorted(re.findall(r"%(?:\\d+\\$)?[a-zA-Z]", s))
+          for entry in overlay:
+              name = entry.attrib["name"]
+              assert name in english and name not in keys, name
+              keys.add(name)
+              original = english[name]
+              assert entry.tag == original.tag, name
+              if entry.tag == "string":
+                  default = original.find("translation[@locale='en']")
+                  assert default is not None
+                  assert formats(entry.text or "") == formats(default.text or ""), name
+              else:
+                  default_items = {i.attrib["quantity"]: i for i in original}
+                  for item in entry:
+                      assert item.attrib["quantity"] in default_items
+                      default = default_items[item.attrib["quantity"]].find(
+                          "translation[@locale='en']")
+                      assert default is not None
+                      assert formats(item.text or "") == formats(default.text or ""), name
+          assert len(keys) >= 100, len(keys)
+          assert overlay.find(".//string[@name='gboard_patches_language_spanish_label']") is not None
+          print(f"Valid Spanish overrides: {len(keys)} strings/plural groups")
+          PY
 
       - name: Generate and validate Spanish settings resources
         run: ./gradlew --no-daemon :extensions:extension:generateSettingsText --stacktrace
