@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 85
     env:
-      GITHUB_ACTOR: \${{ github.repository_owner }}
-      GITHUB_TOKEN: \${{ secrets.MORPHE_PACKAGES_TOKEN || github.token }}
+      GITHUB_ACTOR: ${{ github.repository_owner }}
+      GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN || github.token }}
       OMP_NUM_THREADS: "2"
       OPENBLAS_NUM_THREADS: "2"
     steps:
