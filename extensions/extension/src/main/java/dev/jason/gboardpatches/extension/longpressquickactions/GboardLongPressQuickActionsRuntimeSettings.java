@@ -56,6 +56,16 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         }
     }
 
+    /** True when the shortcut is the first, default-selected long-press popup item. */
+    public static boolean isShortcutFirst() {
+        try {
+            return snapshot().shortcutFirst;
+        } catch (Throwable failure) {
+            logFailure("failed to resolve shortcut placement runtime settings", failure);
+            return GboardLongPressShortcutPlacement.isFirst(null);
+        }
+    }
+
     static Snapshot snapshot() {
         Snapshot override = snapshotOverrideForTest;
         if (override != null) {
@@ -82,13 +92,16 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
     static Snapshot snapshotFromPreferences(SharedPreferences preferences,
             long loadedAtElapsedMs) {
         if (preferences == null) {
-            return new Snapshot(loadedAtElapsedMs, false, false, false, "unavailable");
+            return new Snapshot(loadedAtElapsedMs, false, false, false,
+                    GboardLongPressShortcutPlacement.isFirst(null), "unavailable");
         }
         return new Snapshot(
                 loadedAtElapsedMs,
                 GboardLongPressQuickActionsSettings.readEnabled(preferences),
                 GboardLongPressQuickActionsSettings.readGlobeDragEnabled(preferences),
                 GboardLongPressQuickActionsSettings.readSelectAllWhenUnselected(preferences),
+                GboardLongPressShortcutPlacement.isFirst(
+                        GboardLongPressQuickActionsSettings.readShortcutPlacement(preferences)),
                 "local");
     }
 
@@ -102,8 +115,14 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
 
     static void setOverrideForTest(boolean enabled, boolean globeDragEnabled,
             boolean selectAllWhenUnselected) {
+        setOverrideForTest(enabled, globeDragEnabled, selectAllWhenUnselected,
+                GboardLongPressShortcutPlacement.isFirst(null));
+    }
+
+    static void setOverrideForTest(boolean enabled, boolean globeDragEnabled,
+            boolean selectAllWhenUnselected, boolean shortcutFirst) {
         snapshotOverrideForTest = new Snapshot(0L, enabled, globeDragEnabled,
-                selectAllWhenUnselected, "test");
+                selectAllWhenUnselected, shortcutFirst, "test");
     }
 
     static void clearEnabledOverrideForTest() {
@@ -118,7 +137,8 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         if (context == null) {
             return previous != null
                     ? new Snapshot(loadedAtElapsedMs, previous.enabled,
-                            previous.globeDragEnabled, previous.selectAllWhenUnselected, "last-known")
+                            previous.globeDragEnabled, previous.selectAllWhenUnselected,
+                            previous.shortcutFirst, "last-known")
                     : snapshotFromPreferences(null, loadedAtElapsedMs);
         }
         try {
@@ -129,7 +149,8 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
             logFailure("failed to read local settings", failure);
             return previous != null
                     ? new Snapshot(loadedAtElapsedMs, previous.enabled,
-                            previous.globeDragEnabled, previous.selectAllWhenUnselected, "last-known")
+                            previous.globeDragEnabled, previous.selectAllWhenUnselected,
+                            previous.shortcutFirst, "last-known")
                     : snapshotFromPreferences(null, loadedAtElapsedMs);
         }
     }
@@ -187,14 +208,16 @@ public final class GboardLongPressQuickActionsRuntimeSettings {
         final boolean enabled;
         final boolean globeDragEnabled;
         final boolean selectAllWhenUnselected;
+        final boolean shortcutFirst;
         final String source;
 
         Snapshot(long loadedAtElapsedMs, boolean enabled, boolean globeDragEnabled,
-                boolean selectAllWhenUnselected, String source) {
+                boolean selectAllWhenUnselected, boolean shortcutFirst, String source) {
             this.loadedAtElapsedMs = loadedAtElapsedMs;
             this.enabled = enabled;
             this.globeDragEnabled = globeDragEnabled;
             this.selectAllWhenUnselected = selectAllWhenUnselected;
+            this.shortcutFirst = shortcutFirst;
             this.source = source == null ? "unknown" : source;
         }
     }

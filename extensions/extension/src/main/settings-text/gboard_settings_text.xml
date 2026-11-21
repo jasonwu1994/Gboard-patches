@@ -1856,6 +1856,22 @@
         <translation locale="en">When no text is selected, long-press C/X or drag from Globe to C/X to copy or cut all text in the input field.</translation>
         <translation locale="zh-Hant">未選取文字時，長按 C/X 或從地球鍵拖曳到 C/X，會複製或剪下輸入框內的全部文字。</translation>
     </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_title">
+        <translation locale="en">Shortcut position</translation>
+        <translation locale="zh-Hant">快捷鍵位置</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_summary">
+        <translation locale="en">Where the shortcut appears in the long-press popup.</translation>
+        <translation locale="zh-Hant">快捷鍵在長按選單中的位置。</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_first">
+        <translation locale="en">First</translation>
+        <translation locale="zh-Hant">第一個</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_last">
+        <translation locale="en">Last</translation>
+        <translation locale="zh-Hant">最後一個</translation>
+    </string>
     <string name="gboard_patches_long_press_quick_actions_section_mappings">
         <translation locale="en">Mappings</translation>
         <translation locale="zh-Hant">說明</translation>
@@ -1963,6 +1979,30 @@
     <string name="gboard_patches_advanced_voice_zh_tw_punctuation_summary">
         <translation locale="en">Force-stop and restart Gboard for changes to take effect.</translation>
         <translation locale="zh-Hant">需要強制停止並重新啟動Gboard才會生效。</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_title">
+        <translation locale="en">Rambler Auto Stop</translation>
+        <translation locale="zh-Hant">Rambler 自動停止</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_summary">
+        <translation locale="en">Stops Rambler voice typing and keeps the text after this long without speech. Applies from the next voice input.</translation>
+        <translation locale="zh-Hant">停止說話達到設定時間後，自動結束 Rambler 語音輸入並保留文字。下次開始語音輸入時生效。</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_off">
+        <translation locale="en">Off</translation>
+        <translation locale="zh-Hant">關閉</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_seconds">
+        <translation locale="en">%1$s seconds</translation>
+        <translation locale="zh-Hant">%1$s 秒</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_custom_hint">
+        <translation locale="en">Seconds (1–59)</translation>
+        <translation locale="zh-Hant">秒數（1–59）</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_custom_error">
+        <translation locale="en">Enter a number of seconds from 1 to 59.</translation>
+        <translation locale="zh-Hant">請輸入 1 到 59 之間的秒數。</translation>
     </string>
     <string name="gboard_patches_advanced_voice_section_behavior">
         <translation locale="en">Behavior</translation>

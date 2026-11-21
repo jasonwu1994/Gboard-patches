@@ -39,8 +39,12 @@ public final class GboardAdvancedVoiceSettingsSourceTest {
                 "語音輸入分為三種：標準、標準-進階功能（彩色麥克風）以及 Rambler。"));
         Assert.assertEquals(2, count(feature,
                 "new GboardPatchesSettingsContract.ToggleRow("));
-        Assert.assertEquals(0, count(feature,
+        Assert.assertEquals(1, count(feature,
                 "new GboardPatchesSettingsContract.SelectorRow("));
+        Assert.assertEquals(1, count(feature,
+                "GboardPatchesSettingsContract.showChoiceDialog(host"));
+        Assert.assertTrue(feature.contains("GboardRamblerAutoStopSettings.readSeconds(preferences)"));
+        Assert.assertTrue(feature.contains("GboardRamblerAutoStopSettings.writeSeconds("));
         Assert.assertFalse(feature.contains("GboardAdvancedVoiceSettings.readBackend("));
         Assert.assertFalse(feature.contains("showBackendDialog("));
         Assert.assertFalse(feature.contains("saveBackend("));

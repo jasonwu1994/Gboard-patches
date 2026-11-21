@@ -18,6 +18,9 @@ public final class GboardAdvancedVoiceStockPolicy {
             "enable_sticky_mic_background";
     public static final String ENABLE_SODA_LONGFORM_EXPERIMENT_FLAG =
             "enable_soda_longform_experiment";
+    /** Lets Smart Dictation pick its own S3 recognizer instead of the system voice IME. */
+    public static final String ENABLE_S3_AS_FALLBACK_FLAG =
+            "enable_s3_as_fallback_in_smart_dictation";
 
     private static final Set<String> STOCK_FLAGS = Collections.unmodifiableSet(
             new HashSet<String>(Arrays.asList(
@@ -26,7 +29,8 @@ public final class GboardAdvancedVoiceStockPolicy {
                     ENABLE_DICTATION_SPLIT_INSTALL_FLAG,
                     HANDLE_FALLBACK_INSIDE_SD_STACK_FLAG,
                     ENABLE_STICKY_MIC_BACKGROUND_FLAG,
-                    ENABLE_SODA_LONGFORM_EXPERIMENT_FLAG)));
+                    ENABLE_SODA_LONGFORM_EXPERIMENT_FLAG,
+                    ENABLE_S3_AS_FALLBACK_FLAG)));
 
     private GboardAdvancedVoiceStockPolicy() {
     }

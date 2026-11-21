@@ -82,6 +82,29 @@ public final class GboardLongPressQuickActionsSettingsTest {
         Assert.assertFalse(GboardLongPressQuickActionsSettings
                 .readGlobeDragEnabled(preferences));
     }
+
+    @Test
+    public void shortcutPlacementDefaultsFirstAndKeepsUserChoice() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+        Assert.assertEquals("first",
+                GboardLongPressQuickActionsSettings.readShortcutPlacement(null));
+        Assert.assertEquals("first",
+                GboardLongPressQuickActionsSettings.readShortcutPlacement(preferences));
+
+        GboardLongPressQuickActionsSettings.ensureDefault(preferences);
+        Assert.assertEquals("first", preferences.values.get(
+                GboardLongPressQuickActionsSettings.PREF_KEY_SHORTCUT_PLACEMENT));
+        Assert.assertTrue(GboardLongPressQuickActionsSettings
+                .writeShortcutPlacement(preferences, "last"));
+        GboardLongPressQuickActionsSettings.ensureDefault(preferences);
+        Assert.assertEquals("last",
+                GboardLongPressQuickActionsSettings.readShortcutPlacement(preferences));
+
+        preferences.values.put(
+                GboardLongPressQuickActionsSettings.PREF_KEY_SHORTCUT_PLACEMENT, Boolean.TRUE);
+        Assert.assertEquals("first",
+                GboardLongPressQuickActionsSettings.readShortcutPlacement(preferences));
+    }
 }
 
 final class TestSharedPreferences implements SharedPreferences {

@@ -99,23 +99,25 @@ public final class GboardLongPressQuickActionsRuntimeTest {
         Object patched = new Object();
         Object unrelated = new Object();
 
-        GboardLongPressQuickActionsRuntime.rememberPatchedMetadata(original, patched);
+        GboardLongPressQuickActionsRuntime.rememberPatchedMetadata(original, patched, true);
 
         Assert.assertSame(original,
-                GboardLongPressQuickActionsRuntime.metadataForBind(false, patched));
+                GboardLongPressQuickActionsRuntime.metadataForBind(false, true, patched));
         Assert.assertSame(original,
-                GboardLongPressQuickActionsRuntime.metadataForBind(false, original));
+                GboardLongPressQuickActionsRuntime.metadataForBind(false, true, original));
         Assert.assertSame(unrelated,
-                GboardLongPressQuickActionsRuntime.metadataForBind(false, unrelated));
+                GboardLongPressQuickActionsRuntime.metadataForBind(false, true, unrelated));
         Assert.assertSame(patched,
-                GboardLongPressQuickActionsRuntime.metadataForBind(true, patched));
+                GboardLongPressQuickActionsRuntime.metadataForBind(true, true, patched));
+        Assert.assertSame(original,
+                GboardLongPressQuickActionsRuntime.metadataForBind(true, false, patched));
     }
 
     @Test
     public void disabledModeConsumesOnlyMatchingEventsFromInjectedMetadata() {
         Object original = new Object();
         Object patched = new Object();
-        GboardLongPressQuickActionsRuntime.rememberPatchedMetadata(original, patched);
+        GboardLongPressQuickActionsRuntime.rememberPatchedMetadata(original, patched, false);
 
         Assert.assertTrue(GboardLongPressQuickActionsRuntime
                 .shouldConsumeDisabledInjectedEvent(false, patched, true));

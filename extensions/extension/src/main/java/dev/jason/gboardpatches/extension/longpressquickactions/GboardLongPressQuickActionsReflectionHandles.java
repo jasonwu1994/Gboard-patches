@@ -229,8 +229,9 @@ public final class GboardLongPressQuickActionsReflectionHandles {
                 && "globe".equals(firstEntryPayload(longPressAction));
     }
 
-    public Object appendLongPressAction(Context context, Object metadata,
-            GboardLongPressQuickActionsPolicy.QuickAction action)
+    /** Adds the shortcut entry as the first or last long-press popup item. */
+    public Object insertLongPressAction(Context context, Object metadata,
+            GboardLongPressQuickActionsPolicy.QuickAction action, boolean shortcutFirst)
             throws Throwable {
         Object existingAction = findExactAction(metadata, longPressActionType);
         Object actionBuilder = actionBuilderConstructor.newInstance();
@@ -250,20 +251,14 @@ public final class GboardLongPressQuickActionsReflectionHandles {
                     actionBuilder, resolvedPopupLayoutResId);
         }
 
-        Object updatedEntries = Array.newInstance(actionEntryClass, existingEntries.length + 1);
-        System.arraycopy(existingEntries, 0, updatedEntries, 0, existingEntries.length);
-        Array.set(updatedEntries, existingEntries.length,
-                entryConstructor.newInstance(
-                        action.actionCode, null, null, Integer.MAX_VALUE));
-        setActionEntriesMethod.invoke(actionBuilder, updatedEntries);
-
-        String[] labels = normalizeLabels(existingLabels, existingEntries.length + 1);
-        labels[existingEntries.length] = null;
-        setPopupLabelsMethod.invoke(actionBuilder, (Object) labels);
-
-        int[] icons = normalizeIcons(existingIcons, existingEntries.length + 1);
-        icons[existingEntries.length] = action.iconResId;
-        actionBuilderIconsField.set(actionBuilder, icons);
+        Object shortcutEntry = entryConstructor.newInstance(
+                action.actionCode, null, null, Integer.MAX_VALUE);
+        setActionEntriesMethod.invoke(actionBuilder, GboardLongPressShortcutPlacement.entries(
+                actionEntryClass, existingEntries, shortcutEntry, shortcutFirst));
+        setPopupLabelsMethod.invoke(actionBuilder, (Object) GboardLongPressShortcutPlacement
+                .labels(existingLabels, existingEntries.length, shortcutFirst));
+        actionBuilderIconsField.set(actionBuilder, GboardLongPressShortcutPlacement.icons(
+                existingIcons, existingEntries.length, action.iconResId, shortcutFirst));
 
         Object patchedAction = buildActionMethod.invoke(actionBuilder);
         if (patchedAction == null) {
@@ -427,30 +422,6 @@ public final class GboardLongPressQuickActionsReflectionHandles {
     private int[] popupIcons(Object action) throws IllegalAccessException {
         Object value = action == null ? null : popupIconsField.get(action);
         return value instanceof int[] ? (int[]) value : new int[0];
-    }
-
-    private static String[] normalizeLabels(String[] source, int size) {
-        String[] result = new String[size];
-        if (source != null && source.length == 1 && size > 1) {
-            for (int index = 0; index < size - 1; index++) {
-                result[index] = source[0];
-            }
-        } else if (source != null) {
-            System.arraycopy(source, 0, result, 0, Math.min(source.length, size));
-        }
-        return result;
-    }
-
-    private static int[] normalizeIcons(int[] source, int size) {
-        int[] result = new int[size];
-        if (source != null && source.length == 1 && size > 1) {
-            for (int index = 0; index < size - 1; index++) {
-                result[index] = source[0];
-            }
-        } else if (source != null) {
-            System.arraycopy(source, 0, result, 0, Math.min(source.length, size));
-        }
-        return result;
     }
 
     private static void validateInputEventBinding(Class<?> owner, Method method) {

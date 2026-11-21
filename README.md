@@ -120,7 +120,7 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 <details>
   <summary><code>Shift + Backspace Forward Delete</code></summary>
 
-  Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard. It is off until you turn it on in the Patches settings.
+  Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.
 </details>
 
 <details>
