@@ -1544,6 +1544,14 @@
         <translation locale="en">Recommended: turn on Quick Settings Tile.</translation>
         <translation locale="zh-Hant">建議：開啟快速設定磁貼。</translation>
     </string>
+    <string name="gboard_patches_web_clipboard_image_sync_title">
+        <translation locale="en">Sync images</translation>
+        <translation locale="zh-Hant">同步圖片</translation>
+    </string>
+    <string name="gboard_patches_web_clipboard_image_sync_summary">
+        <translation locale="en">Sync copied images and screenshots with the web portal.</translation>
+        <translation locale="zh-Hant">與網頁剪貼簿同步複製的圖片與螢幕截圖。</translation>
+    </string>
     <string name="gboard_patches_settings_homepage_title">
         <translation locale="en">Settings Style</translation>
         <translation locale="zh-Hant">設定樣式</translation>

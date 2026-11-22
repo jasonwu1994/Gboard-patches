@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -37,6 +38,7 @@ public final class ClipboardSyncWebPortal {
     private static final long WEB_ECHO_SUPPRESSION_WINDOW_MS = 2 * 60_000L;
     private static final long CLIENT_HEARTBEAT_INTERVAL_MS = 1_000L;
     private static final int MAX_REQUEST_BODY_BYTES = 1024 * 1024;
+    private static final long MAX_IMAGE_REQUEST_BODY_BYTES = 20 * 1024 * 1024L;
     private static final AtomicLong NEXT_PORTAL_INSTANCE_SEQUENCE = new AtomicLong(1L);
 
     private final int requestedPort;
@@ -61,6 +63,12 @@ public final class ClipboardSyncWebPortal {
     private volatile boolean stopped = true;
     private volatile String latestPhoneClipboardText = "";
     private volatile long latestPhoneClipboardAtMs;
+    private volatile String latestPhoneClipboardType = "text";
+    private volatile String latestPhoneImageMime = "image/png";
+    private volatile long latestPhoneImageAtMs;
+    private volatile long latestPhoneImageVersion;
+    private volatile long latestPhoneImageSize;
+    private volatile String latestPhoneImageSource = "phone";
     private volatile String latestWebClipboardText = "";
     private volatile long latestWebClipboardAtMs;
     private long nextEventClientId = 1L;
@@ -94,6 +102,29 @@ public final class ClipboardSyncWebPortal {
 
     interface ClipboardBridge {
         void applyDesktopClipboard(String text);
+
+        default boolean applyDesktopImage(InputStream stream, String mimeType, long contentLength) {
+            return false;
+        }
+
+        default InputStream openPhoneImageStream() {
+            return null;
+        }
+
+        default long getPhoneImageLength() {
+            return 0L;
+        }
+
+        default String getPhoneImageMimeType() {
+            return "image/png";
+        }
+
+        default boolean hasPhoneImage() {
+            return false;
+        }
+
+        default void recordPhoneImage(String mimeType, String uri) {
+        }
     }
 
     interface WebAssets {
@@ -299,8 +330,54 @@ public final class ClipboardSyncWebPortal {
             return;
         }
         latestPhoneClipboardText = text;
+        latestPhoneClipboardType = "text";
         latestPhoneClipboardAtMs = nowMs;
         broadcastClipboardEvent(text, latestPhoneClipboardAtMs, "phone", "Phone", null);
+    }
+
+    void publishPhoneImage(String mimeType, long sizeBytes) {
+        long nowMs = System.currentTimeMillis();
+        latestPhoneClipboardType = "image";
+        latestPhoneImageSource = "phone";
+        latestPhoneImageMime = mimeType != null ? mimeType : "image/png";
+        latestPhoneImageSize = sizeBytes;
+        latestPhoneImageAtMs = nowMs;
+        latestPhoneImageVersion = nowMs;
+        broadcastImageEvent(latestPhoneImageMime, latestPhoneImageSize, latestPhoneImageVersion,
+                "phone", "Phone", null);
+    }
+
+    private void broadcastImageEvent(String mime, long sizeBytes, long version, String source,
+            String senderLabel, String clientId) {
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("type", "image");
+            payload.put("mime", mime);
+            payload.put("size", sizeBytes);
+            payload.put("version", version);
+            payload.put("url", "/clipboard/image?v=" + version);
+            payload.put("updatedAtMs", version);
+            payload.put("source", source);
+            if (senderLabel != null && !senderLabel.isBlank()) {
+                payload.put("senderLabel", senderLabel);
+            }
+            if (clientId != null && !clientId.isBlank()) {
+                payload.put("clientId", clientId);
+            }
+        } catch (Throwable ignored) {
+            return;
+        }
+        String frame = "event: image\r\n"
+                + "data: " + payload.toString() + "\r\n\r\n";
+        List<EventClient> clients = snapshotEventClients();
+        logInfo(LOG_PREFIX + " portal published image"
+                + " instance=" + portalInstanceId
+                + " source=" + source
+                + " mime=" + mime
+                + " size=" + sizeBytes
+                + ", clients=" + clients.size());
+        List<EventClient> failedClients = writeFrameToClients(clients, frame, "image");
+        removeFailedEventClients(failedClients);
     }
 
     private long publishWebClipboard(String text, String senderLabel, String clientId) {
@@ -583,6 +660,14 @@ public final class ClipboardSyncWebPortal {
                 handleClipboardPost(socket, request.body);
                 return;
             }
+            if ("GET".equals(request.method) && "/clipboard/image".equals(request.path)) {
+                handleClipboardImageGet(socket);
+                return;
+            }
+            if ("POST".equals(request.method) && "/clipboard/image".equals(request.path)) {
+                handleClipboardImagePost(socket, request);
+                return;
+            }
             if ("POST".equals(request.method) && "/clients/kick".equals(request.path)) {
                 handleKickClientPost(socket, request.body);
                 return;
@@ -627,21 +712,29 @@ public final class ClipboardSyncWebPortal {
             }
         }
         if (contentLength > 0) {
-            if (contentLength > MAX_REQUEST_BODY_BYTES) {
+            boolean isImageUpload = "POST".equals(request.method) && "/clipboard/image".equals(request.path);
+            long maxBytes = isImageUpload ? MAX_IMAGE_REQUEST_BODY_BYTES : MAX_REQUEST_BODY_BYTES;
+            if (contentLength > maxBytes) {
                 request.bodyTooLarge = true;
                 request.body = "";
                 return request;
             }
-            byte[] bytes = new byte[contentLength];
-            int read = 0;
-            while (read < bytes.length) {
-                int count = input.read(bytes, read, bytes.length - read);
-                if (count < 0) {
-                    break;
+            request.contentLength = contentLength;
+            if (isImageUpload) {
+                request.bodyStream = new LimitedInputStream(input, contentLength);
+                request.body = "";
+            } else {
+                byte[] bytes = new byte[contentLength];
+                int read = 0;
+                while (read < bytes.length) {
+                    int count = input.read(bytes, read, bytes.length - read);
+                    if (count < 0) {
+                        break;
+                    }
+                    read += count;
                 }
-                read += count;
+                request.body = new String(bytes, 0, read, StandardCharsets.UTF_8);
             }
-            request.body = new String(bytes, 0, read, StandardCharsets.UTF_8);
         } else {
             request.body = "";
         }
@@ -682,6 +775,7 @@ public final class ClipboardSyncWebPortal {
                 || "/state".equals(request.path)
                 || "/status".equals(request.path)
                 || "/clipboard".equals(request.path)
+                || "/clipboard/image".equals(request.path)
                 || "/clients".equals(request.path)
                 || "/clients/kick".equals(request.path)
                 || "/phone-clipboard".equals(request.path);
@@ -785,6 +879,24 @@ public final class ClipboardSyncWebPortal {
                     "{\"ok\":false,\"error\":\"invalid_loopback_token\"}");
             return;
         }
+        JSONObject ingressJson = null;
+        try {
+            ingressJson = new JSONObject(request.body);
+        } catch (Throwable ignored) {
+        }
+        if (ingressJson != null && "image".equals(ingressJson.optString("type"))) {
+            String rawMime = ingressJson.optString("mime", "image/png");
+            String mime = sanitizeImageMime(rawMime);
+            String uri = ingressJson.optString("uri");
+            if (bridge != null) {
+                bridge.recordPhoneImage(mime, uri);
+            }
+            long size = bridge != null ? bridge.getPhoneImageLength() : 0L;
+            publishPhoneImage(mime, size);
+            writeResponse(socket, 200, "OK", "application/json; charset=utf-8",
+                    "{\"ok\":true}");
+            return;
+        }
         String text = extractText(request.body);
         if (!hasClipboardText(text)) {
             writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
@@ -796,13 +908,126 @@ public final class ClipboardSyncWebPortal {
                 "{\"ok\":true}");
     }
 
+    private static boolean isWhitelistedImageMime(String mime) {
+        if (mime == null) {
+            return false;
+        }
+        String clean = mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+        return "image/png".equals(clean)
+                || "image/jpeg".equals(clean)
+                || "image/jpg".equals(clean)
+                || "image/webp".equals(clean)
+                || "image/gif".equals(clean);
+    }
+
+    private static String sanitizeImageMime(String rawMime) {
+        if (rawMime == null) {
+            return "image/png";
+        }
+        String clean = rawMime.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+        if (isWhitelistedImageMime(clean)) {
+            return clean;
+        }
+        return "image/png";
+    }
+
+    private void handleClipboardImageGet(Socket socket) throws Exception {
+        if (bridge == null || !bridge.hasPhoneImage()) {
+            writeResponse(socket, 404, "Not Found", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"no_image\"}");
+            return;
+        }
+        InputStream stream = bridge.openPhoneImageStream();
+        if (stream == null) {
+            writeResponse(socket, 404, "Not Found", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"image_not_available\"}");
+            return;
+        }
+        try {
+            long length = bridge.getPhoneImageLength();
+            String mime = sanitizeImageMime(bridge.getPhoneImageMimeType());
+            OutputStream output = socket.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                    output, StandardCharsets.UTF_8));
+            writer.write("HTTP/1.1 200 OK\r\n");
+            writer.write("Content-Type: " + mime + "\r\n");
+            writer.write("X-Content-Type-Options: nosniff\r\n");
+            if (length > 0) {
+                writer.write("Content-Length: " + length + "\r\n");
+            }
+            writer.write("Cache-Control: no-cache\r\n");
+            writer.write("Connection: close\r\n");
+            writer.write("\r\n");
+            writer.flush();
+
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = stream.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+            output.flush();
+        } finally {
+            closeQuietly(stream);
+        }
+    }
+
+    private void handleClipboardImagePost(Socket socket, Request request) throws Exception {
+        if (request.bodyTooLarge) {
+            writeResponse(socket, 413, "Payload Too Large", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"payload_too_large\"}");
+            return;
+        }
+        if (request.bodyStream == null || request.contentLength <= 0) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"empty_image\"}");
+            return;
+        }
+        String rawContentType = request.header("content-type");
+        int semi = rawContentType.indexOf(';');
+        if (semi > 0) {
+            rawContentType = rawContentType.substring(0, semi).trim();
+        }
+        if (!isWhitelistedImageMime(rawContentType)) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"unsupported_image_type\"}");
+            return;
+        }
+        String contentType = sanitizeImageMime(rawContentType);
+        boolean applied = bridge != null && bridge.applyDesktopImage(
+                request.bodyStream, contentType, request.contentLength);
+        if (!applied) {
+            writeResponse(socket, 500, "Internal Server Error", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"apply_failed\"}");
+            return;
+        }
+        long now = System.currentTimeMillis();
+        latestPhoneClipboardType = "image";
+        latestPhoneImageSource = "web";
+        latestPhoneImageMime = contentType;
+        latestPhoneImageSize = request.contentLength;
+        latestPhoneImageAtMs = now;
+        latestPhoneImageVersion = now;
+        broadcastImageEvent(contentType, request.contentLength, now, "web",
+                senderLabelFor(socket), request.query("clientId"));
+        writeResponse(socket, 200, "OK", "application/json; charset=utf-8",
+                "{\"ok\":true,\"status\":\"applied\"}");
+    }
+
     private String buildLatestStateJson() {
         JSONObject payload = new JSONObject();
         try {
+            payload.put("type", latestPhoneClipboardType);
             payload.put("text", latestPhoneClipboardText == null ? "" : latestPhoneClipboardText);
             payload.put("updatedAtMs", Math.max(0L, latestPhoneClipboardAtMs));
+            if ("image".equals(latestPhoneClipboardType)) {
+                payload.put("mime", latestPhoneImageMime);
+                payload.put("size", latestPhoneImageSize);
+                payload.put("version", latestPhoneImageVersion);
+                payload.put("url", "/clipboard/image?v=" + latestPhoneImageVersion);
+                payload.put("source", latestPhoneImageSource);
+            }
         } catch (Throwable ignored) {
-            return "{\"text\":\"\",\"updatedAtMs\":0}";
+            return "{\"type\":\"text\",\"text\":\"\",\"updatedAtMs\":0}";
         }
         return payload.toString();
     }
@@ -815,6 +1040,7 @@ public final class ClipboardSyncWebPortal {
                 || "/events".equals(request.path)
                 || "/state".equals(request.path)
                 || "/clipboard".equals(request.path)
+                || "/clipboard/image".equals(request.path)
                 || "/clients".equals(request.path)
                 || "/clients/kick".equals(request.path);
     }
@@ -1043,6 +1269,13 @@ public final class ClipboardSyncWebPortal {
                 return;
             }
             bytes = fallbackBody;
+        }
+        if ("index.html".equals(assetPath) && bytes.length > 0) {
+            String html = new String(bytes, StandardCharsets.UTF_8);
+            if (html.contains("</body>")) {
+                html = html.replace("</body>", IMAGE_INJECTION_SNIPPET + "</body>");
+                bytes = html.getBytes(StandardCharsets.UTF_8);
+            }
         }
         writeResponse(socket, 200, "OK", contentType, bytes);
     }
@@ -1305,6 +1538,8 @@ public final class ClipboardSyncWebPortal {
         String method;
         String path;
         String body;
+        InputStream bodyStream;
+        long contentLength;
         Map<String, String> headers;
         Map<String, String> query;
         boolean bodyTooLarge;
@@ -1323,6 +1558,51 @@ public final class ClipboardSyncWebPortal {
             }
             String value = query.get(name);
             return value == null ? "" : value;
+        }
+    }
+
+    private static final class LimitedInputStream extends InputStream {
+        private final InputStream delegate;
+        private long remaining;
+
+        LimitedInputStream(InputStream delegate, long limit) {
+            this.delegate = delegate;
+            this.remaining = limit;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (remaining <= 0) {
+                return -1;
+            }
+            int b = delegate.read();
+            if (b >= 0) {
+                remaining--;
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if (remaining <= 0) {
+                return -1;
+            }
+            int toRead = (int) Math.min(len, remaining);
+            int count = delegate.read(b, off, toRead);
+            if (count > 0) {
+                remaining -= count;
+            }
+            return count;
+        }
+
+        @Override
+        public int available() throws IOException {
+            return (int) Math.min(delegate.available(), remaining);
+        }
+
+        @Override
+        public void close() throws IOException {
+            // Keep underlying socket stream alive
         }
     }
 
@@ -1383,6 +1663,428 @@ public final class ClipboardSyncWebPortal {
             }
         }
     }
+
+    private static final String IMAGE_INJECTION_SNIPPET = """
+<style>
+#gb-img-tray{position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+.gb-img-card{pointer-events:auto;background:rgba(24,24,27,0.92);color:#fafafa;border:1px solid rgba(255,255,255,0.14);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.35);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:12px 14px;display:flex;align-items:center;gap:12px;max-width:340px;animation:gbIn .25s ease-out}
+@media(prefers-color-scheme:light){.gb-img-card{background:rgba(255,255,255,0.95);color:#18181b;border:1px solid rgba(0,0,0,0.1);box-shadow:0 10px 30px rgba(0,0,0,0.12)}}
+.gb-img-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid rgba(128,128,128,0.25);flex-shrink:0}
+.gb-img-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.gb-img-btn:hover{background:#1d4ed8}
+.gb-img-btn-sec{background:rgba(128,128,128,0.2);color:inherit}
+.gb-img-btn-sec:hover{background:rgba(128,128,128,0.3)}
+@keyframes gbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#gb-img-pending-host{margin-bottom:8px}
+#gb-img-pending{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--agent-chat-border);background:var(--agent-chat-secondary);border-radius:16px;animation:gbIn .2s ease-out}
+#gb-img-pending .gb-img-thumb{width:44px;height:44px}
+.gb-chat-img-row{display:flex;align-items:center;gap:10px}
+.gb-chat-img-col{display:flex;flex-direction:column;gap:5px;align-items:flex-start;min-width:0}
+.gb-chat-img-title{font-size:12px;font-weight:600;color:var(--agent-chat-text)}
+.gb-chat-img-meta{font-size:11px;color:var(--agent-chat-muted);word-break:break-all}
+.gb-chat-img-actions{display:flex;gap:6px;flex-wrap:wrap}
+#gb-img-plus{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin-right:auto;border-radius:9999px;border:1px solid var(--agent-chat-border);background:transparent;color:var(--agent-chat-text);cursor:pointer;transition:background .15s}
+#gb-img-plus:hover{background:var(--agent-chat-secondary)}
+</style>
+<div id="gb-img-tray"></div>
+<script>
+(function(){
+  var pendingFile=null,pendingUrl='',lastVer=0;
+  function getCode(){
+    try{
+      var q=new URLSearchParams(location.search);
+      return q.get('code')||q.get('pairingCode')||sessionStorage.getItem('gboard-web-clipboard.pairing-code.v1')||localStorage.getItem('gboard-web-clipboard.pairing-code.v1')||'';
+    }catch(e){return '';}
+  }
+  function showToast(msg){
+    var tray=document.getElementById('gb-img-tray');
+    if(!tray)return;
+    var t=document.createElement('div');
+    t.className='gb-img-card';
+    t.style.fontSize='13px';
+    t.textContent=msg;
+    tray.appendChild(t);
+    setTimeout(function(){t.remove();},3000);
+  }
+  function chatList(){return document.querySelector('[data-testid="clipboard-thread-messages"]');}
+  function scrollChat(){
+    var vp=document.querySelector('[data-slot="scroll-area-viewport"]');
+    if(!vp)return;
+    try{vp.scrollTo({top:vp.scrollHeight,behavior:'smooth'});}catch(e){vp.scrollTop=vp.scrollHeight;}
+  }
+  function timeLabel(){try{return new Date().toLocaleTimeString();}catch(e){return '';}}
+  function icon(inner,size){
+    var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 24 24');
+    svg.setAttribute('width',size);
+    svg.setAttribute('height',size);
+    svg.setAttribute('fill','none');
+    svg.setAttribute('stroke','currentColor');
+    svg.setAttribute('stroke-width','2');
+    svg.setAttribute('stroke-linecap','round');
+    svg.setAttribute('stroke-linejoin','round');
+    svg.setAttribute('aria-hidden','true');
+    var parsed=new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>','image/svg+xml');
+    while(parsed.documentElement.firstChild){svg.appendChild(parsed.documentElement.firstChild);}
+    return svg;
+  }
+  var ICON_MONITOR='<rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path>';
+  var ICON_PHONE='<rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path>';
+  var ICON_CHECK='<path d="M20 6 9 17l-5-5"></path>';
+  function avatar(side){
+    var wrap=document.createElement('div');
+    wrap.className='row-start-1 mt-0.5 shrink-0 '+(side==='desktop'?'col-start-3':'col-start-1');
+    var circle=document.createElement('div');
+    circle.setAttribute('data-slot','avatar-fallback');
+    circle.className='flex size-6 items-center justify-center rounded-full border border-[var(--agent-chat-border)] '+(side==='desktop'?'bg-background text-foreground dark:bg-[#242424]':'bg-[var(--agent-chat-secondary)] text-[var(--agent-chat-text)]');
+    circle.appendChild(icon(side==='desktop'?ICON_MONITOR:ICON_PHONE,12));
+    wrap.appendChild(circle);
+    return wrap;
+  }
+  function statusDot(){
+    var span=document.createElement('span');
+    span.setAttribute('data-testid','message-status-indicator');
+    span.setAttribute('role','img');
+    span.setAttribute('aria-label','Sent');
+    span.setAttribute('title','Sent');
+    span.className='inline-flex size-5 items-center justify-center rounded-full border border-[var(--agent-chat-border)] bg-transparent text-emerald-600 dark:text-emerald-400';
+    span.appendChild(icon(ICON_CHECK,12));
+    return span;
+  }
+  function addChatMessage(side,source,aria,buildBody){
+    var list=chatList();
+    if(!list)return null;
+    var wrap=document.createElement('div');
+    wrap.className='flex w-full min-w-0 max-w-full '+(side==='desktop'?'justify-end':'justify-start');
+    wrap.setAttribute('data-gb-image-message','true');
+    var art=document.createElement('article');
+    art.setAttribute('role','article');
+    art.setAttribute('aria-label',aria);
+    art.setAttribute('data-side',side);
+    art.setAttribute('data-message-source',source);
+    art.setAttribute('data-layout-variant',side==='desktop'?'desktop':'phone-default');
+    art.className='relative grid min-w-0 w-fit grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 '+(side==='desktop'?'max-w-[min(36rem,82vw)]':'max-w-[min(42rem,92%)]');
+    var meta=document.createElement('div');
+    meta.setAttribute('data-testid','message-side-meta');
+    meta.className='row-start-1 flex shrink-0 self-end pb-1 text-xs text-[var(--agent-chat-muted)] items-center gap-1.5 '+(side==='desktop'?'col-start-1 text-left':'col-start-3 justify-self-end text-right');
+    if(side==='desktop')meta.appendChild(statusDot());
+    var tm=document.createElement('span');
+    tm.className='whitespace-nowrap';
+    tm.textContent=timeLabel();
+    meta.appendChild(tm);
+    var col=document.createElement('div');
+    col.className='col-start-2 row-start-1 flex min-w-0 max-w-full flex-col gap-1.5 '+(side==='desktop'?'items-end text-right':'items-start text-left');
+    var holder=document.createElement('div');
+    holder.className='min-w-0 max-w-full '+(side==='desktop'?'self-end':'self-start');
+    var body=document.createElement('div');
+    body.setAttribute('data-testid','message-body');
+    body.className='min-w-0 w-fit max-w-full rounded-[16px] px-3.5 py-2 text-sm leading-[1.55] whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[var(--agent-chat-text)] '+(side==='desktop'?'text-left bg-[var(--agent-chat-secondary)]':'border border-[var(--agent-chat-border)] bg-[var(--agent-chat-tertiary)]');
+    buildBody(body);
+    holder.appendChild(body);
+    col.appendChild(holder);
+    art.appendChild(meta);
+    art.appendChild(col);
+    art.appendChild(avatar(side));
+    wrap.appendChild(art);
+    var end=document.querySelector('[data-testid="clipboard-thread-end"]');
+    if(end&&end.parentNode===list){list.insertBefore(wrap,end);}else{list.appendChild(wrap);}
+    scrollChat();
+    return wrap;
+  }
+  function copyToClipboard(imgUrl,btn){
+    (async function(){
+      try{
+        var r=await fetch(imgUrl);
+        var b=await r.blob();
+        var out=b;
+        if(b.type!=='image/png'){
+          var im=new Image();
+          await new Promise(function(res,rej){im.onload=res;im.onerror=rej;im.src=URL.createObjectURL(b);});
+          var cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;
+          cv.getContext('2d').drawImage(im,0,0);
+          out=await new Promise(function(res){cv.toBlob(res,'image/png');});
+        }
+        await navigator.clipboard.write([new ClipboardItem({[out.type]:out})]);
+        var old=btn.textContent;
+        btn.textContent='Copied!';
+        setTimeout(function(){btn.textContent=old;},2000);
+      }catch(err){showToast('Clipboard copy failed');}
+    })();
+  }
+  function receiveChat(imgUrl,mime){
+    return addChatMessage('phone','phone','Phone sent an image',function(body){
+      var row=document.createElement('div');
+      row.className='gb-chat-img-row';
+      var im=document.createElement('img');
+      im.className='gb-img-thumb';
+      im.src=imgUrl;
+      im.alt='Image received from phone';
+      var col=document.createElement('div');
+      col.className='gb-chat-img-col';
+      var tit=document.createElement('div');
+      tit.className='gb-chat-img-title';
+      tit.textContent='Image received';
+      var acts=document.createElement('div');
+      acts.className='gb-chat-img-actions';
+      var cp=document.createElement('button');
+      cp.type='button';
+      cp.className='gb-img-btn';
+      cp.textContent='Copy';
+      cp.onclick=function(){copyToClipboard(imgUrl,cp);};
+      var dl=document.createElement('button');
+      dl.type='button';
+      dl.className='gb-img-btn gb-img-btn-sec';
+      dl.textContent='Download';
+      dl.onclick=function(){
+        var a=document.createElement('a');
+        a.href=imgUrl;
+        a.download='phone_image_'+Date.now()+(mime&&mime.indexOf('png')>=0?'.png':'.jpg');
+        a.click();
+      };
+      acts.appendChild(cp);
+      acts.appendChild(dl);
+      col.appendChild(tit);
+      col.appendChild(acts);
+      row.appendChild(im);
+      row.appendChild(col);
+      body.appendChild(row);
+    });
+  }
+  function showImgCard(imgUrl,mime){
+    var tray=document.getElementById('gb-img-tray');
+    if(!tray)return;
+    var old=document.getElementById('gb-card-latest');
+    if(old)old.remove();
+    var card=document.createElement('div');
+    card.id='gb-card-latest';
+    card.className='gb-img-card';
+    var img=document.createElement('img');
+    img.className='gb-img-thumb';
+    img.src=imgUrl;
+    var right=document.createElement('div');
+    right.style.display='flex';
+    right.style.flexDirection='column';
+    right.style.gap='6px';
+    var tit=document.createElement('div');
+    tit.style.fontSize='12px';
+    tit.style.fontWeight='600';
+    tit.textContent='Phone Image';
+    var row=document.createElement('div');
+    row.style.display='flex';
+    row.style.gap='6px';
+    var cp=document.createElement('button');
+    cp.className='gb-img-btn';
+    cp.textContent='Copy';
+    cp.onclick=function(){copyToClipboard(imgUrl,cp);};
+    var dl=document.createElement('button');
+    dl.className='gb-img-btn gb-img-btn-sec';
+    dl.textContent='Download';
+    dl.onclick=function(){
+      var a=document.createElement('a');
+      a.href=imgUrl;
+      a.download='phone_image_'+Date.now()+(mime&&mime.indexOf('png')>=0?'.png':'.jpg');
+      a.click();
+    };
+    var cl=document.createElement('button');
+    cl.className='gb-img-btn gb-img-btn-sec';
+    cl.textContent='✕';
+    cl.onclick=function(){card.remove();};
+    row.appendChild(cp);row.appendChild(dl);row.appendChild(cl);
+    right.appendChild(tit);right.appendChild(row);
+    card.appendChild(img);card.appendChild(right);
+    tray.appendChild(card);
+  }
+  function handlePhoneImage(imgUrl,mime,version){
+    if(version){
+      if(version<=lastVer)return;
+      lastVer=version;
+    }
+    if(!receiveChat(imgUrl,mime))showImgCard(imgUrl,mime);
+  }
+  function composerForm(){
+    var ta=document.getElementById('chat-composer');
+    return ta?ta.closest('form'):null;
+  }
+  function clearPending(){
+    if(pendingUrl){try{URL.revokeObjectURL(pendingUrl);}catch(e){}pendingUrl='';}
+    pendingFile=null;
+    var h=document.getElementById('gb-img-pending-host');
+    if(h){h.innerHTML='';h.style.display='none';}
+  }
+  function stageImg(file){
+    if(!file)return;
+    var host=document.getElementById('gb-img-pending-host');
+    if(!host){uploadImg(file);return;}
+    clearPending();
+    pendingFile=file;
+    pendingUrl=URL.createObjectURL(file);
+    host.style.display='';
+    var box=document.createElement('div');
+    box.id='gb-img-pending';
+    var im=document.createElement('img');
+    im.className='gb-img-thumb';
+    im.src=pendingUrl;
+    im.alt='Selected image';
+    var col=document.createElement('div');
+    col.className='gb-chat-img-col';
+    col.style.flex='1 1 auto';
+    var tit=document.createElement('div');
+    tit.className='gb-chat-img-title';
+    tit.textContent='Ready to send';
+    var meta=document.createElement('div');
+    meta.className='gb-chat-img-meta';
+    meta.textContent=(file.name||'Pasted image')+(file.size?' · '+Math.max(1,Math.round(file.size/1024))+' KB':'');
+    col.appendChild(tit);
+    col.appendChild(meta);
+    var send=document.createElement('button');
+    send.type='button';
+    send.className='gb-img-btn';
+    send.textContent='Send';
+    send.onclick=function(){var f=pendingFile;clearPending();if(f)uploadImg(f);};
+    var cancel=document.createElement('button');
+    cancel.type='button';
+    cancel.className='gb-img-btn gb-img-btn-sec';
+    cancel.textContent='✕';
+    cancel.onclick=clearPending;
+    box.appendChild(im);
+    box.appendChild(col);
+    box.appendChild(send);
+    box.appendChild(cancel);
+    host.appendChild(box);
+  }
+  async function uploadImg(file){
+    var code=getCode();
+    var headers={'Content-Type':file.type||'image/png'};
+    if(code)headers['x-pairing-code']=code;
+    var url='/clipboard/image'+(code?'?code='+encodeURIComponent(code):'');
+    var thumb=URL.createObjectURL(file);
+    var label=file.name||'Pasted image';
+    showToast('Sending image to phone...');
+    try{
+      var res=await fetch(url,{method:'POST',headers:headers,body:file});
+      if(res.ok){
+        var placed=addChatMessage('desktop','web','You sent an image '+label,function(body){
+          var row=document.createElement('div');
+          row.className='gb-chat-img-row';
+          var im=document.createElement('img');
+          im.className='gb-img-thumb';
+          im.src=thumb;
+          im.alt=label;
+          im.onload=function(){try{URL.revokeObjectURL(thumb);}catch(e){}};
+          var col=document.createElement('div');
+          col.className='gb-chat-img-col';
+          var tit=document.createElement('div');
+          tit.className='gb-chat-img-title';
+          tit.textContent='Image sent';
+          var meta=document.createElement('div');
+          meta.className='gb-chat-img-meta';
+          meta.textContent=label+' · copied to phone';
+          col.appendChild(tit);
+          col.appendChild(meta);
+          row.appendChild(im);
+          row.appendChild(col);
+          body.appendChild(row);
+        });
+        if(!placed)showToast('Image copied to phone!');
+      }else{
+        try{URL.revokeObjectURL(thumb);}catch(e){}
+        showToast('Image upload failed ('+res.status+')');
+      }
+    }catch(e){
+      try{URL.revokeObjectURL(thumb);}catch(e2){}
+      showToast('Network error uploading image');
+    }
+  }
+  function ensureComposerUi(){
+    var ta=document.getElementById('chat-composer');
+    if(!ta)return;
+    var form=ta.closest('form');
+    if(form&&!document.getElementById('gb-img-pending-host')){
+      var host=document.createElement('div');
+      host.id='gb-img-pending-host';
+      host.style.display='none';
+      form.insertBefore(host,form.firstChild);
+    }
+    var submit=form?form.querySelector('button[type="submit"]'):null;
+    if(submit&&submit.parentNode&&!document.getElementById('gb-img-plus')){
+      var plus=document.createElement('button');
+      plus.type='button';
+      plus.id='gb-img-plus';
+      plus.setAttribute('aria-label','Attach image');
+      plus.title='Attach image';
+      plus.appendChild(icon('<path d="M12 5v14"></path><path d="M5 12h14"></path>',16));
+      plus.onclick=function(){
+        var fi=document.getElementById('gb-img-file');
+        if(fi)fi.click();
+      };
+      submit.parentNode.insertBefore(plus,submit);
+    }
+    if(!document.getElementById('gb-img-file')){
+      var fi=document.createElement('input');
+      fi.type='file';
+      fi.id='gb-img-file';
+      fi.accept='image/*';
+      fi.style.display='none';
+      fi.onchange=function(){
+        if(fi.files&&fi.files[0]){stageImg(fi.files[0]);fi.value='';}
+      };
+      document.body.appendChild(fi);
+    }
+  }
+  window.addEventListener('paste',function(e){
+    if(e.clipboardData&&e.clipboardData.items){
+      for(var i=0;i<e.clipboardData.items.length;i++){
+        var it=e.clipboardData.items[i];
+        if(it.type&&it.type.indexOf('image/')===0){
+          var f=it.getAsFile();
+          if(f){
+            if(e.preventDefault)e.preventDefault();
+            stageImg(f);
+            return;
+          }
+        }
+      }
+    }
+  });
+  ensureComposerUi();
+  if(window.MutationObserver&&document.body){
+    new MutationObserver(function(){ensureComposerUi();}).observe(document.body,{childList:true,subtree:true});
+  }
+  var OrigES=window.EventSource;
+  if(OrigES){
+    window.EventSource=function(){
+      var es=new (Function.prototype.bind.apply(OrigES,[null].concat([].slice.call(arguments))))();
+      es.addEventListener('image',function(e){
+        try{
+          var d=JSON.parse(e.data);
+          if(d&&d.url&&d.source==='phone'){
+            var c=getCode();
+            handlePhoneImage(d.url+(c?'&code='+encodeURIComponent(c):''),d.mime,d.updatedAtMs||d.version||0);
+          }
+        }catch(_){}
+      });
+      return es;
+    };
+  }
+  setInterval(async function(){
+    try{
+      var c=getCode();
+      var r=await fetch('/state'+(c?'?code='+encodeURIComponent(c):''),{cache:'no-store'});
+      if(!r.ok)return;
+      var d=await r.json();
+      if(d&&d.type==='image'&&d.source==='phone'){
+        var ver=d.updatedAtMs||d.version||0;
+        if(ver>lastVer){
+          var u=(d.url||'/clipboard/image?v='+ver)+(c?'&code='+encodeURIComponent(c):'');
+          handlePhoneImage(u,d.mime,ver);
+        }
+      }
+    }catch(_){}
+  },2000);
+})();
+</script>
+
+""";
 
     private static final String INDEX_HTML = """
 <!doctype html>
@@ -1542,6 +2244,16 @@ public final class ClipboardSyncWebPortal {
       box-shadow: inset 0 1px 18px rgba(86, 145, 191, .14);
       font: 600 16px/1.55 ui-rounded, "SF Pro Rounded", "Noto Sans TC", sans-serif;
     }
+    .clip-image {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, .58);
+      background: rgba(0, 0, 0, .05);
+      display: none;
+      margin-bottom: 8px;
+    }
     textarea:focus {
       border-color: rgba(20, 126, 234, .55);
       box-shadow: 0 0 0 5px var(--blue-soft), inset 0 1px 18px rgba(86, 145, 191, .14);
@@ -1631,12 +2343,14 @@ public final class ClipboardSyncWebPortal {
           <div class="title">Desktop → Phone</div>
           <div class="metric" id="desktopCount">0</div>
         </div>
-        <textarea id="desktopText" placeholder="在這裡 Ctrl+V 貼上 Windows / macOS / Linux 剪貼簿，會直接送到手機。"></textarea>
+        <textarea id="desktopText" placeholder="在這裡 Ctrl+V 貼上 Windows / macOS / Linux 剪貼簿（文字或圖片），會直接送到手機。"></textarea>
         <div class="actions">
           <button id="sendButton">Send to phone</button>
           <button class="secondary" id="pasteButton">Paste from browser</button>
+          <input type="file" id="imageFileInput" accept="image/*" style="display:none">
+          <button class="secondary" id="selectImageButton">Send image...</button>
         </div>
-        <p class="hint">HTTP 模式下瀏覽器可能不允許自動讀剪貼簿；手動 Ctrl+V 永遠可用。</p>
+        <p class="hint">支援文字及圖片。可直接按 Ctrl+V 貼上截圖/圖片，或選取檔案傳送至手機。</p>
       </article>
 
       <article class="card">
@@ -1645,8 +2359,11 @@ public final class ClipboardSyncWebPortal {
           <div class="metric" id="phoneCount">0</div>
         </div>
         <div id="phoneText" class="clip-view">等待手機剪貼簿...</div>
+        <img id="phoneImage" class="clip-image" alt="Phone image clipboard">
         <div class="actions">
           <button id="copyButton">Copy on desktop</button>
+          <button id="copyImageButton" style="display:none">Copy Image</button>
+          <button id="downloadImageButton" class="secondary" style="display:none">Download Image</button>
         </div>
       </article>
 
@@ -1655,7 +2372,7 @@ public final class ClipboardSyncWebPortal {
           <div class="title">Live Link</div>
           <div class="metric">LAN</div>
         </div>
-        <p class="hint">保持這個分頁開啟。手機複製文字後會透過 Server-Sent Events 即時顯示在這裡。</p>
+        <p class="hint">保持這個分頁開啟。手機複製文字或截圖後會透過 Server-Sent Events 即時顯示在這裡。</p>
         <p class="hint" id="lastUpdated">No clipboard received yet.</p>
       </article>
     </section>
@@ -1668,14 +2385,20 @@ public final class ClipboardSyncWebPortal {
   <script>
     const desktopText = document.getElementById("desktopText");
     const phoneText = document.getElementById("phoneText");
+    const phoneImage = document.getElementById("phoneImage");
     const desktopCount = document.getElementById("desktopCount");
     const phoneCount = document.getElementById("phoneCount");
     const statusText = document.getElementById("status");
     const dot = document.getElementById("dot");
     const lastUpdated = document.getElementById("lastUpdated");
     const endpoint = document.getElementById("endpoint");
+    const copyButton = document.getElementById("copyButton");
+    const copyImageButton = document.getElementById("copyImageButton");
+    const downloadImageButton = document.getElementById("downloadImageButton");
+    const imageFileInput = document.getElementById("imageFileInput");
     let lastPhoneText = "";
     let lastPhoneUpdatedAtMs = 0;
+    let currentImagePayload = null;
 
     endpoint.textContent = location.host;
 
@@ -1684,31 +2407,68 @@ public final class ClipboardSyncWebPortal {
       dot.classList.toggle("online", online);
     }
 
-    function applyPhoneClipboard(text, updatedAtMs) {
-      const nextText = text || "";
-      const nextUpdatedAtMs = Number(updatedAtMs || 0);
+    function getPairingCode() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code") || params.get("pairingCode");
+        if (code) {
+          sessionStorage.setItem("gboard_web_clipboard_code", code);
+          return code;
+        }
+        return sessionStorage.getItem("gboard_web_clipboard_code") || "";
+      } catch (_) {
+        return "";
+      }
+    }
+
+    function applyPhonePayload(payload) {
+      if (!payload) return;
+      const nextUpdatedAtMs = Number(payload.updatedAtMs || 0);
       if (nextUpdatedAtMs > 0 && nextUpdatedAtMs < lastPhoneUpdatedAtMs) {
         return;
       }
-      if (nextUpdatedAtMs === lastPhoneUpdatedAtMs && nextText === lastPhoneText) {
-        return;
-      }
-      lastPhoneText = nextText;
       lastPhoneUpdatedAtMs = nextUpdatedAtMs;
-      phoneText.textContent = lastPhoneText || "空剪貼簿";
-      phoneCount.textContent = String(lastPhoneText.length);
       lastUpdated.textContent = nextUpdatedAtMs > 0
         ? "Updated " + new Date(nextUpdatedAtMs).toLocaleTimeString()
         : "Updated " + new Date().toLocaleTimeString();
-      setOnline(true, "Phone copied");
+
+      if (payload.type === "image") {
+        currentImagePayload = payload;
+        phoneText.style.display = "none";
+        copyButton.style.display = "none";
+        phoneImage.style.display = "block";
+        const code = getPairingCode();
+        let imgUrl = payload.url;
+        if (code) {
+          imgUrl += (imgUrl.includes("?") ? "&" : "?") + "code=" + encodeURIComponent(code);
+        }
+        phoneImage.src = imgUrl;
+        copyImageButton.style.display = "";
+        downloadImageButton.style.display = "";
+        phoneCount.textContent = "IMG";
+        setOnline(true, "Image received");
+      } else {
+        currentImagePayload = null;
+        phoneImage.style.display = "none";
+        copyImageButton.style.display = "none";
+        downloadImageButton.style.display = "none";
+        phoneText.style.display = "";
+        copyButton.style.display = "";
+        lastPhoneText = payload.text || "";
+        phoneText.textContent = lastPhoneText || "空剪貼簿";
+        phoneCount.textContent = String(lastPhoneText.length);
+        setOnline(true, "Phone copied");
+      }
     }
 
     async function pollLatestClipboard() {
       try {
-        const response = await fetch("/state", { cache: "no-store" });
+        const code = getPairingCode();
+        const pollUrl = "/state" + (code ? "?code=" + encodeURIComponent(code) : "");
+        const response = await fetch(pollUrl, { cache: "no-store" });
         if (!response.ok) return;
         const payload = await response.json();
-        applyPhoneClipboard(payload.text, payload.updatedAtMs);
+        applyPhonePayload(payload);
       } catch {
         // Keep SSE as the primary path; polling is best effort fallback.
       }
@@ -1717,9 +2477,15 @@ public final class ClipboardSyncWebPortal {
     async function sendToPhone() {
       const text = desktopText.value;
       if (text.length === 0) return;
-      const response = await fetch("/clipboard", {
+      const code = getPairingCode();
+      const sendUrl = "/clipboard" + (code ? "?code=" + encodeURIComponent(code) : "");
+      const headers = { "Content-Type": "application/json" };
+      if (code) {
+        headers["x-pairing-code"] = code;
+      }
+      const response = await fetch(sendUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({ text })
       });
       if (!response.ok) throw new Error("send failed");
@@ -1727,12 +2493,72 @@ public final class ClipboardSyncWebPortal {
       setOnline(true, "Sent");
     }
 
+    async function uploadImageToPhone(file) {
+      if (!file) return;
+      setOnline(true, "Sending image...");
+      try {
+        const code = getPairingCode();
+        const headers = { "Content-Type": file.type || "image/png" };
+        if (code) {
+          headers["x-pairing-code"] = code;
+        }
+        const uploadUrl = "/clipboard/image" + (code ? "?code=" + encodeURIComponent(code) : "");
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: headers,
+          body: file
+        });
+        if (!response.ok) throw new Error("upload failed");
+        setOnline(true, "Image sent to phone");
+        desktopCount.textContent = "IMG";
+      } catch {
+        setOnline(false, "Image send failed");
+      }
+    }
+
     document.getElementById("sendButton").addEventListener("click", () => {
       sendToPhone().catch(() => setOnline(false, "Send failed"));
     });
-    desktopText.addEventListener("paste", () => {
+    desktopText.addEventListener("paste", e => {
+      if (e.clipboardData && e.clipboardData.items) {
+        for (const item of e.clipboardData.items) {
+          if (item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file) {
+              e.preventDefault();
+              uploadImageToPhone(file);
+              return;
+            }
+          }
+        }
+      }
       setTimeout(() => sendToPhone().catch(() => setOnline(false, "Send failed")), 20);
     });
+
+    window.addEventListener("paste", e => {
+      if (e.clipboardData && e.clipboardData.items) {
+        for (const item of e.clipboardData.items) {
+          if (item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file) {
+              e.preventDefault();
+              uploadImageToPhone(file);
+              return;
+            }
+          }
+        }
+      }
+    });
+
+    document.getElementById("selectImageButton").addEventListener("click", () => {
+      imageFileInput.click();
+    });
+    imageFileInput.addEventListener("change", () => {
+      if (imageFileInput.files && imageFileInput.files[0]) {
+        uploadImageToPhone(imageFileInput.files[0]);
+      }
+    });
+
     document.getElementById("pasteButton").addEventListener("click", async () => {
       try {
         desktopText.value = await navigator.clipboard.readText();
@@ -1742,6 +2568,7 @@ public final class ClipboardSyncWebPortal {
         setOnline(false, "Use Ctrl+V");
       }
     });
+
     document.getElementById("copyButton").addEventListener("click", async () => {
       if (!lastPhoneText) return;
       try {
@@ -1757,7 +2584,59 @@ public final class ClipboardSyncWebPortal {
       }
     });
 
-    const events = new EventSource("/events");
+    copyImageButton.addEventListener("click", async () => {
+      if (!currentImagePayload) return;
+      try {
+        setOnline(true, "Copying image...");
+        const code = getPairingCode();
+        let fetchUrl = currentImagePayload.url;
+        if (code && !fetchUrl.includes("code=")) {
+          fetchUrl += (fetchUrl.includes("?") ? "&" : "?") + "code=" + encodeURIComponent(code);
+        }
+        const res = await fetch(fetchUrl);
+        const blob = await res.blob();
+        let writeBlob = blob;
+        if (blob.type !== "image/png") {
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = URL.createObjectURL(blob);
+          });
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          writeBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        }
+        await navigator.clipboard.write([
+          new ClipboardItem({ [writeBlob.type]: writeBlob })
+        ]);
+        setOnline(true, "Image copied");
+      } catch (err) {
+        setOnline(false, "Copy failed - click Download");
+      }
+    });
+
+    downloadImageButton.addEventListener("click", () => {
+      if (!currentImagePayload) return;
+      const code = getPairingCode();
+      let downloadUrl = currentImagePayload.url;
+      if (code && !downloadUrl.includes("code=")) {
+        downloadUrl += (downloadUrl.includes("?") ? "&" : "?") + "code=" + encodeURIComponent(code);
+      }
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      const ext = (currentImagePayload.mime && currentImagePayload.mime.split("/")[1]) || "png";
+      a.download = "phone_clipboard_image." + ext;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    const code = getPairingCode();
+    const events = new EventSource("/events" + (code ? "?code=" + encodeURIComponent(code) : ""));
     events.onopen = () => setOnline(true, "Connected");
     events.onerror = () => {
       setOnline(false, "Reconnecting");
@@ -1765,7 +2644,11 @@ public final class ClipboardSyncWebPortal {
     };
     events.addEventListener("clipboard", event => {
       const payload = JSON.parse(event.data);
-      applyPhoneClipboard(payload.text, payload.updatedAtMs);
+      applyPhonePayload({ type: "text", text: payload.text, updatedAtMs: payload.updatedAtMs });
+    });
+    events.addEventListener("image", event => {
+      const payload = JSON.parse(event.data);
+      applyPhonePayload(payload);
     });
     void pollLatestClipboard();
     setInterval(() => { void pollLatestClipboard(); }, 1500);

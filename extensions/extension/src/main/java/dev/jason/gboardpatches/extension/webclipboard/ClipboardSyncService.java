@@ -7,18 +7,32 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -57,6 +71,11 @@ public final class ClipboardSyncService extends Service {
             WebClipboardPreferences.DEFAULT_LOOPBACK_INGRESS_TOKEN;
     private String lastPublishedText = "";
     private long lastPublishedAtElapsedMs;
+    private volatile Uri latestPhoneImageUri;
+    private volatile String latestPhoneImageMime = "image/png";
+    private volatile File latestPhoneImageFile;
+    private ContentObserver screenshotMediaObserver;
+    private long lastScreenshotDateAdded = 0L;
     private final WebClipboardEchoSuppressor webClipboardEchoSuppressor =
             new WebClipboardEchoSuppressor(DUPLICATE_SUPPRESSION_WINDOW_MS);
     private final ExecutorService clipboardPublishExecutor = Executors.newSingleThreadExecutor();
@@ -171,7 +190,6 @@ public final class ClipboardSyncService extends Service {
         }
     }
 
-    @Override
     public void onTimeout(int startId, int fgsType) {
         try {
             Log.w(TAG, LOG_PREFIX + " foreground service timeout type=" + fgsType + "; stopping");
@@ -234,6 +252,7 @@ public final class ClipboardSyncService extends Service {
                 activeService = null;
             }
             unregisterClipboardListener();
+            unregisterMediaObserver();
             clipboardPublishExecutor.shutdownNow();
             stopWebPortal();
             WebClipboardTileController.requestTileRefresh(this);
@@ -298,6 +317,7 @@ public final class ClipboardSyncService extends Service {
         } else {
             WebClipboardTileController.markRuntimeActive(this, true);
         }
+        registerMediaObserverIfEnabled();
         updateNotification("Open " + firstUrl(desiredPort));
         WebClipboardTileController.requestTileRefresh(this);
     }
@@ -306,7 +326,7 @@ public final class ClipboardSyncService extends Service {
             String loopbackIngressToken) {
         ClipboardSyncWebPortal portal = new ClipboardSyncWebPortal(
                 port,
-                this::applyWebClipboardToPhone,
+                new ServiceClipboardBridge(),
                 ClipboardSyncWebPortal.WebAssets.from(this),
                 new ClipboardSyncWebPortal.SecurityConfig(
                         pairingRequired,
@@ -361,6 +381,7 @@ public final class ClipboardSyncService extends Service {
         currentPairingRequired = false;
         currentPairingCode = WebClipboardPreferences.DEFAULT_PAIRING_CODE;
         currentLoopbackIngressToken = WebClipboardPreferences.DEFAULT_LOOPBACK_INGRESS_TOKEN;
+        unregisterMediaObserver();
         if (portal != null) {
             portal.stop();
         }
@@ -373,12 +394,40 @@ public final class ClipboardSyncService extends Service {
             return;
         }
         ClipboardManager.OnPrimaryClipChangedListener listener = () -> {
-            CharSequence currentText = currentClipboardText(clipboardManager);
-            if (currentText != null) {
-                Log.i(TAG, LOG_PREFIX + " service clipboard listener fired"
-                        + " len=" + currentText.length()
-                        + ", portal=" + describePortal(webPortal));
-                publishClipboardToPortalIfNotWebEcho(currentText.toString());
+            try {
+                ClipboardManager cm = serviceClipboardManager != null
+                        ? serviceClipboardManager
+                        : getSystemService(ClipboardManager.class);
+                if (cm == null || !cm.hasPrimaryClip()) {
+                    return;
+                }
+                ClipData clipData = cm.getPrimaryClip();
+                if (clipData == null) {
+                    return;
+                }
+                if (isWebClipboardEcho(clipData)) {
+                    Log.i(TAG, LOG_PREFIX + " service clipboard listener suppressed web echo");
+                    return;
+                }
+                SharedPreferences preferences = WebClipboardPreferences.preferences(this);
+                if (WebClipboardPreferences.isImageSyncEnabled(preferences)) {
+                    Uri imgUri = resolveImageClip(clipData);
+                    String imgMime = resolveClipMime(clipData, imgUri);
+                    if (imgMime != null && imgUri != null) {
+                        Log.i(TAG, LOG_PREFIX + " service clipboard listener detected image clip: " + imgMime);
+                        handlePhoneImageClip(imgUri, imgMime);
+                        return;
+                    }
+                }
+                CharSequence currentText = currentClipboardText(cm);
+                if (currentText != null) {
+                    Log.i(TAG, LOG_PREFIX + " service clipboard listener fired"
+                            + " len=" + currentText.length()
+                            + ", portal=" + describePortal(webPortal));
+                    publishClipboardToPortalIfNotWebEcho(currentText.toString());
+                }
+            } catch (Throwable throwable) {
+                Log.w(TAG, "Failed handling primary clip change", throwable);
             }
         };
         try {
@@ -446,17 +495,383 @@ public final class ClipboardSyncService extends Service {
         if (clipboardManager == null) {
             clipboardManager = getSystemService(ClipboardManager.class);
         }
-        if (clipboardManager == null) {
+        if (clipboardManager == null || !clipboardManager.hasPrimaryClip()) {
             return;
         }
-        CharSequence currentText = currentClipboardText(clipboardManager);
-        if (currentText == null || currentText.length() == 0) {
+        try {
+            ClipData clipData = clipboardManager.getPrimaryClip();
+            if (clipData == null) {
+                return;
+            }
+            SharedPreferences preferences = WebClipboardPreferences.preferences(this);
+            if (WebClipboardPreferences.isImageSyncEnabled(preferences)) {
+                Uri imgUri = resolveImageClip(clipData);
+                String imgMime = resolveClipMime(clipData, imgUri);
+                if (imgMime != null && imgUri != null) {
+                    handlePhoneImageClip(imgUri, imgMime);
+                    return;
+                }
+            }
+            CharSequence currentText = currentClipboardText(clipboardManager);
+            if (currentText == null || currentText.length() == 0) {
+                return;
+            }
+            String text = currentText.toString();
+            lastPublishedText = text;
+            lastPublishedAtElapsedMs = SystemClock.elapsedRealtime();
+            portal.publishPhoneClipboard(text);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private final class ServiceClipboardBridge implements ClipboardSyncWebPortal.ClipboardBridge {
+        @Override
+        public void applyDesktopClipboard(String text) {
+            applyWebClipboardToPhone(text);
+        }
+
+        @Override
+        public boolean applyDesktopImage(InputStream stream, String mimeType, long contentLength) {
+            return applyWebImageToPhone(stream, mimeType, contentLength);
+        }
+
+        @Override
+        public InputStream openPhoneImageStream() {
+            try {
+                if (latestPhoneImageFile != null && latestPhoneImageFile.exists()) {
+                    return new FileInputStream(latestPhoneImageFile);
+                }
+                if (latestPhoneImageUri != null) {
+                    if ("content".equalsIgnoreCase(latestPhoneImageUri.getScheme())) {
+                        return getContentResolver().openInputStream(latestPhoneImageUri);
+                    } else if ("file".equalsIgnoreCase(latestPhoneImageUri.getScheme()) && latestPhoneImageUri.getPath() != null) {
+                        return new FileInputStream(new File(latestPhoneImageUri.getPath()));
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to open phone image stream", t);
+            }
+            return null;
+        }
+
+        @Override
+        public long getPhoneImageLength() {
+            if (latestPhoneImageFile != null && latestPhoneImageFile.exists()) {
+                return latestPhoneImageFile.length();
+            }
+            if (latestPhoneImageUri != null) {
+                if ("content".equalsIgnoreCase(latestPhoneImageUri.getScheme())) {
+                    try (ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(
+                            latestPhoneImageUri, "r")) {
+                        if (pfd != null) {
+                            return pfd.getStatSize();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                } else if ("file".equalsIgnoreCase(latestPhoneImageUri.getScheme()) && latestPhoneImageUri.getPath() != null) {
+                    File f = new File(latestPhoneImageUri.getPath());
+                    if (f.exists()) {
+                        return f.length();
+                    }
+                }
+            }
+            return 0L;
+        }
+
+        @Override
+        public String getPhoneImageMimeType() {
+            return latestPhoneImageMime != null ? latestPhoneImageMime : "image/png";
+        }
+
+        @Override
+        public boolean hasPhoneImage() {
+            return (latestPhoneImageFile != null && latestPhoneImageFile.exists())
+                    || (latestPhoneImageUri != null && ("content".equalsIgnoreCase(latestPhoneImageUri.getScheme())
+                            || "file".equalsIgnoreCase(latestPhoneImageUri.getScheme())));
+        }
+
+        @Override
+        public void recordPhoneImage(String mimeType, String uri) {
+            if (uri == null || !uri.startsWith("content://")) {
+                return;
+            }
+            if (!isWhitelistedImageMime(mimeType)) {
+                return;
+            }
+            latestPhoneImageMime = mimeType.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+            latestPhoneImageUri = Uri.parse(uri);
+            latestPhoneImageFile = null;
+        }
+    }
+
+    private static boolean isWhitelistedImageMime(String mime) {
+        if (mime == null) {
+            return false;
+        }
+        String clean = mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+        return "image/png".equals(clean)
+                || "image/jpeg".equals(clean)
+                || "image/jpg".equals(clean)
+                || "image/webp".equals(clean)
+                || "image/gif".equals(clean);
+    }
+
+    private boolean applyWebImageToPhone(InputStream stream, String mimeType, long contentLength) {
+        SharedPreferences preferences = WebClipboardPreferences.preferences(this);
+        if (!WebClipboardPreferences.isImageSyncEnabled(preferences)) {
+            Log.w(TAG, LOG_PREFIX + " image sync disabled, rejecting desktop image");
+            return false;
+        }
+        if (!isWhitelistedImageMime(mimeType)) {
+            Log.w(TAG, LOG_PREFIX + " rejected non-whitelisted image mime: " + mimeType);
+            return false;
+        }
+        try {
+            File cacheDir = WebClipboardImageProvider.getImageCacheDir(this);
+            cleanImageCacheDir(cacheDir);
+
+            String cleanMime = mimeType.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+            String ext = ".png";
+            if (cleanMime.contains("jpeg") || cleanMime.contains("jpg")) {
+                ext = ".jpg";
+            } else if (cleanMime.contains("webp")) {
+                ext = ".webp";
+            } else if (cleanMime.contains("gif")) {
+                ext = ".gif";
+            }
+            File outFile = new File(cacheDir, "desktop_clip_" + System.currentTimeMillis() + ext);
+            try (FileOutputStream fos = new FileOutputStream(outFile)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = stream.read(buffer)) != -1) {
+                    fos.write(buffer, 0, read);
+                }
+                fos.flush();
+            }
+
+            Uri contentUri = WebClipboardImageProvider.getUriForFile(this, outFile);
+            latestPhoneImageFile = outFile;
+            latestPhoneImageUri = contentUri;
+            latestPhoneImageMime = cleanMime;
+
+            ClipboardManager cm = serviceClipboardManager != null
+                    ? serviceClipboardManager
+                    : getSystemService(ClipboardManager.class);
+            if (cm == null) {
+                return false;
+            }
+            ClipData clipData = new ClipData(
+                    ClipboardSyncIngressContract.WEB_CLIPBOARD_LABEL,
+                    new String[] { cleanMime },
+                    new ClipData.Item(contentUri));
+            webClipboardEchoSuppressor.markWebApplied(contentUri.toString(), SystemClock.elapsedRealtime());
+            cm.setPrimaryClip(clipData);
+            updateNotification("Image applied from Web");
+            return true;
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Failed to apply web image to phone", throwable);
+            return false;
+        }
+    }
+
+    private static void cleanImageCacheDir(File cacheDir) {
+        if (cacheDir == null || !cacheDir.isDirectory()) {
             return;
         }
-        String text = currentText.toString();
-        lastPublishedText = text;
-        lastPublishedAtElapsedMs = SystemClock.elapsedRealtime();
-        portal.publishPhoneClipboard(text);
+        try {
+            File[] files = cacheDir.listFiles();
+            if (files == null || files.length == 0) {
+                return;
+            }
+            if (files.length >= 5) {
+                Arrays.sort(files, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
+                int deleteCount = files.length - 4;
+                for (int i = 0; i < deleteCount; i++) {
+                    files[i].delete();
+                }
+            }
+            long cutoff = System.currentTimeMillis() - 24 * 60 * 60 * 1000L;
+            for (File file : files) {
+                if (file.exists() && file.lastModified() < cutoff) {
+                    file.delete();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void handlePhoneImageClip(Uri uri, String mime) {
+        if (uri == null) {
+            return;
+        }
+        if (!isWhitelistedImageMime(mime)) {
+            return;
+        }
+        String effectiveMime = mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+        latestPhoneImageUri = uri;
+        latestPhoneImageMime = effectiveMime;
+        latestPhoneImageFile = null;
+
+        long length = 0L;
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            try (ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "r")) {
+                if (pfd != null) {
+                    length = pfd.getStatSize();
+                }
+            } catch (Throwable ignored) {
+            }
+        } else if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
+            File file = new File(uri.getPath());
+            if (file.exists()) {
+                length = file.length();
+                latestPhoneImageFile = file;
+            }
+        }
+
+        ClipboardSyncWebPortal portal = webPortal;
+        if (portal != null) {
+            portal.publishPhoneImage(effectiveMime, length);
+            updateNotification("Image available");
+        }
+    }
+
+    private void registerMediaObserverIfEnabled() {
+        SharedPreferences preferences = WebClipboardPreferences.preferences(this);
+        if (!WebClipboardPreferences.isImageSyncEnabled(preferences)) {
+            unregisterMediaObserver();
+            return;
+        }
+        if (screenshotMediaObserver != null) {
+            return;
+        }
+        try {
+            screenshotMediaObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
+                @Override
+                public void onChange(boolean selfChange, Uri uri) {
+                    onMediaStoreChanged();
+                }
+            };
+            getContentResolver().registerContentObserver(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    true,
+                    screenshotMediaObserver);
+            Log.i(TAG, LOG_PREFIX + " registered MediaStore screenshot observer");
+            onMediaStoreChanged();
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to register MediaStore observer", t);
+        }
+    }
+
+    private void unregisterMediaObserver() {
+        if (screenshotMediaObserver == null) {
+            return;
+        }
+        try {
+            getContentResolver().unregisterContentObserver(screenshotMediaObserver);
+        } catch (Throwable ignored) {
+        }
+        screenshotMediaObserver = null;
+    }
+
+    private void onMediaStoreChanged() {
+        clipboardPublishExecutor.execute(() -> {
+            try {
+                String[] projection = new String[] {
+                        MediaStore.Images.Media._ID,
+                        MediaStore.Images.Media.DATE_ADDED,
+                        MediaStore.Images.Media.MIME_TYPE
+                };
+                long cutoff = (System.currentTimeMillis() / 1000L) - 86400;
+                String selection = MediaStore.Images.Media.DATE_ADDED + " >= ? AND ("
+                        + MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " COLLATE NOCASE = 'Screenshots' OR "
+                        + MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " COLLATE NOCASE = 'Screenshot' OR "
+                        + MediaStore.Images.Media.RELATIVE_PATH + " LIKE '%Screenshots/%' OR "
+                        + MediaStore.Images.Media.DATA + " LIKE '%/Screenshots/%')";
+                String[] selectionArgs = new String[] { String.valueOf(cutoff) };
+                try (Cursor cursor = getContentResolver().query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        MediaStore.Images.Media.DATE_ADDED + " DESC")) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
+                        long dateAdded = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED));
+                        String mime = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE));
+                        if (dateAdded <= lastScreenshotDateAdded || !isWhitelistedImageMime(mime)) {
+                            return;
+                        }
+                        lastScreenshotDateAdded = dateAdded;
+                        Uri imageUri = ContentUris.withAppendedId(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                        Log.i(TAG, LOG_PREFIX + " detected screenshot: id=" + id + " mime=" + mime);
+                        handlePhoneImageClip(imageUri, mime);
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to inspect recent screenshot media", t);
+            }
+        });
+    }
+
+    private static boolean isWebClipboardEcho(ClipData clipData) {
+        if (clipData == null || clipData.getDescription() == null) {
+            return false;
+        }
+        CharSequence label = clipData.getDescription().getLabel();
+        return ClipboardSyncIngressContract.WEB_CLIPBOARD_LABEL.contentEquals(
+                label != null ? label : "");
+    }
+
+    private String resolveClipMime(ClipData clipData, Uri uri) {
+        if (clipData != null && clipData.getDescription() != null) {
+            for (int i = 0; i < clipData.getDescription().getMimeTypeCount(); i++) {
+                String mime = clipData.getDescription().getMimeType(i);
+                if (isWhitelistedImageMime(mime)) {
+                    return mime.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+                }
+            }
+        }
+        if (uri != null && "content".equalsIgnoreCase(uri.getScheme())) {
+            try {
+                String type = getContentResolver().getType(uri);
+                if (isWhitelistedImageMime(type)) {
+                    return type.replaceAll("[\\r\\n]", "").trim().toLowerCase(Locale.ROOT);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        if (uri != null) {
+            String path = uri.getPath();
+            if (path != null) {
+                String lower = path.toLowerCase(Locale.ROOT);
+                if (lower.endsWith(".png")) return "image/png";
+                if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+                if (lower.endsWith(".webp")) return "image/webp";
+                if (lower.endsWith(".gif")) return "image/gif";
+            }
+        }
+        return null;
+    }
+
+    private static Uri resolveImageClip(ClipData clipData) {
+        if (clipData == null) {
+            return null;
+        }
+        for (int i = 0; i < clipData.getItemCount(); i++) {
+            ClipData.Item item = clipData.getItemAt(i);
+            if (item == null) {
+                continue;
+            }
+            Uri uri = item.getUri();
+            if (uri == null && item.getIntent() != null) {
+                uri = item.getIntent().getData();
+            }
+            if (uri != null) {
+                return uri;
+            }
+        }
+        return null;
     }
 
     private void publishClipboardToPortal(String text) {
@@ -538,9 +953,20 @@ public final class ClipboardSyncService extends Service {
     private void startForeground(String statusText) {
         Notification notification = buildNotification(statusText);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
-            return;
+            try {
+                startForeground(NOTIFICATION_ID, notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
+                return;
+            } catch (Throwable t) {
+                Log.w(TAG, LOG_PREFIX + " Failed startForeground with connectedDevice, trying dataSync", t);
+                try {
+                    startForeground(NOTIFICATION_ID, notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+                    return;
+                } catch (Throwable t2) {
+                    Log.w(TAG, LOG_PREFIX + " Failed startForeground with dataSync, falling back to untyped", t2);
+                }
+            }
         }
         startForeground(NOTIFICATION_ID, notification);
     }

@@ -87,6 +87,58 @@ public final class ClipboardSyncLoopbackIngressClient {
         }
     }
 
+    public static boolean submitPhoneImage(String mimeType, String imageUri, int port,
+            String loopbackIngressToken) {
+        return submitPhoneImage(mimeType, imageUri, port, loopbackIngressToken, DEFAULT_TIMEOUT_MS);
+    }
+
+    static boolean submitPhoneImage(String mimeType, String imageUri, int port,
+            String loopbackIngressToken, int timeoutMs) {
+        if (imageUri == null || imageUri.isEmpty()) {
+            return false;
+        }
+        String safeToken = loopbackIngressToken == null ? "" : loopbackIngressToken;
+        if (!ClipboardSyncLoopbackAuth.isUsableToken(safeToken)) {
+            return false;
+        }
+        int safePort = WebClipboardPreferences.sanitizePort(port);
+        int safeTimeoutMs = Math.max(100, timeoutMs);
+        try {
+            if (!isExpectedPortal(safePort, safeToken, safeTimeoutMs)) {
+                return false;
+            }
+            JSONObject payload = new JSONObject();
+            payload.put("type", "image");
+            payload.put("mime", mimeType != null ? mimeType : "image/png");
+            payload.put("uri", imageUri);
+            byte[] body = payload.toString().getBytes(StandardCharsets.UTF_8);
+
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(LOOPBACK_HOST, safePort), safeTimeoutMs);
+                socket.setSoTimeout(safeTimeoutMs);
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                        socket.getOutputStream(), StandardCharsets.UTF_8));
+                writer.write("POST " + INGRESS_PATH + " HTTP/1.1\r\n");
+                writer.write("Host: " + LOOPBACK_HOST + ":" + safePort + "\r\n");
+                writer.write("Content-Type: application/json; charset=utf-8\r\n");
+                writer.write(LOOPBACK_INGRESS_TOKEN_HEADER + ": " + safeToken + "\r\n");
+                writer.write("Content-Length: " + body.length + "\r\n");
+                writer.write("Connection: close\r\n");
+                writer.write("\r\n");
+                writer.flush();
+                socket.getOutputStream().write(body);
+                socket.getOutputStream().flush();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        socket.getInputStream(), StandardCharsets.UTF_8));
+                String statusLine = reader.readLine();
+                return statusLine != null && statusLine.contains(" 200 ");
+            }
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     private static boolean verifyExpectedPortal(int port, String loopbackIngressToken,
             int timeoutMs) {
         String challenge = nextChallenge();

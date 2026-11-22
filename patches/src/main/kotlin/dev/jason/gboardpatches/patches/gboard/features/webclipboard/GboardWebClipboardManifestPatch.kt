@@ -110,6 +110,19 @@ internal fun applyGboardWebClipboardManifest(document: Document) {
         WEB_CLIPBOARD_PACKAGE_REPLACED_RECEIVER_CLASS,
     ).apply { setManifestAndroidAttribute("exported", "false") }
     ensureManifestIntentFilter(document, packageReplacedReceiver, ACTION_MY_PACKAGE_REPLACED)
+
+    val targetPackage = manifest.getAttribute("package").ifBlank { "com.google.android.inputmethod.latin" }
+    val authority = "webclipboard.${targetPackage.replace('.', '_')}.images"
+    ensureManifestComponent(
+        document,
+        application,
+        "provider",
+        WEB_CLIPBOARD_IMAGE_PROVIDER_CLASS,
+    ).apply {
+        setManifestAndroidAttribute("authorities", authority)
+        setManifestAndroidAttribute("exported", "false")
+        setManifestAndroidAttribute("grantUriPermissions", "true")
+    }
 }
 
 context(context: ResourcePatchContext)
@@ -141,6 +154,8 @@ private const val WEB_CLIPBOARD_TILE_SERVICE_CLASS =
     "dev.jason.gboardpatches.extension.webclipboard.WebClipboardTileService"
 private const val WEB_CLIPBOARD_PACKAGE_REPLACED_RECEIVER_CLASS =
     "dev.jason.gboardpatches.extension.webclipboard.WebClipboardPackageReplacedReceiver"
+private const val WEB_CLIPBOARD_IMAGE_PROVIDER_CLASS =
+    "dev.jason.gboardpatches.extension.webclipboard.WebClipboardImageProvider"
 private const val ACTION_QS_TILE = "android.service.quicksettings.action.QS_TILE"
 private const val ACTION_QS_TILE_PREFERENCES =
     "android.service.quicksettings.action.QS_TILE_PREFERENCES"

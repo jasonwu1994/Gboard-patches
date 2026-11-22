@@ -247,9 +247,6 @@ public final class WebClipboardTileController {
                     : context;
             SharedPreferences preferences = WebClipboardPreferences.preferences(appContext);
             setRuntimeActive(preferences, false);
-            if (isEnabled(preferences)) {
-                ClipboardSyncService.startOrUpdate(appContext);
-            }
             requestTileRefresh(appContext);
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to reconcile Web Clipboard after package replace", throwable);
