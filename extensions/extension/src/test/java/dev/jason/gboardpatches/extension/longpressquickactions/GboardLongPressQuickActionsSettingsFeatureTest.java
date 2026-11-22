@@ -1,8 +1,11 @@
 package dev.jason.gboardpatches.extension.longpressquickactions;
 
+import android.content.Context;
+
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,14 +21,16 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 false,
                 true,
                 false,
+                GboardLongPressShortcutPlacement.LAST,
                 value -> { },
                 value -> { },
-                value -> { });
+                value -> { },
+                () -> { });
 
         Assert.assertEquals("Long-Press Editing Shortcuts", screen.getToolbarTitle());
         Assert.assertEquals(2, screen.getSections().size());
         Assert.assertEquals("Feature", screen.getSections().get(0).getTitle());
-        Assert.assertEquals(3, screen.getSections().get(0).getItems().size());
+        Assert.assertEquals(4, screen.getSections().get(0).getItems().size());
         Assert.assertTrue(screen.getSections().get(0).getItems().get(0)
                 instanceof GboardPatchesSettingsContract.ToggleRow);
         GboardPatchesSettingsContract.ToggleRow toggle =
@@ -56,6 +61,14 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         Assert.assertEquals("Hold and drag from globe key", globeDrag.getTitle());
         Assert.assertFalse(globeDrag.isEnabled());
         Assert.assertTrue(globeDrag.isChecked());
+        Assert.assertTrue(screen.getSections().get(0).getItems().get(3)
+                instanceof GboardPatchesSettingsContract.SelectorRow);
+        GboardPatchesSettingsContract.SelectorRow placement =
+                (GboardPatchesSettingsContract.SelectorRow)
+                        screen.getSections().get(0).getItems().get(3);
+        Assert.assertEquals("Shortcut position", placement.getTitle());
+        Assert.assertEquals("Last", placement.getCurrentValue());
+        Assert.assertFalse(placement.isEnabled());
 
         Assert.assertEquals("Mappings", screen.getSections().get(1).getTitle());
         Assert.assertEquals(6, screen.getSections().get(1).getItems().size());
@@ -74,9 +87,11 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 true,
                 true,
                 false,
+                GboardLongPressShortcutPlacement.FIRST,
                 requested::set,
                 value -> { },
-                value -> { });
+                value -> { },
+                () -> { });
         GboardPatchesSettingsContract.ToggleRow toggle =
                 (GboardPatchesSettingsContract.ToggleRow)
                         screen.getSections().get(0).getItems().get(0);
@@ -93,9 +108,11 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 true,
                 true,
                 false,
+                GboardLongPressShortcutPlacement.FIRST,
                 value -> { },
                 requested::set,
-                value -> { });
+                value -> { },
+                () -> { });
         GboardPatchesSettingsContract.SwitchRow globeDrag =
                 (GboardPatchesSettingsContract.SwitchRow)
                         screen.getSections().get(0).getItems().get(1);
@@ -109,7 +126,8 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
     public void selectAllSwitchHasIndependentStateAndCallback() {
         AtomicReference<Boolean> requested = new AtomicReference<>();
         GboardPatchesSettingsContract.Screen screen = testFeature().buildScreenForState(
-                false, true, true, value -> { }, value -> { }, requested::set);
+                false, true, true, GboardLongPressShortcutPlacement.FIRST,
+                value -> { }, value -> { }, requested::set, () -> { });
         GboardPatchesSettingsContract.SwitchRow row =
                 (GboardPatchesSettingsContract.SwitchRow) screen.getSections().get(0).getItems().get(2);
         Assert.assertEquals("Select all when nothing is selected", row.getTitle());
@@ -117,6 +135,66 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
         Assert.assertFalse(row.isEnabled());
         row.getToggleAction().accept(false);
         Assert.assertEquals(Boolean.FALSE, requested.get());
+    }
+
+    @Test
+    public void placementRowShowsCurrentChoiceAndOpensSelector() {
+        AtomicReference<Boolean> opened = new AtomicReference<>(Boolean.FALSE);
+        GboardPatchesSettingsContract.Screen screen = testFeature().buildScreenForState(
+                true, false, false, "unknown",
+                value -> { }, value -> { }, value -> { }, () -> opened.set(Boolean.TRUE));
+        GboardPatchesSettingsContract.SelectorRow placement =
+                (GboardPatchesSettingsContract.SelectorRow)
+                        screen.getSections().get(0).getItems().get(3);
+
+        Assert.assertTrue(placement.isEnabled());
+        Assert.assertEquals("First", placement.getCurrentValue());
+        placement.getAction().run();
+        Assert.assertEquals(Boolean.TRUE, opened.get());
+    }
+
+    @Test
+    public void placementDialogContainsHostAndWriterFailures() {
+        GboardLongPressQuickActionsSettingsFeature feature = testFeature();
+
+        GboardPatchesSettingsContract.FeatureHost failingHost =
+                new GboardPatchesSettingsContract.FeatureHost() {
+                    @Override
+                    public Context getContext() {
+                        return null;
+                    }
+
+                    @Override
+                    public void submit(GboardPatchesSettingsContract.Intent intent) {
+                        throw new IllegalStateException("dialog host failed");
+                    }
+                };
+        feature.showPlacementDialog(failingHost, "first", value -> { });
+
+        AtomicReference<GboardPatchesSettingsContract.StringValueConsumer> capturedConsumer =
+                new AtomicReference<>();
+        GboardPatchesSettingsContract.Host recordingHost =
+                (GboardPatchesSettingsContract.Host) Proxy.newProxyInstance(
+                        GboardPatchesSettingsContract.Host.class.getClassLoader(),
+                        new Class<?>[] {GboardPatchesSettingsContract.Host.class},
+                        (proxy, method, args) -> {
+                            if ("submit".equals(method.getName()) && args[0] != null) {
+                                ((GboardPatchesSettingsContract.Intent) args[0])
+                                        .apply((GboardPatchesSettingsContract.Host) proxy);
+                                return null;
+                            }
+                            if ("showChoiceDialog".equals(method.getName())) {
+                                capturedConsumer.set(
+                                        (GboardPatchesSettingsContract.StringValueConsumer) args[6]);
+                                return null;
+                            }
+                            return null;
+                        });
+        feature.showPlacementDialog(recordingHost, "first", value -> {
+            throw new IllegalStateException("prefs write failed");
+        });
+        Assert.assertNotNull(capturedConsumer.get());
+        capturedConsumer.get().accept(GboardLongPressShortcutPlacement.LAST);
     }
 
     @Test
@@ -140,6 +218,10 @@ public final class GboardLongPressQuickActionsSettingsFeatureTest {
                 "Swipe from the globe key to A/Z/X/C/V/Y for editing actions.",
                 "Select all when nothing is selected",
                 "Copy or cut all text when nothing is selected.",
+                "Shortcut position",
+                "Where the shortcut appears in the long-press popup.",
+                "First",
+                "Last",
                 "Feature",
                 "Mappings",
                 new String[] {"Select all", "Undo", "Copy", "Cut", "Paste", "Redo"});

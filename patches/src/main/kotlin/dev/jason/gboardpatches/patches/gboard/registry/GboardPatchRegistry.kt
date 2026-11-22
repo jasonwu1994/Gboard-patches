@@ -69,6 +69,7 @@ import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardMan
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.applyGboardApplicationDisplayName
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.gboardPackageRenameResourcePatch
+import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboardPackageName
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboardAppDisplayName
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.quickinsert.gboardQuickInsertFlagValuePatch
@@ -84,6 +85,8 @@ import dev.jason.gboardpatches.patches.gboard.features.splitkeyboard.gboardSplit
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.symbolfooter.gboardSymbolFooterOrderFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.shiftdelete.gboardShiftDeleteBytecodePatch
+import dev.jason.gboardpatches.patches.gboard.features.shiftdelete.gboardShiftDeleteFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.swipedismiss.gboardSwipeDismissFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeFeatureMarkerPatch
@@ -96,6 +99,8 @@ import dev.jason.gboardpatches.patches.gboard.shared.generated.GboardTargetAdmis
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.zhuyinbottomrow.gboardZhuyinBottomRowWeightSoftKeyPatch
 import dev.jason.gboardpatches.patches.shared.Constants.COMPATIBILITY_GBOARD
+import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_DEFAULT_PATCHED_PACKAGE_NAME
+import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_PACKAGE_NAME
 
 @Suppress("unused")
 val gboardLanguageModelVersionsPatch = gboardPublicResourcePatch(
@@ -291,6 +296,23 @@ val gboardSwipeDismissPatch = gboardPublicResourcePatch(
         gboardPatchesSettingsPatch,
         gboardSwipeDismissFeatureMarkerPatch,
         gboardSwipeDismissBytecodePatch,
+    )
+}
+
+@Suppress("unused")
+val gboardShiftDeletePatch = gboardPublicResourcePatch(
+    featureId = "shift_backspace_forward_delete",
+    name = "Shift + Backspace Forward Delete",
+    description = "按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。\n" +
+        "Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.",
+    default = true,
+) {
+    compatibleWith(COMPATIBILITY_GBOARD)
+
+    dependsOn(
+        gboardPatchesSettingsPatch,
+        gboardShiftDeleteFeatureMarkerPatch,
+        gboardShiftDeleteBytecodePatch,
     )
 }
 
@@ -824,9 +846,9 @@ val gboardZhuyinBottomRowWeightPatch = gboardPublicResourcePatch(
 val gboardPackageRenamePatch = gboardPublicResourcePatch(
     featureId = "package_rename",
     name = "Package Rename",
-    description = "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\n" +
-        "Rename the package to dev.jason.com.google.android.inputmethod.latin and allow " +
-        "a custom app name so it can be installed alongside the official Gboard.",
+    description = "將套件名稱改成可自訂的值(預設 dev.jason.com...latin)，並可自訂 App 名稱，以便共存安裝\n" +
+        "Rename the package to a configurable name (default dev.jason.com...latin) and allow a " +
+        "custom app name so it can be installed alongside the official Gboard.",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
@@ -848,8 +870,28 @@ val gboardPackageRenamePatch = gboardPublicResourcePatch(
         isValidGboardAppDisplayName(value)
     }
 
+    val packageName = stringOption(
+        key = "package_name",
+        default = GBOARD_DEFAULT_PATCHED_PACKAGE_NAME,
+        values = linkedMapOf(
+            GBOARD_DEFAULT_PATCHED_PACKAGE_NAME to GBOARD_DEFAULT_PATCHED_PACKAGE_NAME,
+            GBOARD_PACKAGE_NAME to GBOARD_PACKAGE_NAME,
+        ),
+        title = "套件名稱 / Package name",
+        description = "必須是有效的 Android 套件名稱。選官方套件名稱 com.google.android.inputmethod.latin " +
+            "時只改 App 名稱、不改套件名稱，無法與官方 Gboard 共存安裝；" +
+            "其他工具改過的套件名稱不受支援。\n" +
+            "Must be a valid Android package name. Choosing the official package " +
+            "com.google.android.inputmethod.latin changes only the app name and keeps the " +
+            "package, so it cannot be installed alongside the official Gboard. " +
+            "Packages renamed by other tools are not supported.",
+        required = true,
+    ) { value ->
+        isValidGboardPackageName(value)
+    }
+
     dependsOn(
-        gboardPackageRenameResourcePatch
+        gboardPackageRenameResourcePatch { checkNotNull(packageName.value) }
     )
 
     finalize {
@@ -882,6 +924,7 @@ object GboardPublishedPatchCatalog {
         gboardEditingAccessPointsPatch,
         gboardSimpleCalculatorPatch,
         gboardSwipeDismissPatch,
+        gboardShiftDeletePatch,
         gboardAdvancedVoiceTypingPatch,
         gboardBluetoothMicrophonePatch,
         gboardEmojiSizePatch,

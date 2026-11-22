@@ -18,12 +18,6 @@ import dev.jason.gboardpatches.extension.toprowswipe.GboardTopRowSwipeSettings;
 public final class GboardPatchesSettingsProvider extends ContentProvider {
     private static final String TAG = "GboardPatches";
     private static final String LOG_LABEL = "expression footer tab order";
-    private static final String GBOARD_PACKAGE_STABLE =
-            "com.google.android.inputmethod.latin";
-    private static final String GBOARD_PACKAGE_JASON_DEV =
-            "com.google.android.inputmethod.latin.jason.dev";
-    private static final String GBOARD_PACKAGE_REVERSED_DEV =
-            "dev.jason.com.google.android.inputmethod.latin";
     public static final String METHOD_GET_SYMBOL_FOOTER_ORDER_SETTINGS =
             "get_symbol_footer_order_settings";
     public static final String BUNDLE_KEY_SYMBOL_FOOTER_ORDER =
@@ -200,10 +194,7 @@ public final class GboardPatchesSettingsProvider extends ContentProvider {
         if (callingPackage == null || callingPackage.isEmpty()) {
             return true;
         }
-        return modulePackage.equals(callingPackage)
-                || GBOARD_PACKAGE_STABLE.equals(callingPackage)
-                || GBOARD_PACKAGE_JASON_DEV.equals(callingPackage)
-                || GBOARD_PACKAGE_REVERSED_DEV.equals(callingPackage);
+        return modulePackage.equals(callingPackage);
     }
 
     static boolean shouldExposeTopRowSwipeSettings(boolean hasFeatureMarker,

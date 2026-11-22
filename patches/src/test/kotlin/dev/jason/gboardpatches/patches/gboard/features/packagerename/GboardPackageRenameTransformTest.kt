@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.patches.gboard.features.packagerename
 import app.morphe.patcher.resource.PublicXmlManager
 import dev.jason.gboardpatches.patches.gboard.shared.ANDROID_NS
 import dev.jason.gboardpatches.patches.gboard.shared.applyGboardPatchesSettings
+import dev.jason.gboardpatches.patches.shared.Constants.GBOARD_PACKAGE_NAME
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.StringWriter
@@ -331,6 +332,134 @@ class GboardPackageRenameTransformTest {
         assertFalse(serialize(manifest).contains(DOUBLE_PREFIX))
         assertEquals(originalComponents, componentNames(manifest))
         assertEquals("com.android.inputmethod.latin", originalPackageName(manifest))
+    }
+
+    @Test
+    fun `custom target package renames every selected attribute`() {
+        val custom = "com.example.keyboard"
+        val manifest = loadManifest()
+
+        val result = applyGboardPackageRename(manifest, loadSettingsDocuments(), custom)
+
+        assertEquals(GboardPackageRenameResult.RENAMED, result)
+        assertEquals(custom, manifest.documentElement.getAttribute("package"))
+        gboardPackageRenameMappings(custom).forEach { mapping ->
+            assertEquals(0, mappingAttributes(manifest, mapping, mapping.originalValue).size)
+            assertEquals(1, mappingAttributes(manifest, mapping, mapping.renamedValue).size)
+        }
+        assertFalse(serialize(manifest).contains(FINAL_PACKAGE))
+    }
+
+    @Test
+    fun `custom target package is idempotent and rejects a different renamed root`() {
+        val custom = "com.touchtype.swiftkey"
+        val manifest = loadManifest()
+        val settings = loadSettingsDocuments()
+        applyGboardPackageRename(manifest, settings, custom)
+
+        assertEquals(
+            GboardPackageRenameResult.ALREADY_RENAMED,
+            applyGboardPackageRename(manifest, settings, custom),
+        )
+        try {
+            applyGboardPackageRename(manifest, settings, "com.example.other")
+            fail("Expected a different target package to be rejected")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message.orEmpty().contains("Unexpected Gboard manifest package"))
+        }
+    }
+
+    @Test
+    fun `target package validation accepts android package names only`() {
+        listOf(
+            "com.example.keyboard", "com.touchtype.swiftkey", "a.b", "My.App_1.x9",
+            "com.google.android.inputmethod.latin",
+        ).forEach { assertTrue(it, isValidGboardPackageName(it)) }
+        listOf(
+            null, "", "single", "1com.example", "com..example", "com.example.", ".com.example",
+            "com.exa mple", "com.example-app", "com.1example",
+            "a." + "b".repeat(300),
+        ).forEach { assertFalse(it.toString(), isValidGboardPackageName(it)) }
+    }
+
+    @Test
+    fun `official target package keeps the manifest and settings untouched`() {
+        val manifest = loadManifest()
+        val settings = loadSettingsDocuments()
+        val before = serialize(manifest)
+        val settingsBefore = settings.map(::serialize)
+
+        val result = applyGboardPackageRename(manifest, settings, GBOARD_PACKAGE_NAME)
+
+        assertEquals(GboardPackageRenameResult.KEPT_OFFICIAL, result)
+        assertEquals(before, serialize(manifest))
+        assertEquals(settingsBefore, settings.map(::serialize))
+        assertTrue(packageIdentityValues(manifest).isEmpty())
+        assertEquals(
+            GboardPackageRenameResult.KEPT_OFFICIAL,
+            applyGboardPackageRename(manifest, settings, GBOARD_PACKAGE_NAME),
+        )
+    }
+
+    @Test
+    fun `official target package rejects an already renamed manifest`() {
+        val manifest = loadManifest()
+        val settings = loadSettingsDocuments()
+        applyGboardPackageRename(manifest, settings)
+        val renamed = serialize(manifest)
+
+        try {
+            applyGboardPackageRename(manifest, settings, GBOARD_PACKAGE_NAME)
+            fail("Expected a renamed manifest to be rejected when keeping the official package")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message.orEmpty().contains("Unexpected Gboard manifest package"))
+        }
+        assertEquals(renamed, serialize(manifest))
+    }
+
+    @Test
+    fun `package identity uses the same prefixed sha256 as the runtime`() {
+        assertEquals(
+            "sha256:f7be8452dc6a8d37e01288672407a2ec20b33d0b559b110d1d231d84c405f467",
+            gboardPackageIdentity(FINAL_PACKAGE),
+        )
+        assertEquals(
+            "sha256:376535488ad8c71fc204404de019921ca7cda644bb8d249ff939b77917db0c2a",
+            gboardPackageIdentity("com.example.keyboard"),
+        )
+        assertEquals("dev.jason.gboardpatches.package_identity", GBOARD_PACKAGE_IDENTITY_META_DATA_NAME)
+    }
+
+    @Test
+    fun `rename writes exactly one identity for the final package`() {
+        listOf(FINAL_PACKAGE, "com.example.keyboard").forEach { target ->
+            val manifest = loadManifest()
+            val settings = loadSettingsDocuments()
+            assertTrue(packageIdentityValues(manifest).isEmpty())
+
+            applyGboardPackageRename(manifest, settings, target)
+            assertEquals(listOf(gboardPackageIdentity(target)), packageIdentityValues(manifest))
+
+            assertEquals(
+                GboardPackageRenameResult.ALREADY_RENAMED,
+                applyGboardPackageRename(manifest, settings, target),
+            )
+            assertEquals(listOf(gboardPackageIdentity(target)), packageIdentityValues(manifest))
+            // The identity never spells out the package, so a manifest-wide text rename cannot
+            // rewrite it into a value that matches the new package.
+            assertFalse(packageIdentityValues(manifest).single().contains(target))
+        }
+    }
+
+    @Test
+    fun `identity is a direct child of application`() {
+        val manifest = loadManifest()
+        applyGboardPackageRename(manifest, loadSettingsDocuments(), "com.example.keyboard")
+
+        val identity = elements(manifest, "meta-data").single { element ->
+            androidAttribute(element, "name") == GBOARD_PACKAGE_IDENTITY_META_DATA_NAME
+        }
+        assertEquals("application", (identity.parentNode as Element).tagName)
     }
 
     @Test
@@ -723,6 +852,13 @@ class GboardPackageRenameTransformTest {
         readFixtureBytes(MANIFEST_FIXTURE),
         namespaceAware = true,
     )
+
+    private fun packageIdentityValues(manifest: Document): List<String> =
+        elements(manifest, "meta-data")
+            .filter { element ->
+                androidAttribute(element, "name") == GBOARD_PACKAGE_IDENTITY_META_DATA_NAME
+            }
+            .map { element -> androidAttribute(element, "value").orEmpty() }
 
     private fun loadSettingsDocuments(): List<Document> = listOf(
         parse(readFixtureBytes(SETTINGS_FIXTURE), namespaceAware = true),

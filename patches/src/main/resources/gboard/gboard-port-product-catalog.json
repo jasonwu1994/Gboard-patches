@@ -382,6 +382,8 @@
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/advancedvoice/GboardAdvancedVoiceFlagValuePatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/advancedvoice/GboardAdvancedVoicePatchSupport.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/advancedvoice/GboardAdvancedVoiceZhTwPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/advancedvoice/GboardS3AirplaneModePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/rambler/GboardRamblerAutoStopPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/rambler/GboardRamblerOfficialSelectorPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
@@ -428,7 +430,10 @@
             "ADVANCED_VOICE_RUNTIME_SHOULD_CHECK_NATIVE",
             "ADVANCED_VOICE_RUNTIME_CLAIM_MDD",
             "ADVANCED_VOICE_RUNTIME_RESET_MDD",
-            "ADVANCED_VOICE_RUNTIME_FORMATTER_GATE"
+            "ADVANCED_VOICE_RUNTIME_FORMATTER_GATE",
+            "RAMBLER_AUTO_STOP_RUNTIME_ON_SESSION_START",
+            "RAMBLER_AUTO_STOP_RUNTIME_ON_SPEECH_LEVEL",
+            "S3_AIRPLANE_MODE_POLICY_SHOULD_OVERRIDE"
           ]
         }
       ]
@@ -1849,6 +1854,33 @@
           ],
           "runtime_calls": [
             "SETTINGS_HOMEPAGE_RUNTIME_APPLY_SETTINGS_HOMEPAGE_POLICY"
+          ]
+        }
+      ]
+    },
+    {
+      "feature_id": "shift_backspace_forward_delete",
+      "public_patch_name": "Shift + Backspace Forward Delete",
+      "feature_marker": "dev.jason.gboardpatches.feature.shift_forward_delete",
+      "target_family_ids": [
+        "shiftdelete"
+      ],
+      "migration_scope": "version-sensitive",
+      "consumer_files": [
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/shiftdelete/GboardShiftDeleteBytecodePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/shiftdelete/GboardShiftDeleteFeatureMarkerPatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+      ],
+      "contributions": [
+        {
+          "contribution_id": "shift_backspace_forward_delete.dispatch",
+          "anchor_family_id": "dedicated_bytecode",
+          "phase": "dedicated",
+          "order": 1970,
+          "required_bindings": [],
+          "runtime_calls": [
+            "SHIFT_DELETE_RUNTIME_ON_TOUCH_EVENT",
+            "SHIFT_DELETE_RUNTIME_REMAP_INPUT"
           ]
         }
       ]

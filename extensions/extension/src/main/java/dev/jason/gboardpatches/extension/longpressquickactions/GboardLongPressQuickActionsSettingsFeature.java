@@ -31,6 +31,10 @@ public final class GboardLongPressQuickActionsSettingsFeature
     private final String globeDragSummary;
     private final String selectAllTitle;
     private final String selectAllSummary;
+    private final String placementTitle;
+    private final String placementSummary;
+    private final String placementFirstLabel;
+    private final String placementLastLabel;
     private final String featureSectionTitle;
     private final String mappingsSectionTitle;
     private final String[] actionLabels;
@@ -60,6 +64,14 @@ public final class GboardLongPressQuickActionsSettingsFeature
                 GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_select_all_summary),
                 GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_placement_title),
+                GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_placement_summary),
+                GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_placement_first),
+                GboardSettingsText.get(context,
+                        R.string.gboard_patches_long_press_quick_actions_placement_last),
+                GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_section_feature),
                 GboardSettingsText.get(context,
                         R.string.gboard_patches_long_press_quick_actions_section_mappings),
@@ -83,6 +95,8 @@ public final class GboardLongPressQuickActionsSettingsFeature
             String headerBadge, String errorTitle, String errorSummary, String enabledTitle,
             String enabledSummary, String globeDragTitle, String globeDragSummary,
             String selectAllTitle, String selectAllSummary,
+            String placementTitle, String placementSummary,
+            String placementFirstLabel, String placementLastLabel,
             String featureSectionTitle, String mappingsSectionTitle, String[] actionLabels) {
         this.entryTitle = entryTitle;
         this.entrySummary = entrySummary;
@@ -95,6 +109,10 @@ public final class GboardLongPressQuickActionsSettingsFeature
         this.globeDragSummary = globeDragSummary;
         this.selectAllTitle = selectAllTitle;
         this.selectAllSummary = selectAllSummary;
+        this.placementTitle = placementTitle;
+        this.placementSummary = placementSummary;
+        this.placementFirstLabel = placementFirstLabel;
+        this.placementLastLabel = placementLastLabel;
         this.featureSectionTitle = featureSectionTitle;
         this.mappingsSectionTitle = mappingsSectionTitle;
         this.actionLabels = actionLabels == null ? new String[0] : actionLabels.clone();
@@ -132,17 +150,23 @@ public final class GboardLongPressQuickActionsSettingsFeature
                     GboardLongPressQuickActionsSettings.readGlobeDragEnabled(preferences);
             boolean selectAllWhenUnselected =
                     GboardLongPressQuickActionsSettings.readSelectAllWhenUnselected(preferences);
+            String placement =
+                    GboardLongPressQuickActionsSettings.readShortcutPlacement(preferences);
             return buildScreenForState(
                     enabled,
                     globeDragEnabled,
                     selectAllWhenUnselected,
+                    placement,
                     value -> GboardLongPressQuickActionsSettings.writeEnabled(context, value),
                     value -> GboardLongPressQuickActionsSettings.writeGlobeDragEnabled(
                             context, value),
                     value -> GboardLongPressQuickActionsSettings.writeSelectAllWhenUnselected(
-                            context, value));
+                            context, value),
+                    () -> showPlacementDialog(host, placement, value ->
+                            GboardLongPressQuickActionsSettings.writeShortcutPlacement(
+                                    context, value)));
         } catch (Throwable throwable) {
-            Log.w(TAG, "Failed to render long-press quick action settings", throwable);
+            logWarningSafely("Failed to render long-press quick action settings", throwable);
             return buildErrorScreen();
         }
     }
@@ -150,9 +174,11 @@ public final class GboardLongPressQuickActionsSettingsFeature
     GboardPatchesSettingsContract.Screen buildScreenForState(boolean enabled,
             boolean globeDragEnabled,
             boolean selectAllWhenUnselected,
+            String shortcutPlacement,
             GboardPatchesSettingsContract.ToggleAction toggleAction,
             GboardPatchesSettingsContract.ToggleAction globeDragToggleAction,
-            GboardPatchesSettingsContract.ToggleAction selectAllToggleAction) {
+            GboardPatchesSettingsContract.ToggleAction selectAllToggleAction,
+            Runnable placementAction) {
         String[] labels = normalizedActionLabels();
         return new GboardPatchesSettingsContract.Screen(
                 entryTitle,
@@ -182,7 +208,13 @@ public final class GboardLongPressQuickActionsSettingsFeature
                                                 selectAllSummary,
                                                 enabled,
                                                 selectAllWhenUnselected,
-                                                selectAllToggleAction))),
+                                                selectAllToggleAction),
+                                        new GboardPatchesSettingsContract.SelectorRow(
+                                                placementTitle,
+                                                placementSummary,
+                                                placementLabel(shortcutPlacement),
+                                                enabled,
+                                                placementAction))),
                         new GboardPatchesSettingsContract.Section(
                                 mappingsSectionTitle,
                                 Arrays.asList(
@@ -200,6 +232,49 @@ public final class GboardLongPressQuickActionsSettingsFeature
                                                 "Y", labels[5], true)))),
                 GboardPatchesSettingsContract.RefreshPolicy.none(),
                 GboardPatchesSettingsContract.PanelStyle.FLAT);
+    }
+
+    String placementLabel(String placement) {
+        return GboardLongPressShortcutPlacement.isFirst(placement)
+                ? placementFirstLabel : placementLastLabel;
+    }
+
+    void showPlacementDialog(GboardPatchesSettingsContract.FeatureHost host,
+            String currentPlacement,
+            GboardPatchesSettingsContract.StringValueConsumer placementWriter) {
+        try {
+            GboardPatchesSettingsContract.showChoiceDialog(host,
+                    placementTitle,
+                    new String[] {placementFirstLabel, placementLastLabel},
+                    new String[] {
+                            GboardLongPressShortcutPlacement.FIRST,
+                            GboardLongPressShortcutPlacement.LAST
+                    },
+                    GboardLongPressShortcutPlacement.normalize(currentPlacement),
+                    "",
+                    () -> {
+                    },
+                    value -> {
+                        try {
+                            if (placementWriter != null) {
+                                placementWriter.accept(value);
+                            }
+                        } catch (Throwable throwable) {
+                            logWarningSafely("Failed to update long-press shortcut placement",
+                                    throwable);
+                        }
+                    });
+        } catch (Throwable throwable) {
+            logWarningSafely("Failed to show long-press shortcut placement dialog", throwable);
+        }
+    }
+
+    private static void logWarningSafely(String message, Throwable throwable) {
+        try {
+            Log.w(TAG, message, throwable);
+        } catch (Throwable ignored) {
+            // Logging must not crash settings.
+        }
     }
 
     private GboardPatchesSettingsContract.PreviewSpec buildEnabledPreview() {

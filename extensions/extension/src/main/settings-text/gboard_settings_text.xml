@@ -431,8 +431,8 @@
         <translation locale="zh-Hant">不支援的 Gboard 套件名稱</translation>
     </string>
     <string name="gboard_patches_developer_options_package_warning_message">
-        <translation locale="en">The current Gboard package is %1$s. Gboard Patches supports only the official package com.google.android.inputmethod.latin and dev.jason.com.google.android.inputmethod.latin. Mixing Gboard builds from multiple sources may cause instability.</translation>
-        <translation locale="zh-Hant">目前的 Gboard 套件名稱是 %1$s。Gboard Patches 只支援官方套件名稱 com.google.android.inputmethod.latin 與 dev.jason.com.google.android.inputmethod.latin，混用多個來源的 Gboard 可能導致不穩定。</translation>
+        <translation locale="en">The current Gboard package is %1$s. Gboard Patches supports only the official package com.google.android.inputmethod.latin and the package name set by its own Package Rename patch. Packages renamed by other tools are not supported, and mixing Gboard builds from multiple sources may cause instability.</translation>
+        <translation locale="zh-Hant">目前的 Gboard 套件名稱是 %1$s。Gboard Patches 只支援官方套件名稱 com.google.android.inputmethod.latin，以及 Gboard Patches 的 Package Rename 修補設定的套件名稱；其他工具改過的套件名稱不支援，混用多個來源的 Gboard 可能導致不穩定。</translation>
     </string>
     <string name="gboard_patches_developer_options_try_anyway">
         <translation locale="en">Try anyway</translation>
@@ -1856,6 +1856,22 @@
         <translation locale="en">When no text is selected, long-press C/X or drag from Globe to C/X to copy or cut all text in the input field.</translation>
         <translation locale="zh-Hant">未選取文字時，長按 C/X 或從地球鍵拖曳到 C/X，會複製或剪下輸入框內的全部文字。</translation>
     </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_title">
+        <translation locale="en">Shortcut position</translation>
+        <translation locale="zh-Hant">快捷鍵位置</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_summary">
+        <translation locale="en">Where the shortcut appears in the long-press popup.</translation>
+        <translation locale="zh-Hant">快捷鍵在長按選單中的位置。</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_first">
+        <translation locale="en">First</translation>
+        <translation locale="zh-Hant">第一個</translation>
+    </string>
+    <string name="gboard_patches_long_press_quick_actions_placement_last">
+        <translation locale="en">Last</translation>
+        <translation locale="zh-Hant">最後一個</translation>
+    </string>
     <string name="gboard_patches_long_press_quick_actions_section_mappings">
         <translation locale="en">Mappings</translation>
         <translation locale="zh-Hant">說明</translation>
@@ -1963,6 +1979,30 @@
     <string name="gboard_patches_advanced_voice_zh_tw_punctuation_summary">
         <translation locale="en">Force-stop and restart Gboard for changes to take effect.</translation>
         <translation locale="zh-Hant">需要強制停止並重新啟動Gboard才會生效。</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_title">
+        <translation locale="en">Rambler Auto Stop</translation>
+        <translation locale="zh-Hant">Rambler 自動停止</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_summary">
+        <translation locale="en">Stops Rambler voice typing and keeps the text after this long without speech. Applies from the next voice input.</translation>
+        <translation locale="zh-Hant">停止說話達到設定時間後，自動結束 Rambler 語音輸入並保留文字。下次開始語音輸入時生效。</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_off">
+        <translation locale="en">Off</translation>
+        <translation locale="zh-Hant">關閉</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_seconds">
+        <translation locale="en">%1$s seconds</translation>
+        <translation locale="zh-Hant">%1$s 秒</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_custom_hint">
+        <translation locale="en">Seconds (1–59)</translation>
+        <translation locale="zh-Hant">秒數（1–59）</translation>
+    </string>
+    <string name="gboard_patches_advanced_voice_rambler_auto_stop_custom_error">
+        <translation locale="en">Enter a number of seconds from 1 to 59.</translation>
+        <translation locale="zh-Hant">請輸入 1 到 59 之間的秒數。</translation>
     </string>
     <string name="gboard_patches_advanced_voice_section_behavior">
         <translation locale="en">Behavior</translation>
@@ -3733,8 +3773,8 @@
         <translation locale="zh-Hant">更換圖片</translation>
     </string>
     <string name="gboard_patches_spacebar_image_import_summary">
-        <translation locale="en">PNG, WebP or JPEG, up to 8 MB. The image is fitted to the spacebar and saved at up to 96 pixels.</translation>
-        <translation locale="zh-Hant">支援 8 MB 以內的 PNG、WebP 或 JPEG。圖片會按比例縮小，以最長邊 96 像素保存。</translation>
+        <translation locale="en">PNG, WebP or JPEG, up to 8 MB. Larger images are scaled down to fit 1024 × 256 pixels.</translation>
+        <translation locale="zh-Hant">支援 8 MB 以內的 PNG、WebP 或 JPEG。較大的圖片會按比例縮小到 1024 × 256 像素以內。</translation>
     </string>
     <string name="gboard_patches_spacebar_image_tint">
         <translation locale="en">Apply a single color</translation>
@@ -3769,19 +3809,35 @@
         <translation locale="zh-Hant">圖示大小</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_summary">
-        <translation locale="en">Resize all spacebar icons. Large sizes fit within the space key.</translation>
-        <translation locale="zh-Hant">調整所有空白鍵圖示的大小；較大的尺寸會限制在空白鍵內。</translation>
+        <translation locale="en">Resize all spacebar icons as a share of the space key.</translation>
+        <translation locale="zh-Hant">以空白鍵大小的百分比調整所有空白鍵圖示。</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_default">
-        <translation locale="en">24 dp (default)</translation>
-        <translation locale="zh-Hant">24 dp (預設)</translation>
+        <translation locale="en">60% (default)</translation>
+        <translation locale="zh-Hant">60% (預設)</translation>
+    </string>
+    <string name="gboard_patches_spacebar_logo_size_max">
+        <translation locale="en">100% (largest)</translation>
+        <translation locale="zh-Hant">100% (最大)</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_hint">
-        <translation locale="en">12–40 dp (default: 24)</translation>
-        <translation locale="zh-Hant">12–40 dp (預設 24)</translation>
+        <translation locale="en">10–100% (default: 60)</translation>
+        <translation locale="zh-Hant">10–100% (預設 60)</translation>
     </string>
     <string name="gboard_patches_spacebar_logo_size_invalid">
-        <translation locale="en">Enter a size between 12 and 40 dp.</translation>
-        <translation locale="zh-Hant">請輸入 12 至 40 dp 的尺寸。</translation>
+        <translation locale="en">Enter a size between 10 and 100%.</translation>
+        <translation locale="zh-Hant">請輸入 10 至 100% 的尺寸。</translation>
+    </string>
+    <string name="gboard_patches_shift_delete_title">
+        <translation locale="en">Shift + Backspace Forward Delete</translation>
+        <translation locale="zh-Hant">Shift+退格向前刪除</translation>
+    </string>
+    <string name="gboard_patches_shift_delete_entry_summary">
+        <translation locale="en">Hold Shift and press Backspace to delete the character after the cursor.</translation>
+        <translation locale="zh-Hant">按住 Shift 再按退格鍵，會刪除游標右邊的字。</translation>
+    </string>
+    <string name="gboard_patches_shift_delete_summary">
+        <translation locale="en">Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard. Hold to repeat; releasing Shift restores backward deletion.</translation>
+        <translation locale="zh-Hant">按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。長按可連續刪除，放開 Shift 後恢復向左刪除。</translation>
     </string>
 </settings-text>

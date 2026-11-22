@@ -12,9 +12,13 @@ public final class GboardLongPressQuickActionsSettings {
             "pref_long_press_quick_actions_globe_drag_enabled";
     public static final String PREF_KEY_SELECT_ALL_WHEN_UNSELECTED =
             "pref_long_press_quick_actions_select_all_when_unselected";
+    public static final String PREF_KEY_SHORTCUT_PLACEMENT =
+            "pref_long_press_quick_actions_shortcut_placement";
     public static final boolean DEFAULT_ENABLED = true;
     public static final boolean DEFAULT_GLOBE_DRAG_ENABLED = false;
     public static final boolean DEFAULT_SELECT_ALL_WHEN_UNSELECTED = false;
+    public static final String DEFAULT_SHORTCUT_PLACEMENT =
+            GboardLongPressShortcutPlacement.DEFAULT;
 
     private GboardLongPressQuickActionsSettings() {
     }
@@ -43,6 +47,12 @@ public final class GboardLongPressQuickActionsSettings {
     public static boolean readSelectAllWhenUnselected(SharedPreferences preferences) {
         return readBoolean(preferences, PREF_KEY_SELECT_ALL_WHEN_UNSELECTED,
                 DEFAULT_SELECT_ALL_WHEN_UNSELECTED);
+    }
+
+    /** Returns {@code first} or {@code last}; see {@link GboardLongPressShortcutPlacement}. */
+    public static String readShortcutPlacement(SharedPreferences preferences) {
+        return GboardLongPressShortcutPlacement.normalize(preferences == null
+                ? null : preferences.getAll().get(PREF_KEY_SHORTCUT_PLACEMENT));
     }
 
     private static boolean readBoolean(SharedPreferences preferences, String key,
@@ -82,6 +92,10 @@ public final class GboardLongPressQuickActionsSettings {
         if (!preferences.contains(PREF_KEY_SELECT_ALL_WHEN_UNSELECTED)) {
             editor.putBoolean(PREF_KEY_SELECT_ALL_WHEN_UNSELECTED,
                     DEFAULT_SELECT_ALL_WHEN_UNSELECTED);
+            changed = true;
+        }
+        if (!preferences.contains(PREF_KEY_SHORTCUT_PLACEMENT)) {
+            editor.putString(PREF_KEY_SHORTCUT_PLACEMENT, DEFAULT_SHORTCUT_PLACEMENT);
             changed = true;
         }
         if (changed) {
@@ -130,6 +144,19 @@ public final class GboardLongPressQuickActionsSettings {
             boolean enabled) {
         return preferences != null && preferences.edit()
                 .putBoolean(PREF_KEY_SELECT_ALL_WHEN_UNSELECTED, enabled)
+                .commit();
+    }
+
+    public static boolean writeShortcutPlacement(Context context, String placement) {
+        return context != null && writeShortcutPlacement(
+                GboardPatchesSettings.preferences(context), placement);
+    }
+
+    public static boolean writeShortcutPlacement(SharedPreferences preferences,
+            String placement) {
+        return preferences != null && preferences.edit()
+                .putString(PREF_KEY_SHORTCUT_PLACEMENT,
+                        GboardLongPressShortcutPlacement.normalize(placement))
                 .commit();
     }
 }

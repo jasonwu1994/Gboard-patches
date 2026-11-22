@@ -6,13 +6,19 @@ public final class GboardSpacebarLogoContract {
     public static final String ICON_EMOJI = "EMOJI";
     public static final String ICON_GOOGLE_G_COLOR = "GOOGLE_G_COLOR";
     public static final String ICON_CUSTOM_IMAGE = "CUSTOM_IMAGE";
-    public static final int MAX_IMAGE_EDGE = 96;
-    public static final int MAX_PNG_BYTES = 48 * 1024;
-    public static final int MAX_BASE64_LENGTH = ((MAX_PNG_BYTES + 2) / 3) * 4;
+    /** Larger than any phone space key in pixels, so 100% never upsamples a stored image. */
+    public static final int MAX_IMAGE_WIDTH = 1024;
+    public static final int MAX_IMAGE_HEIGHT = 256;
+    /** Keeps the stored Base64 value small enough for settings and backups. */
+    public static final int MAX_IMAGE_BYTES = 128 * 1024;
+    public static final int MAX_BASE64_LENGTH = ((MAX_IMAGE_BYTES + 2) / 3) * 4;
     public static final String DEFAULT_ICON = ICON_GOOGLE_G;
-    public static final int DEFAULT_SIZE_DP = 24;
-    public static final int MIN_SIZE_DP = 12;
-    public static final int MAX_SIZE_DP = 40;
+    /** Percent of the space key's inner box; 100% touches its height or width. */
+    public static final int DEFAULT_SIZE_PERCENT = 60;
+    public static final int MIN_SIZE_PERCENT = 10;
+    public static final int MAX_SIZE_PERCENT = 100;
+    /** Earlier dp sizes convert with 40 dp as 100%. */
+    public static final int LEGACY_FULL_SIZE_DP = 40;
 
     private GboardSpacebarLogoContract() {
     }
@@ -38,11 +44,16 @@ public final class GboardSpacebarLogoContract {
         return value != null && value.length() <= MAX_BASE64_LENGTH ? value : "";
     }
 
-    public static boolean isValidSizeDp(int sizeDp) {
-        return sizeDp >= MIN_SIZE_DP && sizeDp <= MAX_SIZE_DP;
+    public static boolean isValidSizePercent(int sizePercent) {
+        return sizePercent >= MIN_SIZE_PERCENT && sizePercent <= MAX_SIZE_PERCENT;
     }
 
-    public static int normalizeSizeDp(int sizeDp) {
-        return isValidSizeDp(sizeDp) ? sizeDp : DEFAULT_SIZE_DP;
+    /** Out-of-range numbers clamp, so a large stored value means "as large as the key". */
+    public static int normalizeSizePercent(int sizePercent) {
+        return Math.max(MIN_SIZE_PERCENT, Math.min(MAX_SIZE_PERCENT, sizePercent));
+    }
+
+    public static int sizePercentFromLegacyDp(int sizeDp) {
+        return normalizeSizePercent(Math.round(sizeDp * 100f / LEGACY_FULL_SIZE_DP));
     }
 }

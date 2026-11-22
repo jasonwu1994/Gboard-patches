@@ -16,6 +16,7 @@ import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCu
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCustomSymbolsRoutingPatch
 import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardAdvancedVoice1803ZhTwPatch
 import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardAdvancedVoiceFlagValuePatch
+import dev.jason.gboardpatches.patches.gboard.features.advancedvoice.gboardS3AirplaneModePatch
 import dev.jason.gboardpatches.patches.gboard.features.englishqwerty.gboardEnglishQwertyPointerPatch
 import dev.jason.gboardpatches.patches.gboard.features.englishqwerty.gboardEnglishQwertySoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gboardLongPressQuickActionsInputEventPatch
@@ -25,6 +26,7 @@ import dev.jason.gboardpatches.patches.gboard.features.longpressquickactions.gbo
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrRuntimePatch
 import dev.jason.gboardpatches.patches.gboard.features.rambler.gboardRambler1803OfficialSelectorPatch
+import dev.jason.gboardpatches.patches.gboard.features.rambler.gboardRamblerAutoStopPatch
 import dev.jason.gboardpatches.patches.gboard.features.roundedkeyboard.gboardRoundedKeyboardBytecodePatch
 import dev.jason.gboardpatches.patches.gboard.features.spacebarlogo.gboardSpacebarLogoSoftKeyPatch
 import dev.jason.gboardpatches.patches.gboard.features.toprowswipe.gboardTopRowSwipeGesturePatch
@@ -76,6 +78,8 @@ internal object GboardContributionWiring {
                 arrayOf(
                     gboardAdvancedVoice1803ZhTwPatch,
                     gboardRambler1803OfficialSelectorPatch,
+                    gboardRamblerAutoStopPatch,
+                    gboardS3AirplaneModePatch,
                 )
             },
         ),

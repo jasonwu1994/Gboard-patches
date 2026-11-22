@@ -118,6 +118,12 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 </details>
 
 <details>
+  <summary><code>Shift + Backspace Forward Delete</code></summary>
+
+  Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.
+</details>
+
+<details>
   <summary><code>G Logo on Spacebar</code></summary>
 
   Show a built-in icon or your own PNG, WebP, or JPEG on the spacebar. Keep its original colors or choose a single color, adjust its size, and include imported images in settings backups.
@@ -281,7 +287,7 @@ Shows a dismiss button in the proactive suggestions bar.
 <details>
   <summary><code>Package Rename</code></summary>
 
-  Renames the patched package so it can be installed alongside the official Gboard app.
+  Rename the package to a configurable name (default <code>dev.jason.com.google.android.inputmethod.latin</code>) and allow a custom app name so it can be installed alongside the official Gboard.
 </details>
 
 ### Taiwan-focused Features

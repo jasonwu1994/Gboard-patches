@@ -1143,7 +1143,11 @@ public final class GboardFrostedGlassRuntime {
         if (tag.endsWith(".for-candidate-key") || tag.contains(".for-candidate-key.")) return 0;
         int kinds = 0;
         if (tag.equals(".keytop") || tag.startsWith(".keytop.")
-                || tag.equals(".space_bar") || tag.startsWith(".space_bar.")) {
+                || tag.equals(".space_bar") || tag.startsWith(".space_bar.")
+                || tag.equals(".background-icon.for-mic")
+                || tag.startsWith(".background-icon.for-mic.")
+                || tag.equals(".access-point-menu-icon")
+                || tag.startsWith(".access-point-menu-icon.")) {
             kinds |= TARGET_KEY;
         }
         if (tag.equals(".background-icon.for-action-key")
@@ -1202,6 +1206,10 @@ public final class GboardFrostedGlassRuntime {
             target.mutate();
             saved = new SurfaceAlpha(current);
             state.originalKeyAlphas.put(target, saved);
+        } else if (current == 0 && saved.observed != 0) {
+            // Theme state transition returned to a transparent idle/released fill.
+            state.originalKeyAlphas.remove(target);
+            return;
         }
         int alpha = state.customKeyOpacity;
         if (saved.requested != alpha || saved.observed != current) {
@@ -1228,8 +1236,18 @@ public final class GboardFrostedGlassRuntime {
     private static Drawable opacityTarget(Drawable drawable) {
         // Some stock wrappers intentionally reject setAlpha; their public child still
         // supports it. Keep the wrapper installed so its outline/state/shape remain stock.
-        for (int depth = 0; depth < 16 && drawable instanceof DrawableWrapper wrapper; depth++) {
-            drawable = wrapper.getDrawable();
+        // For RippleDrawable (e.g. header access-point pills), fade only the background
+        // fill layer so the ripple mask and press highlight remain untouched.
+        for (int depth = 0; depth < 16; depth++) {
+            if (drawable instanceof DrawableWrapper wrapper) {
+                drawable = wrapper.getDrawable();
+            } else if (drawable instanceof android.graphics.drawable.RippleDrawable ripple) {
+                Drawable background = ripple.findDrawableByLayerId(android.R.id.background);
+                if (background == null || background == drawable) return null;
+                drawable = background;
+            } else {
+                break;
+            }
         }
         return drawable;
     }

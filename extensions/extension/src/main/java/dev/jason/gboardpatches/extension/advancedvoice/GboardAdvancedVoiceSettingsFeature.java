@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 import dev.jason.gboardpatches.extension.R;
+import dev.jason.gboardpatches.extension.rambler.GboardRamblerAutoStopSettings;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettings;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
@@ -36,6 +37,13 @@ public final class GboardAdvancedVoiceSettingsFeature
     private final String enabledSummary;
     private final String zhTwPunctuationTitle;
     private final String zhTwPunctuationSummary;
+    private final String ramblerAutoStopTitle;
+    private final String ramblerAutoStopSummary;
+    private final String ramblerAutoStopOff;
+    private final String ramblerAutoStopSeconds;
+    private final String ramblerAutoStopCustom;
+    private final String ramblerAutoStopCustomHint;
+    private final String ramblerAutoStopCustomError;
     private final String sectionBehavior;
     private final String sectionInformation;
     private final String sectionOfflineSpeechModel;
@@ -93,6 +101,20 @@ public final class GboardAdvancedVoiceSettingsFeature
                 R.string.gboard_patches_advanced_voice_zh_tw_punctuation_title);
         zhTwPunctuationSummary = GboardSettingsText.get(context,
                 R.string.gboard_patches_advanced_voice_zh_tw_punctuation_summary);
+        ramblerAutoStopTitle = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_title);
+        ramblerAutoStopSummary = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_summary);
+        ramblerAutoStopOff = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_off);
+        ramblerAutoStopSeconds = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_seconds);
+        ramblerAutoStopCustom = GboardSettingsText.get(context,
+                R.string.gboard_patches_option_custom);
+        ramblerAutoStopCustomHint = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_custom_hint);
+        ramblerAutoStopCustomError = GboardSettingsText.get(context,
+                R.string.gboard_patches_advanced_voice_rambler_auto_stop_custom_error);
         sectionBehavior = GboardSettingsText.get(context,
                 R.string.gboard_patches_advanced_voice_section_behavior);
         sectionInformation = GboardSettingsText.get(context,
@@ -201,6 +223,7 @@ public final class GboardAdvancedVoiceSettingsFeature
             boolean enabled = GboardAdvancedVoiceSettings.readEnabled(preferences);
             boolean zhTwPunctuationEnabled =
                     GboardAdvancedVoiceSettings.readZhTwPunctuationEnabled(preferences);
+            int ramblerAutoStopSeconds = GboardRamblerAutoStopSettings.readSeconds(preferences);
             GboardDictationPayloadDetector.Detection payloadDetection =
                     GboardDictationPayloadDetector.detect(
                             context,
@@ -211,6 +234,7 @@ public final class GboardAdvancedVoiceSettingsFeature
                     host.getOfflineSpeechLanguages();
             Log.i(TAG, "Loaded Advanced Voice Typing enabled=" + enabled
                     + ", zhTwPunctuationEnabled=" + zhTwPunctuationEnabled
+                    + ", ramblerAutoStopSeconds=" + ramblerAutoStopSeconds
                     + ", payloadStatus=" + payloadDetection.getStatus()
                     + ", payloadPackage=" + payloadDetection.getPackageName()
                     + ", speechServicesStatus=" + speechServicesStatus
@@ -236,6 +260,12 @@ public final class GboardAdvancedVoiceSettingsFeature
                     value -> saveZhTwPunctuationEnabled(context, value))
                     .setRestartRequired(
                             GboardAdvancedVoiceSettings.PREF_KEY_ZH_TW_PUNCTUATION_ENABLED));
+            behaviorRows.add(new GboardPatchesSettingsContract.SelectorRow(
+                    ramblerAutoStopTitle,
+                    ramblerAutoStopSummary,
+                    ramblerAutoStopLabel(ramblerAutoStopSeconds),
+                    true,
+                    () -> showRamblerAutoStopDialog(host, preferences, ramblerAutoStopSeconds)));
 
             List<GboardPatchesSettingsContract.Row> informationRows =
                     new ArrayList<GboardPatchesSettingsContract.Row>();
@@ -349,6 +379,70 @@ public final class GboardAdvancedVoiceSettingsFeature
         }
     }
 
+    private static final String RAMBLER_AUTO_STOP_CUSTOM_VALUE = "custom";
+    private static final int RAMBLER_AUTO_STOP_CUSTOM_INITIAL = 10;
+
+    private void showRamblerAutoStopDialog(GboardPatchesSettingsContract.FeatureHost host,
+            SharedPreferences preferences, int currentSeconds) {
+        int[] presets = GboardRamblerAutoStopSettings.presets();
+        String[] labels = new String[presets.length + 1];
+        String[] values = new String[presets.length + 1];
+        for (int index = 0; index < presets.length; index++) {
+            labels[index] = ramblerAutoStopLabel(presets[index]);
+            values[index] = Integer.toString(presets[index]);
+        }
+        boolean custom = !GboardRamblerAutoStopSettings.isPreset(currentSeconds);
+        labels[presets.length] = custom
+                ? ramblerAutoStopCustom + " (" + ramblerAutoStopLabel(currentSeconds) + ")"
+                : ramblerAutoStopCustom;
+        values[presets.length] = RAMBLER_AUTO_STOP_CUSTOM_VALUE;
+        GboardPatchesSettingsContract.showChoiceDialog(host,
+                ramblerAutoStopTitle,
+                labels,
+                values,
+                custom ? RAMBLER_AUTO_STOP_CUSTOM_VALUE : Integer.toString(currentSeconds),
+                RAMBLER_AUTO_STOP_CUSTOM_VALUE,
+                () -> showRamblerAutoStopCustomDialog(host, preferences,
+                        custom ? currentSeconds : RAMBLER_AUTO_STOP_CUSTOM_INITIAL),
+                value -> saveRamblerAutoStopSeconds(host, preferences, value));
+    }
+
+    private void showRamblerAutoStopCustomDialog(GboardPatchesSettingsContract.FeatureHost host,
+            SharedPreferences preferences, int initialSeconds) {
+        GboardPatchesSettingsContract.showPositiveIntegerDialog(host,
+                ramblerAutoStopTitle,
+                ramblerAutoStopCustomHint,
+                initialSeconds,
+                value -> {
+                    if (value < GboardRamblerAutoStopSettings.MIN_SECONDS
+                            || value > GboardRamblerAutoStopSettings.MAX_SECONDS) {
+                        throw new IllegalArgumentException(ramblerAutoStopCustomError);
+                    }
+                    saveRamblerAutoStopSeconds(host, preferences, Integer.toString(value));
+                });
+    }
+
+    private void saveRamblerAutoStopSeconds(GboardPatchesSettingsContract.FeatureHost host,
+            SharedPreferences preferences, String value) {
+        if (RAMBLER_AUTO_STOP_CUSTOM_VALUE.equals(value)) {
+            return;
+        }
+        try {
+            int seconds = Integer.parseInt(value);
+            boolean saved = GboardRamblerAutoStopSettings.writeSeconds(preferences, seconds);
+            Log.i(TAG, "Saved Rambler auto stop seconds=" + seconds + ", saved=" + saved);
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Failed to save Rambler auto stop", throwable);
+        }
+        refreshSafely(host);
+    }
+
+    private String ramblerAutoStopLabel(int seconds) {
+        return seconds <= GboardRamblerAutoStopSettings.OFF
+                ? ramblerAutoStopOff
+                : String.format(Locale.ROOT, ramblerAutoStopSeconds, Integer.toString(seconds));
+    }
+
     private void refreshSafely(GboardPatchesSettingsContract.FeatureHost host) {
         try {
             GboardPatchesSettingsContract.refresh(host);
@@ -440,9 +534,6 @@ public final class GboardAdvancedVoiceSettingsFeature
     private static List<String> targetPackageNames(Context context) {
         List<String> packageNames = new ArrayList<String>();
         addPackageName(packageNames, context == null ? null : context.getPackageName());
-        addPackageName(packageNames, "com.google.android.inputmethod.latin");
-        addPackageName(packageNames, "com.google.android.inputmethod.latin.jason.dev");
-        addPackageName(packageNames, "dev.jason.com.google.android.inputmethod.latin");
         return packageNames;
     }
 

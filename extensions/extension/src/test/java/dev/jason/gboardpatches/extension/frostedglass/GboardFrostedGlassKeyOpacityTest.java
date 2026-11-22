@@ -152,6 +152,119 @@ public class GboardFrostedGlassKeyOpacityTest {
         }
     }
 
+    @Test public void micHeaderBackgroundFadesWithoutTouchingIconOrProtectionLayer() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GradientDrawable oval = new GradientDrawable();
+            oval.setShape(GradientDrawable.OVAL);
+            oval.setColor(Color.WHITE);
+            android.graphics.drawable.DrawableWrapper tintedOval =
+                    new android.graphics.drawable.DrawableWrapper(oval) {};
+            FrameLayout micBackground = new FrameLayout(f.activity.get());
+            micBackground.setTag(".background-icon.for-mic");
+            micBackground.setBackground(tintedOval);
+            f.root.addView(micBackground);
+
+            ImageView micIcon = f.image(".icon.for-header-icon.for-mic.non-linear-scale", Color.BLACK);
+            ImageView micProtection = f.image(".background-icon.for-mic-protection", Color.WHITE);
+
+            f.keys(77);
+            f.apply();
+            assertEquals(77, oval.getAlpha());
+            assertEquals(GradientDrawable.OVAL, oval.getShape());
+            assertEquals(255, micIcon.getDrawable().getAlpha());
+            assertEquals(255, micProtection.getDrawable().getAlpha());
+            assertEquals(0, GboardFrostedGlassRuntime.targetKinds(".background-icon.for-mic-protection"));
+
+            f.keys(-1);
+            f.apply();
+            assertEquals(255, oval.getAlpha());
+
+            f.keys(51);
+            f.apply();
+            assertEquals(51, oval.getAlpha());
+            f.restore();
+            assertEquals(255, oval.getAlpha());
+        }
+    }
+
+    @Test public void accessPointMenuIconBackgroundFadesInsideFocusRingRippleWithoutTouchingMaskOrIcon() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GradientDrawable mask = new GradientDrawable();
+            mask.setShape(GradientDrawable.OVAL);
+            mask.setColor(Color.WHITE);
+            GradientDrawable oval = new GradientDrawable();
+            oval.setShape(GradientDrawable.OVAL);
+            oval.setColor(Color.WHITE);
+            android.graphics.drawable.DrawableWrapper tintedOval =
+                    new android.graphics.drawable.DrawableWrapper(oval) {};
+            android.graphics.drawable.RippleDrawable ripple =
+                    new android.graphics.drawable.RippleDrawable(
+                            android.content.res.ColorStateList.valueOf(Color.GRAY),
+                            tintedOval,
+                            mask);
+            ripple.setId(0, android.R.id.background);
+            android.graphics.drawable.DrawableWrapper focusRing =
+                    new android.graphics.drawable.DrawableWrapper(ripple) {};
+
+            FrameLayout slot = new FrameLayout(f.activity.get());
+            slot.setTag(".access-point-menu-icon.background-icon.header-icon-item-ripple");
+            slot.setBackground(focusRing);
+            f.root.addView(slot);
+
+            ImageView icon = f.image(".icon.for-access-point-icon.non-linear-scale", Color.BLACK);
+
+            f.keys(77);
+            f.apply();
+            assertEquals(77, oval.getAlpha());
+            assertEquals(255, mask.getAlpha());
+            assertEquals(255, icon.getDrawable().getAlpha());
+
+            f.keys(-1);
+            f.apply();
+            assertEquals(255, oval.getAlpha());
+
+            f.keys(51);
+            f.apply();
+            assertEquals(51, oval.getAlpha());
+            f.restore();
+            assertEquals(255, oval.getAlpha());
+        }
+    }
+
+    @Test public void transparentIdleStateAfterActivationStaysTransparent() throws Exception {
+        try (Fixture f = new Fixture()) {
+            GradientDrawable oval = new GradientDrawable();
+            oval.setShape(GradientDrawable.OVAL);
+            oval.setColor(Color.WHITE);
+            oval.setAlpha(0);
+            android.graphics.drawable.DrawableWrapper tintedOval =
+                    new android.graphics.drawable.DrawableWrapper(oval) {};
+            FrameLayout micBackground = new FrameLayout(f.activity.get());
+            micBackground.setTag(".background-icon.for-mic");
+            micBackground.setBackground(tintedOval);
+            f.root.addView(micBackground);
+
+            f.keys(77);
+            f.apply();
+            assertEquals(0, oval.getAlpha());
+
+            // Simulate theme :activated state switching to an opaque fill.
+            oval.setAlpha(255);
+            f.apply();
+            assertEquals(77, oval.getAlpha());
+
+            // Simulate returning to transparent idle state: must stay invisible.
+            oval.setAlpha(0);
+            f.apply();
+            assertEquals(0, oval.getAlpha());
+
+            // Returning to follow-theme must not restore 255 onto the transparent idle state.
+            f.keys(-1);
+            f.apply();
+            assertEquals(0, oval.getAlpha());
+        }
+    }
+
     static final class Fixture implements AutoCloseable {
         final ActivityController<Activity> activity = Robolectric.buildActivity(Activity.class).setup();
         final Window window = activity.get().getWindow();

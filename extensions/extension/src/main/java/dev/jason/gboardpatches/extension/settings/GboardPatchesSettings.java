@@ -14,11 +14,31 @@ public final class GboardPatchesSettings {
     public static final String DEFAULT_SETTINGS_UI_LANGUAGE =
             GboardSettingsLocaleManager.LANGUAGE_SYSTEM;
 
+    /** Opens the settings store. The default is this app's own private preferences. */
+    public interface Storage {
+        SharedPreferences preferences(Context context);
+    }
+
+    private static volatile Storage storage = GboardPatchesSettings::appPreferences;
+
     private GboardPatchesSettings() {
+    }
+
+    /** Replaces where settings are read from and written to; {@code null} restores the default. */
+    public static void setStorage(Storage replacement) {
+        storage = replacement != null ? replacement : GboardPatchesSettings::appPreferences;
     }
 
     /** Strict legacy/settings-UI access. Runtime features should use readRuntimeSetting(). */
     public static SharedPreferences preferences(Context context) {
+        SharedPreferences preferences = storage.preferences(context);
+        if (preferences == null) {
+            throw new IllegalStateException("Gboard patch settings are unavailable.");
+        }
+        return preferences;
+    }
+
+    private static SharedPreferences appPreferences(Context context) {
         Context applicationContext = context == null ? null : context.getApplicationContext();
         Context lookupContext = applicationContext != null ? applicationContext : context;
         if (lookupContext == null) {

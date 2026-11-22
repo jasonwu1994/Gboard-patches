@@ -40,7 +40,7 @@ public class GboardSpacebarFailureBoundaryTest {
         preferences.edit().clear().putBoolean(GboardSpacebarLogoSettings.PREF_KEY_ENABLED, true)
                 .putString(GboardSpacebarLogoSettings.PREF_KEY_IMAGE, GboardSpacebarLogoImageData.base64())
                 .putString(GboardSpacebarLogoSettings.PREF_KEY_ICON, GboardSpacebarLogoContract.ICON_CUSTOM_IMAGE)
-                .putInt(GboardSpacebarLogoSettings.PREF_KEY_SIZE_DP, 12).commit();
+                .putInt(GboardSpacebarLogoSettings.PREF_KEY_SIZE_PERCENT, 30).commit();
         List<Runnable> lateWorkerPosts = new ArrayList<>();
         Handler main = new Handler(Looper.getMainLooper());
         FrameLayout root = new FrameLayout(context) {
@@ -55,8 +55,10 @@ public class GboardSpacebarFailureBoundaryTest {
         int spaceId = View.generateViewId(), labelId = View.generateViewId();
         root.setId(spaceId);
         TextView label = new TextView(context); label.setId(labelId); root.addView(label);
+        root.layout(0, 0, 300, 40);
         var bindings = new GboardSpacebarLogoRuntime.ViewBindings(spaceId, labelId, 0, 0, 0);
         GboardSpacebarLogoRuntime.afterSoftKeyBound(root, true, GboardSpacebarLogoSettings.snapshot(context), bindings);
+        assertEquals(90, root.getChildAt(1).getLayoutParams().width);
         AtomicReference<Throwable> failure = new AtomicReference<>();
         Thread importer = new Thread(() -> {
             try { assertTrue(GboardSpacebarLogoSettings.writeImage(context, GboardSpacebarLogoImageData.base64())); }
@@ -65,14 +67,13 @@ public class GboardSpacebarFailureBoundaryTest {
         importer.start(); importer.join(5000);
         assertFalse(importer.isAlive());
         assertNull(failure.get());
-        assertTrue(GboardSpacebarLogoSettings.writeSizeDp(context, 40));
+        assertTrue(GboardSpacebarLogoSettings.writeSizePercent(context, 100));
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         for (Runnable action : lateWorkerPosts) main.post(action);
         Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertEquals(40, GboardSpacebarLogoSettings.readSizeDp(preferences));
+        assertEquals(100, GboardSpacebarLogoSettings.readSizePercent(preferences));
         assertEquals("The final view must match the newest persisted size",
-                Math.round(40 * context.getResources().getDisplayMetrics().density),
-                root.getChildAt(1).getLayoutParams().width);
+                300, root.getChildAt(1).getLayoutParams().width);
     }
 
     @Test public void runtimeReadsDoNotWaitForImageDiskPersistence() throws Exception {
@@ -144,7 +145,7 @@ public class GboardSpacebarFailureBoundaryTest {
     private void assertRejectedReplacementPreservesState(boolean throwsAfterApply, boolean absentImage,
             boolean unexpectedTypes, boolean throwingRollback) {
         SharedPreferences actual = context.getSharedPreferences("spacebar-failed-save", Context.MODE_PRIVATE);
-        actual.edit().clear().putInt(GboardSpacebarLogoSettings.PREF_KEY_SIZE_DP, 30).commit();
+        actual.edit().clear().putInt(GboardSpacebarLogoSettings.PREF_KEY_SIZE_PERCENT, 75).commit();
         if (!absentImage) actual.edit().putString(GboardSpacebarLogoSettings.PREF_KEY_ICON, "HEART")
                 .putString(GboardSpacebarLogoSettings.PREF_KEY_IMAGE, "old-image")
                 .putBoolean(GboardSpacebarLogoSettings.PREF_KEY_IMAGE_TINT, true).commit();

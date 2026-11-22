@@ -40,6 +40,28 @@ public final class GboardLongPressQuickActionsRuntimeSettingsTest {
         GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
         try {
             Assert.assertFalse(GboardLongPressQuickActionsRuntimeSettings.isEnabled());
+            Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings.isShortcutFirst());
+        } finally {
+            GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
+        }
+    }
+
+    @Test
+    public void shortcutPlacementSnapshotDefaultsFirstAndHonorsLastAndOverride() {
+        TestSharedPreferences preferences = new TestSharedPreferences();
+        Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings
+                .snapshotFromPreferences(null, 0L).shortcutFirst);
+        Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings
+                .snapshotFromPreferences(preferences, 1L).shortcutFirst);
+        preferences.values.put(
+                GboardLongPressQuickActionsSettings.PREF_KEY_SHORTCUT_PLACEMENT, "last");
+        Assert.assertFalse(GboardLongPressQuickActionsRuntimeSettings
+                .snapshotFromPreferences(preferences, 2L).shortcutFirst);
+        try {
+            GboardLongPressQuickActionsRuntimeSettings.setOverrideForTest(true, false, false, false);
+            Assert.assertFalse(GboardLongPressQuickActionsRuntimeSettings.isShortcutFirst());
+            GboardLongPressQuickActionsRuntimeSettings.setOverrideForTest(true, false, false, true);
+            Assert.assertTrue(GboardLongPressQuickActionsRuntimeSettings.isShortcutFirst());
         } finally {
             GboardLongPressQuickActionsRuntimeSettings.clearEnabledOverrideForTest();
         }

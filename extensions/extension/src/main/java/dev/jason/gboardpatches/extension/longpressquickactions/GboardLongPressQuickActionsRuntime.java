@@ -26,6 +26,7 @@ public final class GboardLongPressQuickActionsRuntime {
             Collections.synchronizedMap(new WeakHashMap<>());
     private static final Map<Object, Boolean> UNPATCHED_METADATA_MARKERS =
             Collections.synchronizedMap(new WeakHashMap<>());
+    /** Patched metadata mapped to its shortcut placement: true when the shortcut is first. */
     private static final Map<Object, Boolean> PATCHED_METADATA_MARKERS =
             Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -59,49 +60,65 @@ public final class GboardLongPressQuickActionsRuntime {
 
     public static Object maybePatchMetadata(Object metadata, View softKeyView) {
         metadata = GboardGlobeDragRuntime.maybePatchMetadata(metadata, softKeyView);
-        Object incomingMetadata = metadata;
+        return maybePatchMetadataWithPatcher(metadata, (candidate, shortcutFirst) -> {
+            ClassLoader classLoader = candidate.getClass().getClassLoader();
+            GboardLongPressQuickActionsReflectionHandles handles =
+                    reflectionHandles(classLoader);
+            Context context = softKeyView == null ? null : softKeyView.getContext();
+            GboardLongPressQuickActionsPolicy.QuickAction action =
+                    GboardLongPressQuickActionsPolicy.plan(
+                            handles.extractKeyId(candidate),
+                            handles.extractPressText(candidate),
+                            handles.extractLongPressCodes(candidate));
+            if (action == null) {
+                return null;
+            }
+            Object patched = handles.insertLongPressAction(
+                    context, candidate, action, shortcutFirst);
+            if (patched != null) {
+                logInfo(PATCH_LOG_COUNT, 30,
+                        "inserted " + (shortcutFirst ? "first" : "last")
+                                + " keycode=" + action.actionCode
+                                + ", name=" + action.debugName
+                                + ", icon=0x" + Integer.toHexString(action.iconResId));
+            }
+            return patched;
+        });
+    }
+
+    static Object maybePatchMetadataWithPatcher(Object metadata, MetadataPatcher patcher) {
+        Object fallbackMetadata = metadata;
         try {
             boolean enabled = GboardLongPressQuickActionsRuntimeSettings.isEnabled();
-            metadata = metadataForBind(enabled, metadata);
-            if (!enabled || metadata == null || isPatchedMetadata(metadata)
+            boolean shortcutFirst = GboardLongPressQuickActionsRuntimeSettings.isShortcutFirst();
+            metadata = metadataForBind(enabled, shortcutFirst, metadata);
+            fallbackMetadata = metadata != null ? metadata : fallbackMetadata;
+            if (!enabled || patcher == null || metadata == null || isPatchedMetadata(metadata)
                     || Boolean.TRUE.equals(UNPATCHED_METADATA_MARKERS.get(metadata))) {
                 return metadata;
             }
             synchronized (PATCHED_METADATA_BY_ORIGINAL) {
                 Object cached = PATCHED_METADATA_BY_ORIGINAL.get(metadata);
-                if (cached != null) {
+                if (cached != null && hasPlacement(cached, shortcutFirst)) {
                     return cached;
                 }
-                ClassLoader classLoader = metadata.getClass().getClassLoader();
-                GboardLongPressQuickActionsReflectionHandles handles =
-                        reflectionHandles(classLoader);
-                Context context = softKeyView == null ? null : softKeyView.getContext();
-                GboardLongPressQuickActionsPolicy.QuickAction action =
-                        GboardLongPressQuickActionsPolicy.plan(
-                                handles.extractKeyId(metadata),
-                                handles.extractPressText(metadata),
-                                handles.extractLongPressCodes(metadata));
-                if (action == null) {
-                    UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
-                    return metadata;
-                }
-                Object patched = handles.appendLongPressAction(context, metadata, action);
+                Object patched = patcher.patch(metadata, shortcutFirst);
                 if (patched == null) {
                     UNPATCHED_METADATA_MARKERS.put(metadata, Boolean.TRUE);
                     return metadata;
                 }
-                rememberPatchedMetadata(metadata, patched);
-                logInfo(PATCH_LOG_COUNT, 30,
-                        "appended keycode=" + action.actionCode
-                                + ", name=" + action.debugName
-                                + ", icon=0x" + Integer.toHexString(action.iconResId));
+                rememberPatchedMetadata(metadata, patched, shortcutFirst);
                 return patched;
             }
         } catch (Throwable throwable) {
-            markUnpatchedSafely(incomingMetadata);
+            markUnpatchedSafely(fallbackMetadata);
             logError("metadata patch failed", throwable);
-            return incomingMetadata;
+            return fallbackMetadata;
         }
+    }
+
+    interface MetadataPatcher {
+        Object patch(Object metadata, boolean shortcutFirst) throws Throwable;
     }
 
     public static boolean maybeHandleInputEvent(
@@ -219,17 +236,23 @@ public final class GboardLongPressQuickActionsRuntime {
         InputConnection get() throws Throwable;
     }
 
-    static void rememberPatchedMetadata(Object original, Object patched) {
+    static void rememberPatchedMetadata(Object original, Object patched,
+            boolean shortcutFirst) {
         if (original == null || patched == null) {
             return;
         }
         PATCHED_METADATA_BY_ORIGINAL.put(original, patched);
         ORIGINAL_METADATA_BY_PATCHED.put(patched, new WeakReference<>(original));
-        PATCHED_METADATA_MARKERS.put(patched, Boolean.TRUE);
+        PATCHED_METADATA_MARKERS.put(patched, Boolean.valueOf(shortcutFirst));
     }
 
-    static Object metadataForBind(boolean enabled, Object metadata) {
-        if (enabled || metadata == null) {
+    /**
+     * Returns the stock metadata for a patched key that is disabled or was built for the other
+     * shortcut placement, so the next bind restores it or rebuilds it in the current order.
+     */
+    static Object metadataForBind(boolean enabled, boolean shortcutFirst, Object metadata) {
+        if (metadata == null || (enabled
+                && (!isPatchedMetadata(metadata) || hasPlacement(metadata, shortcutFirst)))) {
             return metadata;
         }
         WeakReference<Object> originalReference = ORIGINAL_METADATA_BY_PATCHED.get(metadata);
@@ -243,7 +266,11 @@ public final class GboardLongPressQuickActionsRuntime {
     }
 
     private static boolean isPatchedMetadata(Object metadata) {
-        return metadata != null && Boolean.TRUE.equals(PATCHED_METADATA_MARKERS.get(metadata));
+        return metadata != null && PATCHED_METADATA_MARKERS.get(metadata) != null;
+    }
+
+    private static boolean hasPlacement(Object patched, boolean shortcutFirst) {
+        return Boolean.valueOf(shortcutFirst).equals(PATCHED_METADATA_MARKERS.get(patched));
     }
 
     private static void markUnpatchedSafely(Object metadata) {

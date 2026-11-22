@@ -1,5 +1,5 @@
 {
-  "version": "4.3.0",
+  "version": "4.4.0",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -375,7 +375,7 @@
     },
     {
       "name": "Package Rename",
-      "description": "將套件名稱改成 dev.jason.com.google.android.inputmethod.latin，並可自訂 App 名稱，以便共存安裝\nRename the package to dev.jason.com.google.android.inputmethod.latin and allow a custom app name so it can be installed alongside the official Gboard.",
+      "description": "將套件名稱改成可自訂的值(預設 dev.jason.com...latin)，並可自訂 App 名稱，以便共存安裝\nRename the package to a configurable name (default dev.jason.com...latin) and allow a custom app name so it can be installed alongside the official Gboard.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
@@ -397,6 +397,18 @@
             "Gboard Patches": "Gboard Patches",
             "Gboard Mod": "Gboard Mod",
             "GboardWu": "GboardWu"
+          }
+        },
+        {
+          "key": "package_name",
+          "title": "套件名稱 / Package name",
+          "description": "必須是有效的 Android 套件名稱。選官方套件名稱 com.google.android.inputmethod.latin 時只改 App 名稱、不改套件名稱，無法與官方 Gboard 共存安裝；其他工具改過的套件名稱不受支援。\nMust be a valid Android package name. Choosing the official package com.google.android.inputmethod.latin changes only the app name and keeps the package, so it cannot be installed alongside the official Gboard. Packages renamed by other tools are not supported.",
+          "required": true,
+          "type": "kotlin.String",
+          "default": "dev.jason.com.google.android.inputmethod.latin",
+          "values": {
+            "dev.jason.com.google.android.inputmethod.latin": "dev.jason.com.google.android.inputmethod.latin",
+            "com.google.android.inputmethod.latin": "com.google.android.inputmethod.latin"
           }
         }
       ]
@@ -428,6 +440,18 @@
     {
       "name": "Settings Homepage Override",
       "description": "允許切換新版或舊版 Gboard 設定頁面\nAllow switching between the new and legacy Gboard settings pages.",
+      "use": true,
+      "dependencies": [],
+      "compatiblePackages": {
+        "com.google.android.inputmethod.latin": [
+          "18.5.4.993608717-release-arm64-v8a"
+        ]
+      },
+      "options": []
+    },
+    {
+      "name": "Shift + Backspace Forward Delete",
+      "description": "按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。\nHold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {
