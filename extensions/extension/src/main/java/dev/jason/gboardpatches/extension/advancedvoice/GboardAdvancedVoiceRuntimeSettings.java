@@ -17,6 +17,7 @@ public final class GboardAdvancedVoiceRuntimeSettings {
     private static final AtomicInteger FAILURE_LOG_COUNT = new AtomicInteger();
 
     private static volatile Snapshot cachedSnapshot;
+    private static volatile Snapshot directBootSnapshot;
     private static volatile Boolean enabledOverrideForTest;
     private static volatile String backendOverrideForTest;
     private static volatile Boolean zhTwPunctuationEnabledOverrideForTest;
@@ -30,7 +31,7 @@ public final class GboardAdvancedVoiceRuntimeSettings {
             Boolean override = enabledOverrideForTest;
             return override != null ? override.booleanValue() : snapshot().enabled;
         } catch (Throwable ignored) {
-            return false;
+            return GboardAdvancedVoiceSettings.DEFAULT_ENABLED;
         }
     }
 
@@ -71,12 +72,18 @@ public final class GboardAdvancedVoiceRuntimeSettings {
             if (current != null) {
                 return current;
             }
-            Snapshot loaded = loadSnapshot();
-            if (loaded == null) {
+            Context context = resolveContext();
+            if (context == null) {
                 return defaultSnapshot("transient-defaults");
             }
-            cachedSnapshot = loaded;
-            return loaded;
+            Snapshot authoritative = loadAuthoritativeSnapshot(context);
+            if (authoritative != null) {
+                cachedSnapshot = authoritative;
+                directBootSnapshot = null;
+                return authoritative;
+            }
+            Snapshot directBoot = loadDirectBootSnapshot(context);
+            return directBoot != null ? directBoot : defaultSnapshot("direct-boot-defaults");
         }
     }
 
@@ -113,12 +120,18 @@ public final class GboardAdvancedVoiceRuntimeSettings {
         backendOverrideForTest = null;
         zhTwPunctuationEnabledOverrideForTest = null;
         cachedSnapshot = null;
+        directBootSnapshot = null;
         applicationContext = null;
         FAILURE_LOG_COUNT.set(0);
     }
 
     static void invalidateCachedSnapshot() {
         cachedSnapshot = null;
+        directBootSnapshot = null;
+    }
+
+    public static Context resolveApplicationContext() {
+        return resolveContext();
     }
 
     static void seedApplicationContext(Context context) {
@@ -141,21 +154,47 @@ public final class GboardAdvancedVoiceRuntimeSettings {
             if (applicationContext != resolved) {
                 applicationContext = resolved;
                 cachedSnapshot = null;
+                directBootSnapshot = null;
             }
         }
     }
 
-    private static Snapshot loadSnapshot() {
-        Context context = resolveContext();
-        if (context == null) {
-            return null;
-        }
+    private static Snapshot loadAuthoritativeSnapshot(Context context) {
         try {
-            SharedPreferences preferences = GboardPatchesSettings.preferences(context);
-            GboardAdvancedVoiceSettings.ensureDefaults(preferences);
-            return snapshotFromPreferences(preferences);
+            SharedPreferences preferences = GboardPatchesSettings.preferencesOrNull(context);
+            if (preferences == null) {
+                return null;
+            }
+            Snapshot loaded = snapshotFromPreferences(preferences);
+            GboardAdvancedVoiceSettings.mirrorToDeviceProtectedStorage(
+                    context, loaded.enabled, loaded.zhTwPunctuationEnabled);
+            return loaded;
         } catch (Throwable failure) {
             logFailure("failed to read local settings", failure);
+            return null;
+        }
+    }
+
+    private static Snapshot loadDirectBootSnapshot(Context context) {
+        Snapshot cachedDirectBoot = directBootSnapshot;
+        if (cachedDirectBoot != null) {
+            return cachedDirectBoot;
+        }
+        try {
+            SharedPreferences preferences =
+                    GboardPatchesSettings.deviceProtectedPreferencesOrNull(context);
+            if (preferences == null) {
+                return null;
+            }
+            Snapshot loaded = new Snapshot(
+                    GboardAdvancedVoiceSettings.readEnabled(preferences),
+                    GboardAdvancedVoiceSettings.DEFAULT_BACKEND,
+                    GboardAdvancedVoiceSettings.readZhTwPunctuationEnabled(preferences),
+                    "direct-boot-de");
+            directBootSnapshot = loaded;
+            return loaded;
+        } catch (Throwable failure) {
+            logFailure("failed to read Direct Boot settings", failure);
             return null;
         }
     }
@@ -179,7 +218,9 @@ public final class GboardAdvancedVoiceRuntimeSettings {
             resolved = reflectedApplicationContext(
                     "android.app.AppGlobals", "getInitialApplication");
         }
-        applicationContext = resolved;
+        if (resolved != null) {
+            applicationContext = resolved;
+        }
         return resolved;
     }
 

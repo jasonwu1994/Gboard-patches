@@ -74,7 +74,12 @@ public final class GboardAdvancedVoiceSettings {
     }
 
     public static boolean writeEnabled(Context context, boolean enabled) {
-        return context != null && writeEnabled(preferences(context), enabled);
+        if (context == null || !writeEnabled(preferences(context), enabled)) {
+            return false;
+        }
+        GboardPatchesSettings.writeDeviceProtectedBoolean(
+                context, PREF_KEY_ENABLED, enabled, true);
+        return true;
     }
 
     public static boolean writeEnabled(SharedPreferences preferences, boolean enabled) {
@@ -99,8 +104,13 @@ public final class GboardAdvancedVoiceSettings {
     }
 
     public static boolean writeZhTwPunctuationEnabled(Context context, boolean enabled) {
-        return context != null
-                && writeZhTwPunctuationEnabled(preferences(context), enabled);
+        if (context == null
+                || !writeZhTwPunctuationEnabled(preferences(context), enabled)) {
+            return false;
+        }
+        GboardPatchesSettings.writeDeviceProtectedBoolean(
+                context, PREF_KEY_ZH_TW_PUNCTUATION_ENABLED, enabled, true);
+        return true;
     }
 
     public static boolean writeZhTwPunctuationEnabled(
@@ -110,6 +120,19 @@ public final class GboardAdvancedVoiceSettings {
                 preferences,
                 PREF_KEY_ZH_TW_PUNCTUATION_ENABLED,
                 enabled);
+    }
+
+    static void mirrorToDeviceProtectedStorage(
+            Context context,
+            boolean enabled,
+            boolean zhTwPunctuationEnabled) {
+        if (context == null) {
+            return;
+        }
+        GboardPatchesSettings.writeDeviceProtectedBoolean(
+                context, PREF_KEY_ENABLED, enabled, false);
+        GboardPatchesSettings.writeDeviceProtectedBoolean(
+                context, PREF_KEY_ZH_TW_PUNCTUATION_ENABLED, zhTwPunctuationEnabled, false);
     }
 
     private static boolean readBooleanStrict(

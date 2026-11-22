@@ -120,6 +120,7 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     RAMBLER_RUNTIME_ENTER_VOICE_SETTINGS_SCOPE("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerOfficialSelectionRuntime;->enterVoiceSettingsScope()V"),
     RAMBLER_RUNTIME_EXIT_DEFAULT_SELECTION_SUPPRESSION("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerOfficialSelectionRuntime;->exitDefaultSelectionSuppression()V"),
     RAMBLER_RUNTIME_EXIT_VOICE_SETTINGS_SCOPE("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerOfficialSelectionRuntime;->exitVoiceSettingsScope()V"),
+    RAMBLER_RUNTIME_OBSERVE_OFFICIAL_SELECTION_READ("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerOfficialSelectionRuntime;->observeOfficialSelectionRead(Landroid/content/Context;Z)Z"),
     RAMBLER_RUNTIME_UPDATE_OFFICIAL_SELECTION("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerOfficialSelectionRuntime;->updateOfficialSelection(Z)V"),
     RAMBLER_AUTO_STOP_RUNTIME_ON_SESSION_START("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerAutoStopRuntime;->onSessionStart(Landroid/content/Context;ZLjava/lang/Object;)Ljava/lang/Object;"),
     RAMBLER_AUTO_STOP_RUNTIME_ON_SPEECH_LEVEL("Ldev/jason/gboardpatches/extension/rambler/GboardRamblerAutoStopRuntime;->onSpeechLevel(ZI)Z"),
