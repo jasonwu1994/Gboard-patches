@@ -57,8 +57,13 @@ internal val gboardRambler1803OfficialSelectorPatch = bytecodePatch(
     }
 }
 
-internal fun rambler1853WrapperBody(reference: String, static: Boolean, words: Int, returnType: String,
-    role: Int): String {
+internal fun rambler1853WrapperBody(
+    reference: String,
+    static: Boolean,
+    words: Int,
+    returnType: String,
+    role: Int,
+): String {
     val enter = when (role) {
         0, 1, 2 -> RuntimeCallId.RAMBLER_RUNTIME_ENTER_VOICE_SETTINGS_SCOPE
         5 -> RuntimeCallId.RAMBLER_RUNTIME_ENTER_DEFAULT_SELECTION_SUPPRESSION
@@ -71,25 +76,49 @@ internal fun rambler1853WrapperBody(reference: String, static: Boolean, words: I
     }
     val invoke = "invoke-${if (static) "static" else "direct"}/range {p0 .. p${words - 1}}, $reference"
     val result = if (returnType == "V") "" else "move-result v0"
-    val observe = when (role) {
-        3 -> RuntimeCallEmitter.invoke(RuntimeCallId.RAMBLER_RUNTIME_UPDATE_OFFICIAL_SELECTION, "p0")
-        4 -> RuntimeCallEmitter.invoke(RuntimeCallId.RAMBLER_RUNTIME_UPDATE_OFFICIAL_SELECTION, "v0")
-        else -> ""
-    }
     val returnInstruction = if (returnType == "V") "return-void" else "return v0"
-    if (enter == null || exit == null) return "$invoke\n$result\n$observe\n$returnInstruction"
-    return """
-        ${RuntimeCallEmitter.invoke(enter, "")}
-        :start
-        $invoke
-        $result
-        :end
-        ${RuntimeCallEmitter.invoke(exit, "")}
-        $returnInstruction
-        .catch Ljava/lang/Throwable; {:start .. :end} :failed
-        :failed
-        move-exception v1
-        ${RuntimeCallEmitter.invoke(exit, "")}
-        throw v1
-    """.trimIndent()
+    if (role == 3) {
+        // Record the explicit selection before invoking stock aE so synchronous preference
+        // listeners immediately observe the updated Agentic capability flag.
+        return listOf(
+            RuntimeCallEmitter.invoke(RuntimeCallId.RAMBLER_RUNTIME_UPDATE_OFFICIAL_SELECTION, "p0"),
+            invoke,
+            returnInstruction,
+        ).joinToString("\n")
+    }
+    if (role == 4) {
+        // Reconcile passive Lnca;->a(Context) reads against DE storage and active scopes so
+        // Direct Boot lockouts, Lfhv;->hU() suppression, or background refreshes cannot poison
+        // an active Rambler selection back to Standard.
+        return listOf(
+            invoke,
+            result,
+            RuntimeCallEmitter.invoke(
+                RuntimeCallId.RAMBLER_RUNTIME_OBSERVE_OFFICIAL_SELECTION_READ,
+                "p0, v0",
+            ),
+            "move-result v0",
+            returnInstruction,
+        ).joinToString("\n")
+    }
+    if (enter == null || exit == null) {
+        return listOf(invoke, result, returnInstruction)
+            .filter(String::isNotEmpty)
+            .joinToString("\n")
+    }
+    val body = listOfNotNull(
+        RuntimeCallEmitter.invoke(enter, ""),
+        ":start",
+        invoke,
+        result.takeIf(String::isNotEmpty),
+        ":end",
+        RuntimeCallEmitter.invoke(exit, ""),
+        returnInstruction,
+        ".catch Ljava/lang/Throwable; {:start .. :end} :failed",
+        ":failed",
+        "move-exception v1",
+        RuntimeCallEmitter.invoke(exit, ""),
+        "throw v1",
+    )
+    return body.joinToString("\n")
 }

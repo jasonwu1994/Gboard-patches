@@ -9,6 +9,8 @@ import java.util.function.Function;
 
 public final class GboardPatchesSettings {
     public static final String PREF_FILE = "gboard_patches_settings";
+    public static final String DEVICE_PROTECTED_PREF_FILE =
+            "gboard_patches_direct_boot_settings";
     public static final String PREF_KEY_SETTINGS_UI_LANGUAGE =
             "pref_settings_ui_language";
     public static final String DEFAULT_SETTINGS_UI_LANGUAGE =
@@ -20,6 +22,8 @@ public final class GboardPatchesSettings {
     }
 
     private static volatile Storage storage = GboardPatchesSettings::appPreferences;
+    private static volatile Storage deviceProtectedStorage =
+            GboardPatchesSettings::deviceProtectedAppPreferences;
 
     private GboardPatchesSettings() {
     }
@@ -27,6 +31,13 @@ public final class GboardPatchesSettings {
     /** Replaces where settings are read from and written to; {@code null} restores the default. */
     public static void setStorage(Storage replacement) {
         storage = replacement != null ? replacement : GboardPatchesSettings::appPreferences;
+    }
+
+    /** Replaces where Direct Boot settings are stored; {@code null} restores the default. */
+    public static void setDeviceProtectedStorage(Storage replacement) {
+        deviceProtectedStorage = replacement != null
+                ? replacement
+                : GboardPatchesSettings::deviceProtectedAppPreferences;
     }
 
     /** Strict legacy/settings-UI access. Runtime features should use readRuntimeSetting(). */
@@ -45,6 +56,82 @@ public final class GboardPatchesSettings {
             throw new IllegalStateException("Context required for Gboard patch settings.");
         }
         return lookupContext.getSharedPreferences(PREF_FILE, Context.MODE_PRIVATE);
+    }
+
+    private static SharedPreferences deviceProtectedAppPreferences(Context context) {
+        Context applicationContext = context == null ? null : context.getApplicationContext();
+        Context lookupContext = applicationContext != null ? applicationContext : context;
+        if (lookupContext == null) {
+            return null;
+        }
+        Context storageContext = lookupContext;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                Context deviceProtectedContext = lookupContext.isDeviceProtectedStorage()
+                        ? lookupContext
+                        : lookupContext.createDeviceProtectedStorageContext();
+                if (deviceProtectedContext != null) {
+                    storageContext = deviceProtectedContext;
+                } else if (!isUserUnlocked(lookupContext)) {
+                    return null;
+                }
+            } catch (Throwable unavailable) {
+                if (!isUserUnlocked(lookupContext)) {
+                    return null;
+                }
+            }
+        }
+        return storageContext.getSharedPreferences(
+                DEVICE_PROTECTED_PREF_FILE, Context.MODE_PRIVATE);
+    }
+
+    /** Direct Boot storage lookup for non-sensitive flags needed before first unlock. */
+    public static SharedPreferences deviceProtectedPreferencesOrNull(Context context) {
+        if (context == null) {
+            return null;
+        }
+        try {
+            return deviceProtectedStorage.preferences(context);
+        } catch (Throwable unavailable) {
+            return null;
+        }
+    }
+
+    /** Reads a Direct Boot setting from Device-Protected storage without touching CE storage. */
+    public static <T> T readDeviceProtectedSetting(Context context,
+            Function<SharedPreferences, T> reader, T fallback) {
+        try {
+            SharedPreferences preferences = deviceProtectedPreferencesOrNull(context);
+            if (preferences == null) {
+                return fallback;
+            }
+            T value = reader.apply(preferences);
+            return value != null ? value : fallback;
+        } catch (Throwable unavailable) {
+            return fallback;
+        }
+    }
+
+    /** Persists a Direct Boot boolean flag into Device-Protected storage. */
+    public static boolean writeDeviceProtectedBoolean(Context context, String key, boolean value,
+            boolean synchronous) {
+        if (context == null || key == null || key.isEmpty()) {
+            return false;
+        }
+        try {
+            SharedPreferences preferences = deviceProtectedPreferencesOrNull(context);
+            if (preferences == null) {
+                return false;
+            }
+            SharedPreferences.Editor editor = preferences.edit().putBoolean(key, value);
+            if (synchronous) {
+                return editor.commit();
+            }
+            editor.apply();
+            return true;
+        } catch (Throwable unavailable) {
+            return false;
+        }
     }
 
     public static Boolean readKeypressHapticsEnabled(Context context) {

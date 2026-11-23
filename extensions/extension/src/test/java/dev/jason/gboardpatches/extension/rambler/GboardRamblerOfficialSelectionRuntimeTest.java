@@ -4,10 +4,13 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import dev.jason.gboardpatches.extension.advancedvoice.GboardAdvancedVoiceRuntimeSettings;
+
 public final class GboardRamblerOfficialSelectionRuntimeTest {
     @After
     public void tearDown() {
         GboardRamblerOfficialSelectionRuntime.resetForTests();
+        GboardAdvancedVoiceRuntimeSettings.clearEnabledOverrideForTest();
     }
 
     @Test
@@ -56,5 +59,47 @@ public final class GboardRamblerOfficialSelectionRuntimeTest {
         GboardRamblerOfficialSelectionRuntime.exitVoiceSettingsScope();
         Assert.assertTrue(
                 GboardRamblerOfficialSelectionRuntime.shouldEnableAgenticDictation());
+    }
+
+    @Test
+    public void passiveFalseReadDuringDefaultSuppressionDoesNotPoisonActiveSelection() {
+        GboardRamblerOfficialSelectionRuntime.updateOfficialSelection(true);
+        GboardRamblerOfficialSelectionRuntime.enterDefaultSelectionSuppression();
+
+        Assert.assertFalse(
+                GboardRamblerOfficialSelectionRuntime.observeOfficialSelectionRead(null, false));
+        Assert.assertFalse(
+                GboardRamblerOfficialSelectionRuntime.shouldEnableAgenticDictation());
+
+        GboardRamblerOfficialSelectionRuntime.exitDefaultSelectionSuppression();
+        Assert.assertTrue(
+                GboardRamblerOfficialSelectionRuntime.shouldEnableAgenticDictation());
+    }
+
+    @Test
+    public void passiveFalseReadPreservesActiveRamblerSelectionOutsideSuppression() {
+        GboardRamblerOfficialSelectionRuntime.updateOfficialSelection(true);
+
+        Assert.assertTrue(
+                GboardRamblerOfficialSelectionRuntime.observeOfficialSelectionRead(null, false));
+        Assert.assertTrue(
+                GboardRamblerOfficialSelectionRuntime.shouldEnableAgenticDictation());
+    }
+
+    @Test
+    public void passiveTrueReadPromotesSelectionToRambler() {
+        Assert.assertTrue(
+                GboardRamblerOfficialSelectionRuntime.observeOfficialSelectionRead(null, true));
+        Assert.assertTrue(
+                GboardRamblerOfficialSelectionRuntime.shouldEnableAgenticDictation());
+    }
+
+    @Test
+    public void masterToggleOffReturnsStockFalseOnPassiveRead() {
+        GboardRamblerOfficialSelectionRuntime.updateOfficialSelection(true);
+        GboardAdvancedVoiceRuntimeSettings.setEnabledOverrideForTest(false);
+
+        Assert.assertFalse(
+                GboardRamblerOfficialSelectionRuntime.observeOfficialSelectionRead(null, false));
     }
 }

@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import dev.jason.gboardpatches.extension.rambler.GboardRamblerOfficialSelectionRuntime;
 import dev.jason.gboardpatches.extension.rambler.GboardRamblerStockPolicy;
 
 public final class GboardAdvancedVoiceRuntime {
@@ -38,6 +39,7 @@ public final class GboardAdvancedVoiceRuntime {
     public static void seedApplicationContext(Context context) {
         try {
             GboardAdvancedVoiceRuntimeSettings.seedApplicationContext(context);
+            GboardRamblerOfficialSelectionRuntime.seedApplicationContext(context);
         } catch (Throwable failure) {
             logError("constructor context seed failed", failure);
         }
