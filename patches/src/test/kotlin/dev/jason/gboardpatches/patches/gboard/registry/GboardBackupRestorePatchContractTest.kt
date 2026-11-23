@@ -86,17 +86,16 @@ class GboardBackupRestorePatchContractTest {
         val developer = registry.indexOf("new GboardDeveloperOptionsSettingsFeature(context)")
         assertTrue(homepage >= 0 && homepage < backup && backup < developer)
 
-        val text = Files.readString(
-            repositoryRoot.resolve(SETTINGS_TEXT_PATH),
-            StandardCharsets.UTF_8,
-        )
-        assertTrue(text.contains("<translation locale=\"en\">Backup &amp; Restore</translation>"))
+        val text = SETTINGS_TEXT_PATHS.joinToString("\n") { path ->
+            Files.readString(repositoryRoot.resolve(path), StandardCharsets.UTF_8)
+        }
+        assertTrue(text.contains(">Backup &amp; Restore</string>"))
         assertTrue(text.contains(
-            "<translation locale=\"en\">Export or restore all Patches settings</translation>",
+            ">Export or restore all Patches settings</string>",
         ))
-        assertTrue(text.contains("<translation locale=\"zh-Hant\">備份與還原</translation>"))
+        assertTrue(text.contains(">備份與還原</string>"))
         assertTrue(text.contains(
-            "<translation locale=\"zh-Hant\">匯出或還原全部 Patches 設定</translation>",
+            ">匯出或還原全部 Patches 設定</string>",
         ))
     }
 
@@ -121,7 +120,9 @@ class GboardBackupRestorePatchContractTest {
         const val SETTINGS_REGISTRY_PATH =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
                 "GboardMoreSettingsGroupFeature.java"
-        const val SETTINGS_TEXT_PATH =
-            "extensions/extension/src/main/settings-text/gboard_settings_text.xml"
+        val SETTINGS_TEXT_PATHS = listOf(
+            "extensions/extension/src/main/settings-text/values/gboard_settings_strings.xml",
+            "extensions/extension/src/main/settings-text/values-b+zh+Hant/gboard_settings_strings.xml",
+        )
     }
 }

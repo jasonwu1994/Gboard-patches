@@ -17,8 +17,8 @@ import dev.jason.gboardpatches.extension.R;
 public final class GboardSettingsTextTest {
     @Test
     public void nullContextRemainsSafeForStaticFeatureInitialization() {
-        Assert.assertEquals("Patch settings", GboardSettingsText.get(
-                null, R.string.gboard_patches_header_title));
+        Assert.assertEquals("Search settings", GboardSettingsText.get(
+                null, R.string.gboard_patches_search_title));
     }
 
     @Test
@@ -51,14 +51,14 @@ public final class GboardSettingsTextTest {
     @Test
     public void authoritativeCopyResolvesBothLocalesWithoutCallerFallback() {
         Assert.assertEquals(
-                "Patch settings",
+                "Search settings",
                 GboardSettingsText.resolveStableTextForTesting(
-                        R.string.gboard_patches_header_title,
+                        R.string.gboard_patches_search_title,
                         "en"));
         Assert.assertEquals(
-                "Patch 設定",
+                "搜尋設定",
                 GboardSettingsText.resolveStableTextForTesting(
-                        R.string.gboard_patches_header_title,
+                        R.string.gboard_patches_search_title,
                         "zh-Hant"));
     }
 
@@ -74,7 +74,7 @@ public final class GboardSettingsTextTest {
                 "System default (English)",
                 GboardSettingsText.resolveStableTextForTesting(
                         R.string.gboard_patches_language_system_value,
-                        "fr-FR",
+                        "th-TH",
                         "English"));
     }
 

@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.accesspointcount;
 
+import dev.jason.gboardpatches.extension.settings.GboardSettingsTextFiles;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -70,22 +71,19 @@ public final class GboardAccessPointCountSettingsFeatureTest {
     @Test
     public void settingsTextMatchesTheRequestedEnglishAndTraditionalChineseCopy()
             throws Exception {
-        String source = new String(
-                Files.readAllBytes(
-                        Path.of("src/main/settings-text/gboard_settings_text.xml")),
-                StandardCharsets.UTF_8);
+        String source = GboardSettingsTextFiles.englishAndTraditionalChinese();
 
         Assert.assertTrue(source.contains(
-                "<translation locale=\"zh-Hant\">頂端工具列項目數量</translation>"));
+                ">頂端工具列項目數量</string>"));
         Assert.assertTrue(source.contains(
-                "<translation locale=\"zh-Hant\">"
-                        + "需要強制停止並重新啟動 Gboard 才會生效。</translation>"));
+                ">"
+                        + "需要強制停止並重新啟動 Gboard 才會生效。</string>"));
         Assert.assertTrue(source.contains(
-                "<translation locale=\"zh-Hant\">數量</translation>"));
+                ">數量</string>"));
         Assert.assertTrue(source.contains(
-                "<translation locale=\"en\">Top Toolbar Item Count</translation>"));
+                ">Top Toolbar Item Count</string>"));
         Assert.assertTrue(source.contains(
-                "<translation locale=\"en\">Count</translation>"));
+                ">Count</string>"));
     }
 
     private static void assertRejected(GboardAccessPointCountSettingsFeature feature,

@@ -8,12 +8,31 @@ import groovy.json.JsonSlurper
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
-private data class LocalizedSettingsText(
-    val type: String,
+val extensionNamespace = "dev.jason.gboardpatches.extension"
+
+// ---------------------------------------------------------------------------------------------
+// Settings text. src/main/settings-text/values/gboard_settings_strings.xml is the English
+// authority; sibling values-*/gboard_settings_strings.xml files hold per-locale translations
+// (standard Android resource XML, partial translations allowed with automatic English fallback).
+// Both Android string resources and the in-code catalog are generated from them.
+// ---------------------------------------------------------------------------------------------
+
+private data class SettingsStringEntry(
     val name: String,
     val formatted: Boolean,
-    val translations: Map<String, String>,
-    val quantities: List<Pair<String, Map<String, String>>>,
+    val english: String,
+)
+
+private data class SettingsPluralEntry(
+    val name: String,
+    val englishQuantities: Map<String, String>,
+)
+
+private data class ParsedSettingsLocale(
+    val qualifier: String,
+    val languageTag: String,
+    val strings: Map<String, String>,
+    val plurals: Map<String, Map<String, String>>,
 )
 
 private fun Element.childElements(name: String? = null): List<Element> =
@@ -24,17 +43,56 @@ private fun Element.childElements(name: String? = null): List<Element> =
         }
         .map { it as Element }
 
-private fun Element.requiredTranslations(
-    entryName: String,
-    requiredLocales: Set<String>,
-): Map<String, String> {
-    val translations = childElements("translation").associate { translation ->
-        translation.getAttribute("locale") to translation.textContent
+private fun canonicalizePrimaryLanguage(code: String): String = when (code.lowercase()) {
+    "in" -> "id"
+    "iw" -> "he"
+    "ji" -> "yi"
+    else -> code.lowercase()
+}
+
+private fun qualifierToLanguageTag(qualifier: String): String {
+    if (qualifier == "values") {
+        return "en"
     }
-    require(translations.keys == requiredLocales) {
-        "$entryName must define exactly ${requiredLocales.joinToString()}"
+    require(qualifier.startsWith("values-")) {
+        "Unsupported settings-text resource directory: $qualifier"
     }
-    return translations
+    val suffix = qualifier.removePrefix("values-")
+    if (suffix.startsWith("b+")) {
+        val parts = suffix.removePrefix("b+").split("+").filter { it.isNotBlank() }
+        require(parts.isNotEmpty()) { "Invalid BCP-47 resource directory: $qualifier" }
+        val primary = canonicalizePrimaryLanguage(parts[0])
+        return (listOf(primary) + parts.drop(1)).joinToString("-")
+    }
+    val regionMatch = Regex("^([a-zA-Z]{2,3})-r([a-zA-Z0-9]{2,3})$").matchEntire(suffix)
+    if (regionMatch != null) {
+        val lang = canonicalizePrimaryLanguage(regionMatch.groupValues[1])
+        val region = regionMatch.groupValues[2].uppercase()
+        return "$lang-$region"
+    }
+    val langMatch = Regex("^([a-zA-Z]{2,3})$").matchEntire(suffix)
+    if (langMatch != null) {
+        return canonicalizePrimaryLanguage(langMatch.groupValues[1])
+    }
+    throw IllegalArgumentException("Unsupported settings-text locale qualifier: $qualifier")
+}
+
+private val formatPlaceholderRegex =
+    Regex("""%(?:(\d+)\$)?([-+0#]*)(\d+)?(?:\.(\d+))?([sdfoxXeEgGcCbBhH%])""")
+
+private fun extractFormatPlaceholders(value: String): Set<Pair<Int, String>> {
+    val result = linkedSetOf<Pair<Int, String>>()
+    var implicitIndex = 1
+    for (match in formatPlaceholderRegex.findAll(value)) {
+        val conversion = match.groupValues[5]
+        if (conversion == "%") {
+            continue
+        }
+        val explicit = match.groupValues[1]
+        val index = if (explicit.isNotEmpty()) explicit.toInt() else implicitIndex++
+        result.add(index to conversion.lowercase())
+    }
+    return result
 }
 
 private fun escapeXmlText(value: String): String = value
@@ -45,6 +103,7 @@ private fun escapeXmlText(value: String): String = value
 private fun decodeAndroidEscapes(value: String): String = value
     .replace("\\n", "\n")
     .replace("\\'", "'")
+    .replace("\\\"", "\"")
     .replace("\\?", "?")
 
 private fun escapeJavaString(value: String): String = decodeAndroidEscapes(value)
@@ -52,6 +111,9 @@ private fun escapeJavaString(value: String): String = decodeAndroidEscapes(value
     .replace("\"", "\\\"")
     .replace("\r", "\\r")
     .replace("\n", "\\n")
+
+private fun localeMethodSuffix(languageTag: String): String =
+    languageTag.replace(Regex("[^A-Za-z0-9]"), "_")
 
 extension {
     name = "extensions/gboard-patches.rve"
@@ -62,9 +124,7 @@ val generatedQuickJsPayloadDir = layout.buildDirectory.dir(
     "generated/source/quickJsPayload/java"
 )
 val generatedSpacebarImageDir = layout.buildDirectory.dir("generated/source/spacebarImage/java")
-val settingsTextAuthority = layout.projectDirectory.file(
-    "src/main/settings-text/gboard_settings_text.xml"
-)
+val settingsTextDir = layout.projectDirectory.dir("src/main/settings-text")
 val generatedSettingsTextResDir = layout.buildDirectory.dir(
     "generated/settingsText/res"
 )
@@ -234,163 +294,398 @@ $renderedChunks
 }
 
 val generateSettingsText = tasks.register("generateSettingsText") {
-    inputs.file(settingsTextAuthority)
+    inputs.dir(settingsTextDir)
+    inputs.property("namespace", extensionNamespace)
     outputs.dir(generatedSettingsTextResDir)
     outputs.dir(generatedSettingsTextJavaDir)
 
     doLast {
-        val requiredLocales = linkedSetOf("en", "zh-Hant")
+        val baseDir = settingsTextDir.asFile
+        val baseFile = baseDir.resolve("values/gboard_settings_strings.xml")
+        require(baseFile.isFile) {
+            "Missing English settings text authority at ${baseFile.absolutePath}"
+        }
+
         val documentBuilderFactory = DocumentBuilderFactory.newInstance().apply {
             setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
             setFeature("http://xml.org/sax/features/external-general-entities", false)
             setFeature("http://xml.org/sax/features/external-parameter-entities", false)
             isExpandEntityReferences = false
         }
-        val document = documentBuilderFactory.newDocumentBuilder()
-            .parse(settingsTextAuthority.asFile)
-        val root = document.documentElement
-        require(root.nodeName == "settings-text") {
-            "Settings text authority must use a <settings-text> root"
-        }
-        require(root.getAttribute("locales").split(Regex("\\s+")).toSet() == requiredLocales) {
-            "Settings text authority must declare exactly ${requiredLocales.joinToString()}"
+
+        fun parseResourceXml(file: java.io.File): Element {
+            val document = documentBuilderFactory.newDocumentBuilder().parse(file)
+            val root = document.documentElement
+            require(root.nodeName == "resources") {
+                "${file.absolutePath} must use a <resources> root"
+            }
+            return root
         }
 
+        val baseRoot = parseResourceXml(baseFile)
         val seenNames = linkedSetOf<String>()
-        val entries = root.childElements().map { entry ->
+        val stringEntries = mutableListOf<SettingsStringEntry>()
+        val pluralEntries = mutableListOf<SettingsPluralEntry>()
+        for (entry in baseRoot.childElements()) {
             val type = entry.nodeName
             require(type == "string" || type == "plurals") {
-                "Unsupported settings text type: $type"
+                "Unsupported settings text type in ${baseFile.name}: $type"
             }
             val name = entry.getAttribute("name")
             require(name.isNotBlank() && seenNames.add(name)) {
                 "Settings text names must be non-blank and unique: $name"
             }
             if (type == "string") {
-                LocalizedSettingsText(
-                    type = type,
-                    name = name,
-                    formatted = entry.getAttribute("formatted") != "false",
-                    translations = entry.requiredTranslations(name, requiredLocales),
-                    quantities = emptyList(),
+                stringEntries.add(
+                    SettingsStringEntry(
+                        name = name,
+                        formatted = entry.getAttribute("formatted") != "false",
+                        english = entry.textContent,
+                    )
                 )
             } else {
-                val quantities = entry.childElements("item").map { item ->
+                val quantities = linkedMapOf<String, String>()
+                for (item in entry.childElements("item")) {
                     val quantity = item.getAttribute("quantity")
-                    require(quantity.isNotBlank()) { "$name has a plural item without quantity" }
-                    quantity to item.requiredTranslations("$name[$quantity]", requiredLocales)
+                    require(quantity.isNotBlank() && !quantities.containsKey(quantity)) {
+                        "$name must define non-blank unique plural quantities"
+                    }
+                    quantities[quantity] = item.textContent
                 }
-                require(quantities.isNotEmpty() && quantities.map { it.first }.distinct().size == quantities.size) {
-                    "$name must define unique plural quantities"
+                require(quantities.isNotEmpty() && quantities.containsKey("other")) {
+                    "$name must define at least an 'other' plural quantity"
                 }
-                LocalizedSettingsText(
-                    type = type,
-                    name = name,
-                    formatted = true,
-                    translations = emptyMap(),
-                    quantities = quantities,
-                )
+                pluralEntries.add(SettingsPluralEntry(name = name, englishQuantities = quantities))
             }
         }
-        require(entries.isNotEmpty()) { "Settings text authority must not be empty" }
+        require(stringEntries.isNotEmpty()) { "English settings text authority must not be empty" }
+
+        val stringEntryByName = stringEntries.associateBy { it.name }
+        val pluralEntryByName = pluralEntries.associateBy { it.name }
+
+        val translatedLocales = mutableListOf<ParsedSettingsLocale>()
+        val seenLanguageTags = linkedSetOf("en")
+        val localeDirs = (baseDir.listFiles() ?: emptyArray())
+            .filter { it.isDirectory && it.name.startsWith("values-") }
+            .sortedBy { it.name }
+
+        for (dir in localeDirs) {
+            val file = dir.resolve("gboard_settings_strings.xml")
+            if (!file.isFile) {
+                continue
+            }
+            val languageTag = qualifierToLanguageTag(dir.name)
+            require(seenLanguageTags.add(languageTag)) {
+                "Duplicate settings text language tag '$languageTag' from ${dir.name}"
+            }
+            val root = parseResourceXml(file)
+            val strings = linkedMapOf<String, String>()
+            val plurals = linkedMapOf<String, Map<String, String>>()
+            val seenLocalNames = linkedSetOf<String>()
+            for (entry in root.childElements()) {
+                val type = entry.nodeName
+                if (type != "string" && type != "plurals") {
+                    continue
+                }
+                val name = entry.getAttribute("name")
+                require(name.isNotBlank() && seenLocalNames.add(name)) {
+                    "${dir.name}/${file.name} has blank or duplicate name: $name"
+                }
+                if (type == "string") {
+                    val baseEntry = stringEntryByName[name] ?: continue
+                    val value = entry.textContent
+                    if (baseEntry.formatted) {
+                        val expectedPlaceholders = extractFormatPlaceholders(baseEntry.english)
+                        val actualPlaceholders = extractFormatPlaceholders(value)
+                        require(expectedPlaceholders == actualPlaceholders) {
+                            "${dir.name}/${file.name} '$name' format placeholders mismatch: " +
+                                "expected $expectedPlaceholders, got $actualPlaceholders"
+                        }
+                    }
+                    strings[name] = value
+                } else {
+                    val basePlural = pluralEntryByName[name] ?: continue
+                    val expectedPlaceholders = extractFormatPlaceholders(
+                        basePlural.englishQuantities.getValue("other")
+                    )
+                    val quantities = linkedMapOf<String, String>()
+                    for (item in entry.childElements("item")) {
+                        val quantity = item.getAttribute("quantity")
+                        require(quantity.isNotBlank() && !quantities.containsKey(quantity)) {
+                            "${dir.name}/${file.name} '$name' has invalid/duplicate plural quantity: $quantity"
+                        }
+                        val value = item.textContent
+                        val actualPlaceholders = extractFormatPlaceholders(value)
+                        require(expectedPlaceholders == actualPlaceholders) {
+                            "${dir.name}/${file.name} '$name[$quantity]' format placeholders mismatch: " +
+                                "expected $expectedPlaceholders, got $actualPlaceholders"
+                        }
+                        quantities[quantity] = value
+                    }
+                    if (quantities.isNotEmpty()) {
+                        plurals[name] = quantities
+                    }
+                }
+            }
+            translatedLocales.add(
+                ParsedSettingsLocale(
+                    qualifier = dir.name,
+                    languageTag = languageTag,
+                    strings = strings,
+                    plurals = plurals,
+                )
+            )
+        }
 
         val resRoot = generatedSettingsTextResDir.get().asFile
-        mapOf("en" to "values", "zh-Hant" to "values-b+zh+Hant").forEach { (locale, qualifier) ->
-            val output = resRoot.resolve("$qualifier/gboard_settings_strings.xml")
-            output.parentFile.mkdirs()
-            output.writeText(buildString {
+        if (resRoot.exists()) {
+            resRoot.deleteRecursively()
+        }
+        // Write English base resource file.
+        val englishOut = resRoot.resolve("values/gboard_settings_strings.xml")
+        englishOut.parentFile.mkdirs()
+        englishOut.writeText(buildString {
+            appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+            appendLine("<resources>")
+            stringEntries.forEach { entry ->
+                append("    <string name=\"")
+                append(entry.name)
+                if (!entry.formatted) {
+                    append("\" formatted=\"false")
+                }
+                append("\">")
+                append(escapeXmlText(entry.english))
+                appendLine("</string>")
+            }
+            pluralEntries.forEach { entry ->
+                append("    <plurals name=\"")
+                append(entry.name)
+                appendLine("\">")
+                entry.englishQuantities.forEach { (quantity, text) ->
+                    append("        <item quantity=\"")
+                    append(quantity)
+                    append("\">")
+                    append(escapeXmlText(text))
+                    appendLine("</item>")
+                }
+                appendLine("    </plurals>")
+            }
+            appendLine("</resources>")
+        }, StandardCharsets.UTF_8)
+
+        // Write per-locale translated resource files (partial translations rely on Android fallback).
+        translatedLocales.forEach { locale ->
+            val out = resRoot.resolve("${locale.qualifier}/gboard_settings_strings.xml")
+            out.parentFile.mkdirs()
+            out.writeText(buildString {
                 appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
                 appendLine("<resources>")
-                entries.forEach { entry ->
-                    if (entry.type == "string") {
-                        append("    <string name=\"")
-                        append(entry.name)
-                        if (!entry.formatted) {
-                            append("\" formatted=\"false")
-                        }
-                        append("\">")
-                        append(escapeXmlText(entry.translations.getValue(locale)))
-                        appendLine("</string>")
-                    } else {
-                        append("    <plurals name=\"")
-                        append(entry.name)
-                        appendLine("\">")
-                        entry.quantities.forEach { (quantity, translations) ->
-                            append("        <item quantity=\"")
-                            append(quantity)
-                            append("\">")
-                            append(escapeXmlText(translations.getValue(locale)))
-                            appendLine("</item>")
-                        }
-                        appendLine("    </plurals>")
+                stringEntries.forEach { entry ->
+                    val translated = locale.strings[entry.name] ?: return@forEach
+                    append("    <string name=\"")
+                    append(entry.name)
+                    if (!entry.formatted) {
+                        append("\" formatted=\"false")
                     }
+                    append("\">")
+                    append(escapeXmlText(translated))
+                    appendLine("</string>")
+                }
+                pluralEntries.forEach { entry ->
+                    val quantities = locale.plurals[entry.name] ?: return@forEach
+                    append("    <plurals name=\"")
+                    append(entry.name)
+                    appendLine("\">")
+                    quantities.forEach { (quantity, text) ->
+                        append("        <item quantity=\"")
+                        append(quantity)
+                        append("\">")
+                        append(escapeXmlText(text))
+                        appendLine("</item>")
+                    }
+                    appendLine("    </plurals>")
                 }
                 appendLine("</resources>")
             }, StandardCharsets.UTF_8)
         }
 
-        val stringEntries = entries.filter { it.type == "string" }
-        val pluralEntries = entries.filter { it.type == "plurals" }
+        val allLanguageTags = listOf("en") + translatedLocales.map { it.languageTag }
         val javaOutput = generatedSettingsTextJavaDir.get().asFile.resolve(
-            "dev/jason/gboardpatches/extension/settings/GboardSettingsTextCatalog.java"
+            "${extensionNamespace.replace('.', '/')}/settings/GboardSettingsTextCatalog.java"
         )
         javaOutput.parentFile.mkdirs()
         javaOutput.writeText(buildString {
-            appendLine("package dev.jason.gboardpatches.extension.settings;")
+            appendLine("package $extensionNamespace.settings;")
             appendLine()
+            appendLine("import java.util.Collections;")
             appendLine("import java.util.HashMap;")
             appendLine("import java.util.Map;")
+            appendLine("import java.util.concurrent.ConcurrentHashMap;")
             appendLine()
-            appendLine("import dev.jason.gboardpatches.extension.R;")
+            appendLine("import $extensionNamespace.R;")
             appendLine()
             appendLine("final class GboardSettingsTextCatalog {")
-            appendLine("    private static final Map<Integer, String> ENGLISH = createEnglish();")
-            appendLine("    private static final Map<Integer, String> TRADITIONAL_CHINESE =")
-            appendLine("            createTraditionalChinese();")
+            append("    private static final String[] SUPPORTED_LANGUAGE_TAGS = {")
+            append(allLanguageTags.joinToString(", ") { "\"${escapeJavaString(it)}\"" })
+            appendLine("};")
+            appendLine("    private static final Map<Integer, String> ENGLISH = createLocale_en();")
+            appendLine("    private static final Map<String, Map<Integer, String>> LOCALE_CACHE =")
+            appendLine("            new ConcurrentHashMap<String, Map<Integer, String>>();")
             appendLine()
             appendLine("    private GboardSettingsTextCatalog() {")
             appendLine("    }")
             appendLine()
+            appendLine("    static String[] supportedLanguageTags() {")
+            appendLine("        return SUPPORTED_LANGUAGE_TAGS.clone();")
+            appendLine("    }")
+            appendLine()
+            appendLine("    static boolean isSupportedLanguageTag(String languageTag) {")
+            appendLine("        if (languageTag == null) {")
+            appendLine("            return false;")
+            appendLine("        }")
+            appendLine("        for (String tag : SUPPORTED_LANGUAGE_TAGS) {")
+            appendLine("            if (tag.equals(languageTag)) {")
+            appendLine("                return true;")
+            appendLine("            }")
+            appendLine("        }")
+            appendLine("        return false;")
+            appendLine("    }")
+            appendLine()
             appendLine("    static String template(int resId, String languageTag) {")
-            appendLine("        return \"zh-Hant\".equals(languageTag)")
-            appendLine("                ? TRADITIONAL_CHINESE.get(resId)")
-            appendLine("                : ENGLISH.get(resId);")
+            appendLine("        if (languageTag != null && !\"en\".equals(languageTag)) {")
+            appendLine("            Map<Integer, String> localized = templatesFor(languageTag);")
+            appendLine("            String value = localized.get(resId);")
+            appendLine("            if (value != null) {")
+            appendLine("                return value;")
+            appendLine("            }")
+            appendLine("        }")
+            appendLine("        return ENGLISH.get(resId);")
+            appendLine("    }")
+            appendLine()
+            appendLine("    private static Map<Integer, String> templatesFor(String languageTag) {")
+            appendLine("        Map<Integer, String> cached = LOCALE_CACHE.get(languageTag);")
+            appendLine("        if (cached != null) {")
+            appendLine("            return cached;")
+            appendLine("        }")
+            appendLine("        Map<Integer, String> created;")
+            appendLine("        switch (languageTag) {")
+            translatedLocales.forEach { locale ->
+                val suffix = localeMethodSuffix(locale.languageTag)
+                appendLine("            case \"${escapeJavaString(locale.languageTag)}\":")
+                appendLine("                created = createLocale_$suffix();")
+                appendLine("                break;")
+            }
+            appendLine("            default:")
+            appendLine("                created = Collections.emptyMap();")
+            appendLine("                break;")
+            appendLine("        }")
+            appendLine("        Map<Integer, String> existing = LOCALE_CACHE.putIfAbsent(languageTag, created);")
+            appendLine("        return existing != null ? existing : created;")
             appendLine("    }")
             appendLine()
             appendLine("    static String quantityTemplate(int resId, String languageTag, int quantity) {")
+            appendLine("        String category = pluralCategory(languageTag, quantity);")
             pluralEntries.forEach { entry ->
-                val one = entry.quantities.firstOrNull { it.first == "one" }?.second
-                    ?: entry.quantities.first().second
-                val other = entry.quantities.firstOrNull { it.first == "other" }?.second
-                    ?: entry.quantities.last().second
                 append("        if (resId == R.plurals.")
                 append(entry.name)
                 appendLine(") {")
-                append("            return \"zh-Hant\".equals(languageTag) ? \"")
-                append(escapeJavaString(other.getValue("zh-Hant")))
-                append("\" : quantity == 1 ? \"")
-                append(escapeJavaString(one.getValue("en")))
+                if (translatedLocales.any { it.plurals.containsKey(entry.name) }) {
+                    appendLine("            if (languageTag != null && !\"en\".equals(languageTag)) {")
+                    appendLine("                switch (languageTag) {")
+                    translatedLocales.forEach { locale ->
+                        val quantities = locale.plurals[entry.name] ?: return@forEach
+                        appendLine("                    case \"${escapeJavaString(locale.languageTag)}\":")
+                        quantities.forEach { (qtyKey, text) ->
+                            if (qtyKey != "other") {
+                                appendLine("                        if (\"$qtyKey\".equals(category)) {")
+                                appendLine("                            return \"${escapeJavaString(text)}\";")
+                                appendLine("                        }")
+                            }
+                        }
+                        val fallbackOther = quantities["other"] ?: quantities.values.first()
+                        appendLine("                        return \"${escapeJavaString(fallbackOther)}\";")
+                    }
+                    appendLine("                    default:")
+                    appendLine("                        break;")
+                    appendLine("                }")
+                    appendLine("            }")
+                }
+                val enOne = entry.englishQuantities["one"] ?: entry.englishQuantities.getValue("other")
+                val enOther = entry.englishQuantities.getValue("other")
+                append("            return quantity == 1 ? \"")
+                append(escapeJavaString(enOne))
                 append("\" : \"")
-                append(escapeJavaString(other.getValue("en")))
+                append(escapeJavaString(enOther))
                 appendLine("\";")
                 appendLine("        }")
             }
             appendLine("        return null;")
             appendLine("    }")
-            listOf(
-                "English" to "en",
-                "TraditionalChinese" to "zh-Hant",
-            ).forEach { (methodSuffix, locale) ->
+            appendLine()
+            appendLine("    private static String pluralCategory(String languageTag, int quantity) {")
+            appendLine("        int abs = quantity == Integer.MIN_VALUE ? 0 : Math.abs(quantity);")
+            appendLine("        if (languageTag == null) {")
+            appendLine("            return abs == 1 ? \"one\" : \"other\";")
+            appendLine("        }")
+            appendLine("        String primary = languageTag;")
+            appendLine("        int dash = primary.indexOf('-');")
+            appendLine("        if (dash >= 0) {")
+            appendLine("            primary = primary.substring(0, dash);")
+            appendLine("        }")
+            appendLine("        if (\"zh\".equals(primary) || \"ja\".equals(primary) || \"ko\".equals(primary)")
+            appendLine("                || \"vi\".equals(primary) || \"id\".equals(primary) || \"th\".equals(primary)) {")
+            appendLine("            return \"other\";")
+            appendLine("        }")
+            appendLine("        if (\"fr\".equals(primary) || \"pt\".equals(primary)) {")
+            appendLine("            return (abs == 0 || abs == 1) ? \"one\" : \"other\";")
+            appendLine("        }")
+            appendLine("        if (\"ru\".equals(primary) || \"uk\".equals(primary)) {")
+            appendLine("            int mod10 = abs % 10;")
+            appendLine("            int mod100 = abs % 100;")
+            appendLine("            if (mod10 == 1 && mod100 != 11) {")
+            appendLine("                return \"one\";")
+            appendLine("            }")
+            appendLine("            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {")
+            appendLine("                return \"few\";")
+            appendLine("            }")
+            appendLine("            return \"many\";")
+            appendLine("        }")
+            appendLine("        if (\"pl\".equals(primary)) {")
+            appendLine("            if (abs == 1) {")
+            appendLine("                return \"one\";")
+            appendLine("            }")
+            appendLine("            int mod10 = abs % 10;")
+            appendLine("            int mod100 = abs % 100;")
+            appendLine("            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {")
+            appendLine("                return \"few\";")
+            appendLine("            }")
+            appendLine("            return \"many\";")
+            appendLine("        }")
+            appendLine("        return abs == 1 ? \"one\" : \"other\";")
+            appendLine("    }")
+            appendLine()
+            appendLine("    private static Map<Integer, String> createLocale_en() {")
+            appendLine("        Map<Integer, String> templates = new HashMap<Integer, String>(${stringEntries.size * 2});")
+            stringEntries.forEach { entry ->
+                append("        templates.put(R.string.")
+                append(entry.name)
+                append(", \"")
+                append(escapeJavaString(entry.english))
+                appendLine("\");")
+            }
+            appendLine("        return templates;")
+            appendLine("    }")
+            translatedLocales.forEach { locale ->
+                val suffix = localeMethodSuffix(locale.languageTag)
                 appendLine()
-                append("    private static Map<Integer, String> create")
-                append(methodSuffix)
-                appendLine("() {")
-                appendLine("        Map<Integer, String> templates = new HashMap<Integer, String>();")
+                appendLine("    private static Map<Integer, String> createLocale_$suffix() {")
+                appendLine("        Map<Integer, String> templates = new HashMap<Integer, String>(${(locale.strings.size.coerceAtLeast(1)) * 2});")
                 stringEntries.forEach { entry ->
+                    val translated = locale.strings[entry.name] ?: return@forEach
                     append("        templates.put(R.string.")
                     append(entry.name)
                     append(", \"")
-                    append(escapeJavaString(entry.translations.getValue(locale)))
+                    append(escapeJavaString(translated))
                     appendLine("\");")
                 }
                 appendLine("        return templates;")
@@ -405,8 +700,11 @@ val generateSettingsText = tasks.register("generateSettingsText") {
 // -PupdateSettingsSearchIndex=true lets the snapshot test rewrite the packaged search index.
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
     maxHeapSize = "2g"
-    maxParallelForks = 1
-    forkEvery = 40
+    // Independent test classes run in parallel JVMs; each JVM is recycled to bound the native
+    // graphics workers that Robolectric accumulates.
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceIn(1, 4)
+    forkEvery = 150
+    jvmArgs("--add-opens=java.base/java.net=ALL-UNNAMED")
     systemProperty("user.language", "en")
     systemProperty("user.country", "US")
     systemProperty(

@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.lanftp.settings;
 
+import dev.jason.gboardpatches.extension.settings.GboardSettingsTextFiles;
 import android.content.Context;
 
 import org.junit.Assert;
@@ -86,12 +87,10 @@ public final class GboardLanFtpSettingsFeatureTest {
     @Test
     public void traditionalChineseCopyOmitsRemovedRows()
             throws Exception {
-        String traditionalChinese = new String(Files.readAllBytes(Path.of(
-                "src/main/settings-text/gboard_settings_text.xml")),
-                StandardCharsets.UTF_8);
+        String traditionalChinese = GboardSettingsTextFiles.englishAndTraditionalChinese();
 
         Assert.assertTrue(traditionalChinese.contains(
-                "<translation locale=\"zh-Hant\">FTP 伺服器</translation>"));
+                ">FTP 伺服器</string>"));
         Assert.assertFalse(traditionalChinese.contains("下載續傳"));
         Assert.assertFalse(traditionalChinese.contains("保留的未完成上傳"));
         Assert.assertFalse(traditionalChinese.contains("純 FTP 未加密"));
@@ -252,9 +251,7 @@ public final class GboardLanFtpSettingsFeatureTest {
         screenOffRow.getAction().run();
         Assert.assertTrue(host.openedBatteryOptimizationSettings);
 
-        String traditionalChinese = new String(Files.readAllBytes(Path.of(
-                "src/main/settings-text/gboard_settings_text.xml")),
-                StandardCharsets.UTF_8);
+        String traditionalChinese = GboardSettingsTextFiles.englishAndTraditionalChinese();
         Assert.assertTrue(traditionalChinese.contains("關螢幕時保持連線"));
         Assert.assertTrue(traditionalChinese.contains("無限制"));
         Assert.assertTrue(traditionalChinese.contains("上傳至手機"));

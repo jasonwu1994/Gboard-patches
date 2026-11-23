@@ -1,3 +1,13 @@
+## [4.5.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.1...v4.5.0-dev.2) (2026-11-23)
+
+### ✨ New Features
+
+* **Gboard:** add 11 more languages to the `Patches` settings page: Simplified Chinese, Japanese, Korean, Spanish, Brazilian Portuguese, Russian, German, French, Vietnamese, Indonesian, and Turkish. When **Language** is set to **System default**, the settings page follows your system language if it is supported; you can also pick any of the 13 bundled languages manually. Any text that is not translated yet is shown in English.
+
+### ✨ 新功能
+
+* **Gboard:** `Patches` 設定頁新增 11 種語言：簡體中文、日文、韓文、西班牙文、巴西葡萄牙文、俄文、德文、法文、越南文、印尼文與土耳其文。「語言」設為「跟隨系統」時，若系統語言在支援範圍內，設定頁會自動切換；也可以手動選擇任一種內建語言（共 13 種）。尚未翻譯的文字會以英文顯示。
+
 ## [4.5.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0...v4.5.0-dev.1) (2026-11-22)
 
 ### ✨ New Features
