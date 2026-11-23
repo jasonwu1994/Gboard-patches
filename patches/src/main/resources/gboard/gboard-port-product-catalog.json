@@ -2084,8 +2084,8 @@
         "patches/src/main/resources/web-clipboard-assets/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
         "patches/src/main/resources/web-clipboard-assets/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
         "patches/src/main/resources/web-clipboard-assets/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2",
-        "patches/src/main/resources/web-clipboard-assets/assets/index-CrrbJfwz.js",
-        "patches/src/main/resources/web-clipboard-assets/assets/index-j-45Yer8.css",
+        "patches/src/main/resources/web-clipboard-assets/assets/index-D6QcYQar.css",
+        "patches/src/main/resources/web-clipboard-assets/assets/index-izxGW1n_.js",
         "patches/src/main/resources/web-clipboard-assets/favicon.svg",
         "patches/src/main/resources/web-clipboard-assets/icons.svg",
         "patches/src/main/resources/web-clipboard-assets/index.html",
@@ -2102,7 +2102,8 @@
             "web_clipboard_create"
           ],
           "runtime_calls": [
-            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_LATIN_IME_ON_CREATE"
+            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_LATIN_IME_ON_CREATE",
+            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_CLIPBOARD_PROVIDER_INSERT"
           ]
         }
       ]

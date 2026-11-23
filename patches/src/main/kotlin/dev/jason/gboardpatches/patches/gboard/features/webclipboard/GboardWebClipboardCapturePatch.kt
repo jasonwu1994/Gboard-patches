@@ -51,8 +51,33 @@ private val CAPTURE_BOOTSTRAP_RUNTIME_ABI = RuntimeAbiCatalog.abi(CAPTURE_BOOTST
 private val CAPTURE_BOOTSTRAP_RUNTIME_CLASS = CAPTURE_BOOTSTRAP_RUNTIME_ABI.owner
 private val CAPTURE_BOOTSTRAP_RUNTIME_DESCRIPTOR = CAPTURE_BOOTSTRAP_RUNTIME_ABI.reference
 
+private const val CLIPBOARD_PROVIDER_CLASS =
+    "Lcom/google/android/apps/inputmethod/libs/clipboard/ClipboardContentProvider;"
+private const val CONTENT_PROVIDER_CLASS = "Landroid/content/ContentProvider;"
+private const val PROVIDER_INSERT_METHOD_NAME = "insert"
+private val PROVIDER_INSERT_PARAMETER_TYPES = listOf(
+    "Landroid/net/Uri;",
+    "Landroid/content/ContentValues;",
+)
+private const val PROVIDER_INSERT_RETURN_TYPE = "Landroid/net/Uri;"
+private const val PROVIDER_INSERT_DESCRIPTOR =
+    "$CLIPBOARD_PROVIDER_CLASS->insert(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;"
+private const val SQLITE_INSERT_WITH_ON_CONFLICT_DESCRIPTOR =
+    "Landroid/database/sqlite/SQLiteDatabase;->insertWithOnConflict(" +
+        "Ljava/lang/String;Ljava/lang/String;Landroid/content/ContentValues;I)J"
+private const val SQLITE_EXCEPTION_TYPE = "Landroid/database/sqlite/SQLiteException;"
+private const val PROVIDER_STOCK_REGISTER_COUNT = 10
+private const val PROVIDER_RECEIVER_REGISTER = 7
+private const val PROVIDER_VALUES_REGISTER = 9
+private const val PROVIDER_SAVED_RECEIVER_REGISTER = 3
+
+private val PROVIDER_INSERT_RUNTIME_CALL =
+    RuntimeCallId.WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_CLIPBOARD_PROVIDER_INSERT
+private val PROVIDER_INSERT_RUNTIME_ABI = RuntimeAbiCatalog.abi(PROVIDER_INSERT_RUNTIME_CALL)
+private val PROVIDER_INSERT_RUNTIME_DESCRIPTOR = PROVIDER_INSERT_RUNTIME_ABI.reference
+
 internal val gboardWebClipboardCapturePatch = bytecodePatch(
-    description = "在 phr.onCreate() 正常返回前掛上 Web Clipboard capture bootstrap。"
+    description = "在 phr.onCreate() 與 ClipboardContentProvider.insert() 掛上 Web Clipboard capture bootstrap。"
 ) {
     dependsOn(gboardPatchesExtensionCarrierPatch)
 
@@ -60,6 +85,13 @@ internal val gboardWebClipboardCapturePatch = bytecodePatch(
         val owner = mutableClass(LATIN_IME_SERVICE_CLASS)
         val target = selectWebClipboardCaptureOnCreate(owner, owner.methods.toList())
         target.applyWebClipboardCaptureBootstrap()
+
+        val providerOwner = mutableClass(CLIPBOARD_PROVIDER_CLASS)
+        val providerInsert = selectClipboardProviderInsert(
+            providerOwner,
+            providerOwner.methods.toList(),
+        )
+        providerInsert.applyClipboardProviderInsertCapture()
     }
 }
 
@@ -389,6 +421,201 @@ private fun Instruction.normalizedOpcode(): String =
 private const val RECEIVER_SAVE = "move-object v10, p0"
 private val CAPTURE_BOOTSTRAP_DELEGATE =
     RuntimeCallEmitter.invoke(CAPTURE_BOOTSTRAP_RUNTIME_CALL, "v10 .. v10")
+private const val PROVIDER_RECEIVER_SAVE = "move-object v3, p0"
+private val PROVIDER_INSERT_DELEGATE =
+    RuntimeCallEmitter.invoke(PROVIDER_INSERT_RUNTIME_CALL, "v3, p2")
+
+internal fun selectClipboardProviderInsert(
+    owner: MutableClass,
+    methods: List<MutableMethod>,
+): MutableMethod {
+    check(
+        owner.type == CLIPBOARD_PROVIDER_CLASS &&
+            owner.accessFlags == TARGET_CLASS_ACCESS_FLAGS &&
+            owner.superclass == CONTENT_PROVIDER_CLASS,
+    ) {
+        "Expected public $CLIPBOARD_PROVIDER_CLASS to directly extend $CONTENT_PROVIDER_CLASS"
+    }
+    val matches = methods.filter { method ->
+        method.definingClass == CLIPBOARD_PROVIDER_CLASS &&
+            method.name == PROVIDER_INSERT_METHOD_NAME &&
+            method.parameterTypes == PROVIDER_INSERT_PARAMETER_TYPES &&
+            method.returnType == PROVIDER_INSERT_RETURN_TYPE &&
+            method.accessFlags == TARGET_METHOD_ACCESS_FLAGS
+    }
+    check(matches.size == 1) {
+        "Expected exactly one public final instance $PROVIDER_INSERT_DESCRIPTOR target"
+    }
+    return matches.single()
+}
+
+internal fun MutableMethod.applyClipboardProviderInsertCapture(): MutableMethod {
+    requireExactProviderInsertTarget()
+    return applyVerified(
+        VerifiedTransformationPlan(
+            targetName = PROVIDER_INSERT_DESCRIPTOR,
+            classify = MutableMethod::classifyClipboardProviderInsert,
+            mutate = { method ->
+                method.addInstructions(0, PROVIDER_RECEIVER_SAVE)
+                val updatedInstructions = method.implementation?.instructions
+                    ?: error("No instructions in $PROVIDER_INSERT_DESCRIPTOR")
+                val insertIndex = singleSqliteInsertIndex(updatedInstructions)
+                method.addInstructions(insertIndex + 1, PROVIDER_INSERT_DELEGATE)
+                method
+            },
+        ),
+    )
+}
+
+private fun MutableMethod.requireExactProviderInsertTarget() {
+    check(
+        definingClass == CLIPBOARD_PROVIDER_CLASS &&
+            name == PROVIDER_INSERT_METHOD_NAME &&
+            parameterTypes == PROVIDER_INSERT_PARAMETER_TYPES &&
+            returnType == PROVIDER_INSERT_RETURN_TYPE &&
+            accessFlags == TARGET_METHOD_ACCESS_FLAGS,
+    ) {
+        "Refusing non-target Web Clipboard provider method " +
+            "$definingClass->$name(${parameterTypes.joinToString("")})$returnType"
+    }
+}
+
+private fun MutableMethod.classifyClipboardProviderInsert(): VerifiedTransformationState {
+    val instructions = implementation?.instructions
+        ?: error("No instructions in $PROVIDER_INSERT_DESCRIPTOR")
+    val runtimeReferences = instructions.filter { instruction ->
+        instruction.isMethodReferenceInClass(CAPTURE_BOOTSTRAP_RUNTIME_CLASS)
+    }
+    return when {
+        runtimeReferences.isEmpty() -> {
+            validateProviderInsertStockBody()
+            VerifiedTransformationState.STOCK
+        }
+        runtimeReferences.size == 1 &&
+            runtimeReferences.single().isMethodReference(PROVIDER_INSERT_RUNTIME_DESCRIPTOR) -> {
+            validateProviderInsertCompletedPatch()
+            VerifiedTransformationState.PATCHED
+        }
+        else -> VerifiedTransformationState.MALFORMED
+    }
+}
+
+private fun MutableMethod.validateProviderInsertStockBody() {
+    val implementation = implementation ?: error("No instructions in $PROVIDER_INSERT_DESCRIPTOR")
+    check(implementation.registerCount == PROVIDER_STOCK_REGISTER_COUNT) {
+        "Unexpected register count in $PROVIDER_INSERT_DESCRIPTOR: ${implementation.registerCount}"
+    }
+    val instructions = implementation.instructions
+    check(instructions.none { instruction ->
+        instruction.isMethodReferenceInClass(CAPTURE_BOOTSTRAP_RUNTIME_CLASS)
+    }) {
+        "$PROVIDER_INSERT_DESCRIPTOR contains an orphan Web Clipboard runtime reference"
+    }
+    check(instructions.none { instruction ->
+        instruction.isExactProviderReceiverSave()
+    }) {
+        "$PROVIDER_INSERT_DESCRIPTOR contains an orphan receiver save"
+    }
+    val insertIndex = singleSqliteInsertIndex(instructions)
+    validateProviderInsertTryBlock(implementation, instructions, insertIndex)
+    check(instructions.subList(0, insertIndex + 1).none { instruction ->
+        PROVIDER_SAVED_RECEIVER_REGISTER in instruction.mentionedRegisters()
+    }) {
+        "$PROVIDER_INSERT_DESCRIPTOR v$PROVIDER_SAVED_RECEIVER_REGISTER is live before insertWithOnConflict"
+    }
+}
+
+private fun MutableMethod.validateProviderInsertCompletedPatch() {
+    requireExactProviderInsertTarget()
+    val implementation = implementation ?: error("No instructions in $PROVIDER_INSERT_DESCRIPTOR")
+    check(implementation.registerCount == PROVIDER_STOCK_REGISTER_COUNT)
+    val instructions = implementation.instructions
+    val saveIndices = instructions.indices.filter { index ->
+        instructions[index].isExactProviderReceiverSave()
+    }
+    check(saveIndices == listOf(0)) {
+        "$PROVIDER_INSERT_DESCRIPTOR must contain exactly one entry receiver save at index 0"
+    }
+    val insertIndex = singleSqliteInsertIndex(instructions)
+    validateProviderInsertTryBlock(implementation, instructions, insertIndex)
+    val delegateIndex = insertIndex + 1
+    check(instructions.getOrNull(delegateIndex).isExactProviderInsertDelegate()) {
+        "$PROVIDER_INSERT_DESCRIPTOR delegate is missing, misplaced, or malformed"
+    }
+    check(instructions.subList(1, delegateIndex).none { instruction ->
+        PROVIDER_SAVED_RECEIVER_REGISTER in instruction.mentionedRegisters()
+    }) {
+        "$PROVIDER_INSERT_DESCRIPTOR saved receiver local is modified before delegate"
+    }
+    check(instructions.count { instruction ->
+        instruction.isMethodReference(PROVIDER_INSERT_RUNTIME_DESCRIPTOR)
+    } == 1) {
+        "$PROVIDER_INSERT_DESCRIPTOR must contain exactly one Web Clipboard provider delegate"
+    }
+    check(instructions.count { instruction ->
+        instruction.isMethodReferenceInClass(CAPTURE_BOOTSTRAP_RUNTIME_CLASS)
+    } == 1) {
+        "$PROVIDER_INSERT_DESCRIPTOR contains an orphan Web Clipboard runtime reference"
+    }
+}
+
+private fun validateProviderInsertTryBlock(
+    implementation: com.android.tools.smali.dexlib2.iface.MethodImplementation,
+    instructions: List<Instruction>,
+    insertIndex: Int,
+) {
+    val tryBlocks = implementation.tryBlocks
+    check(tryBlocks.size == 1) {
+        "$PROVIDER_INSERT_DESCRIPTOR must retain exactly 1 SQLiteException try block"
+    }
+    val tryBlock = tryBlocks.single()
+    check(
+        tryBlock.exceptionHandlers.size == 1 &&
+            tryBlock.exceptionHandlers.single().exceptionType == SQLITE_EXCEPTION_TYPE,
+    ) {
+        "$PROVIDER_INSERT_DESCRIPTOR must retain a single $SQLITE_EXCEPTION_TYPE handler"
+    }
+    val insertAddress = instructions.codeAddressOf(insertIndex)
+    check(
+        insertAddress in tryBlock.startCodeAddress until
+            (tryBlock.startCodeAddress + tryBlock.codeUnitCount),
+    ) {
+        "$PROVIDER_INSERT_DESCRIPTOR insertWithOnConflict must remain inside its SQLiteException try block"
+    }
+}
+
+private fun singleSqliteInsertIndex(instructions: List<Instruction>): Int {
+    val indices = instructions.indices.filter { index ->
+        instructions[index].isMethodReference(SQLITE_INSERT_WITH_ON_CONFLICT_DESCRIPTOR)
+    }
+    check(indices.size == 1) {
+        "$PROVIDER_INSERT_DESCRIPTOR must contain exactly one SQLiteDatabase.insertWithOnConflict call"
+    }
+    val insertIndex = indices.single()
+    val insertInstruction = instructions[insertIndex] as? FiveRegisterInstruction
+        ?: error("$PROVIDER_INSERT_DESCRIPTOR insertWithOnConflict must use 5-register invoke form")
+    check(
+        insertInstruction.registerCount == 5 &&
+            insertInstruction.registerF == PROVIDER_VALUES_REGISTER,
+    ) {
+        "$PROVIDER_INSERT_DESCRIPTOR insertWithOnConflict must pass p2 (v$PROVIDER_VALUES_REGISTER) as ContentValues"
+    }
+    return insertIndex
+}
+
+private fun Instruction?.isExactProviderReceiverSave(): Boolean =
+    this?.isOpcode("MOVE_OBJECT") == true &&
+        this is TwoRegisterInstruction &&
+        registerA == PROVIDER_SAVED_RECEIVER_REGISTER &&
+        registerB == PROVIDER_RECEIVER_REGISTER
+
+private fun Instruction?.isExactProviderInsertDelegate(): Boolean =
+    this?.isInvoke(
+        "INVOKE_STATIC",
+        PROVIDER_INSERT_RUNTIME_DESCRIPTOR,
+        PROVIDER_SAVED_RECEIVER_REGISTER,
+        PROVIDER_VALUES_REGISTER,
+    ) == true
 
 private val DESTINATION_REGISTER_PREFIXES = listOf(
     "CONST",

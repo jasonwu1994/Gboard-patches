@@ -1,3 +1,55 @@
+## [4.5.0-dev.1](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0...v4.5.0-dev.1) (2026-11-22)
+
+### ✨ New Features
+
+* **Gboard:** **Web Clipboard**: add bidirectional image and screenshot sync. Copy an image or take a screenshot on your phone to see it in the web portal right away, or upload, paste, or drag-and-drop one or multiple images from your browser directly into your phone's clipboard and Gboard clipboard history.
+* **Gboard:** **Web Clipboard**: upgrade the image viewer and workspace UI with a fullscreen lightbox featuring fixed full-height left/right navigation edges, a bottom thumbnail filmstrip for quick switching, top-right copy/download/close actions, compact upload previews, a checkerboard backdrop for transparent images, and refined empty states and same-day timestamps.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** **Web Clipboard**: fix cleared messages reappearing after reloading the page by clearing the phone-hosted latest clipboard snapshot along with the browser thread.
+* **Gboard:** **Web Clipboard**: fix message ordering when phone and computer clocks differ by ordering thread items using the browser's local receive time.
+* **Gboard:** **Web Clipboard**: fix top action button clipping in the image lightbox, corner border clipping on the drag-and-drop overlay, and potential history entry collisions when uploading multiple images at once.
+
+### ✨ 新功能
+
+* **Gboard:** **Web Clipboard**：新增雙向圖片與截圖同步。在手機複製圖片或截圖後會即時顯示在網頁端；在電腦網頁點選、貼上或拖曳單張／多張圖片，也會直接同步到手機系統剪貼簿與 Gboard 剪貼簿歷史中。
+* **Gboard:** **Web Clipboard**：優化圖片檢視與介面體驗，包含全新全螢幕圖片預覽燈箱（固定左右全高切換區域、底部所有圖片縮圖預覽列、右上角複製／下載／關閉按鈕）、精簡的待傳圖片列、透明圖片棋盤格底紋，以及更俐落的空狀態與同日時間戳顯示。
+
+### 🐛 修復
+
+* **Gboard:** **Web Clipboard**：修復清空對話後重新整理網頁時舊訊息會再次出現的問題，現在清空時會一併重置手機端快取的最新剪貼簿狀態。
+* **Gboard:** **Web Clipboard**：修復手機與電腦系統時間存在誤差時訊息排序錯亂的問題，改以電腦端實際收到訊息的時間排序。
+* **Gboard:** **Web Clipboard**：修復圖片預覽燈箱頂部按鈕裁切、拖曳上傳外框四角邊線被遮擋，以及連續上傳多張圖片時 Gboard 剪貼簿歷史項目可能互相覆蓋的問題。
+
+## [4.4.0](https://github.com/jasonwu1994/Gboard-patches/compare/v4.3.0...v4.4.0) (2026-11-21)
+
+### ✨ New Features
+
+* **Gboard:** switch icon sizing in the G logo patch from dp to percentages. Your icons can now get biiiiiig!
+* **Gboard:** add support for custom package names in Package Rename.
+* **Gboard:** add the Shift + Backspace Forward Delete patch. Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard.
+* **Gboard:** add a **Rambler Auto Stop** option (Off, 3 seconds, 5 seconds, or custom 1–59 seconds) to **Advanced Voice Typing** to automatically stop Rambler voice typing and keep the text after the chosen period of silence.
+* **Gboard:** add a **Shortcut position** option (**First** or **Last**) to **Long-Press Editing Shortcuts** to choose where the editing shortcut appears in a key's long-press popup.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** fix **Key transparency** in **Frosted Glass** not applying to the circular background behind the microphone or other shortcut in the top-right toolbar slot, while keeping the icon clear and preserving transparent idle states.
+* **Gboard:** keep standard voice typing in Traditional Chinese (zh-TW) on Gboard's built-in S3 recognizer with **Advanced Voice Typing**, and allow S3 voice typing in airplane mode when a usable network (such as Wi-Fi) is connected.
+
+### ✨ 新功能
+
+* **Gboard:** G logo patch：圖示大小從 dp 改為百分比調整，現在你的圖示可以變得超級大！
+* **Gboard:** Package Rename 新增自訂套件名稱功能。
+* **Gboard:** 新增「Shift + Backspace Forward Delete」Patch。按住 Shift 再按退格鍵，就能刪除游標右邊的字，就像電腦鍵盤上的 Delete 鍵。
+* **Gboard:** 在「進階語音輸入」新增「Rambler 自動停止」選項（關閉、3 秒、5 秒或自訂 1–59 秒），停止說話達設定時間後自動結束 Rambler 語音輸入並保留文字。
+* **Gboard:** 在「長按編輯快捷鍵」新增「快捷鍵位置」選項（第一個／最後一個），可自訂快捷鍵在長按選單中的位置。
+
+### 🐛 修復
+
+* **Gboard:** 修復「磨砂玻璃」的「按鍵透明度」未套用到工具列最右側麥克風或其他快捷按鈕圓底的問題，同時保持前景圖示清晰並保留自訂主題的待機透明狀態。
+* **Gboard:** 搭配「進階語音輸入」時，讓繁體中文（zh-TW）標準語音輸入維持使用 Gboard 內建 S3 辨識器，並修復飛航模式下已連上可用網路（如 Wi-Fi）時 S3 語音輸入被拒絕的問題。
+
 ## [4.4.0-dev.5](https://github.com/jasonwu1994/Gboard-patches/compare/v4.4.0-dev.3...v4.4.0-dev.5) (2026-11-21)
 
 ### ✨ New Features

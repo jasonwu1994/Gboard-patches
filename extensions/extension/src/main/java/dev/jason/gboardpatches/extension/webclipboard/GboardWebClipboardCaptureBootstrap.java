@@ -3,20 +3,30 @@ package dev.jason.gboardpatches.extension.webclipboard;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
+import android.content.ContentProvider;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class GboardWebClipboardCaptureBootstrap {
     private static final String TAG = "GboardWebClipboard";
     private static final long DUPLICATE_SUPPRESSION_WINDOW_MS = 1_000L;
+    private static final long IMAGE_DUPLICATE_SUPPRESSION_WINDOW_MS = 5_000L;
+    private static final long INSERT_RECENCY_WINDOW_MS = 60_000L;
+    private static final String SELF_INCOMING_URI_SEGMENT =
+            "/clipboard_image/" + ClipboardSyncService.INCOMING_IMAGE_PREFIX;
     private static final int PORTAL_PROOF_ATTEMPTS = 3;
     private static final long PORTAL_PROOF_RETRY_DELAY_MS = 150L;
     private static final Object LISTENER_LOCK = new Object();
@@ -43,7 +53,41 @@ public final class GboardWebClipboardCaptureBootstrap {
             }
             ensureClipboardListenerInstalled(context);
         } catch (Throwable throwable) {
-            Log.w(TAG, "Failed to install Web Clipboard capture bootstrap", throwable);
+            logWarn("Failed to install Web Clipboard capture bootstrap", throwable);
+        }
+    }
+
+    public static void afterClipboardProviderInsert(Object providerObj, Object valuesObj) {
+        try {
+            if (!(providerObj instanceof ContentProvider provider)
+                    || !(valuesObj instanceof ContentValues values)) {
+                return;
+            }
+            Context context = provider.getContext();
+            if (context == null) {
+                return;
+            }
+            String uriString = values.getAsString("uri");
+            if (uriString == null || uriString.isBlank()
+                    || uriString.contains(SELF_INCOMING_URI_SEGMENT)) {
+                return;
+            }
+            String text = values.getAsString("text");
+            if (text != null && !text.isEmpty()) {
+                return;
+            }
+            Long timestamp = values.getAsLong("timestamp");
+            if (timestamp != null && timestamp > 0L
+                    && Math.abs(System.currentTimeMillis() - timestamp) > INSERT_RECENCY_WINDOW_MS) {
+                return;
+            }
+            Context appContext = context.getApplicationContext() != null
+                    ? context.getApplicationContext()
+                    : context;
+            LOOPBACK_DISPATCH_EXECUTOR.execute(
+                    () -> dispatchImageUriLoopbackIngress(appContext, uriString));
+        } catch (Throwable throwable) {
+            logWarn("Failed to capture clipboard provider insert", throwable);
         }
     }
 
@@ -92,38 +136,116 @@ public final class GboardWebClipboardCaptureBootstrap {
 
     private static void dispatchLoopbackIngress(Context context,
             ClipboardManager clipboardManager) {
-        RuntimeLookup runtimeLookup = webClipboardRuntimeConfig(context);
-        if (runtimeLookup.config == null) {
-            return;
-        }
-        if (!isExpectedPortalWithRetry(runtimeLookup.config)) {
-            return;
-        }
-        ClipData clipData = currentClipboardData(clipboardManager);
-        if (clipData == null || isWebClipboardEcho(clipData)) {
-            return;
-        }
-        CharSequence text = currentClipboardText(context, clipData);
-        if (text == null) {
-            return;
-        }
-        String normalizedText = text.toString();
-        if (normalizedText.isEmpty()) {
-            return;
-        }
-
-        String hash = sha256Hex(normalizedText);
-        long now = SystemClock.elapsedRealtime();
-        if (hash.equals(lastDispatchedHash)
-                && now - lastDispatchedElapsedMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
-            return;
-        }
-
         try {
+            RuntimeLookup runtimeLookup = webClipboardRuntimeConfig(context);
+            if (runtimeLookup.config == null) {
+                return;
+            }
+            if (!isExpectedPortalWithRetry(runtimeLookup.config)) {
+                return;
+            }
+            ClipData clipData = currentClipboardData(clipboardManager);
+            if (clipData == null || isWebClipboardEcho(clipData)) {
+                return;
+            }
+            Uri imageUri = extractImageClipUri(context, clipData);
+            if (imageUri != null) {
+                String declaredMime = resolveImageClipMimeType(context, clipData, imageUri);
+                dispatchImageUriWithConfig(context, imageUri, declaredMime, runtimeLookup.config);
+                return;
+            }
+            CharSequence text = currentClipboardText(context, clipData);
+            if (text == null) {
+                return;
+            }
+            String normalizedText = text.toString();
+            if (normalizedText.isEmpty()) {
+                return;
+            }
+
+            String hash = sha256Hex(normalizedText);
+            long now = SystemClock.elapsedRealtime();
+            if (hash.equals(lastDispatchedHash)
+                    && now - lastDispatchedElapsedMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
+                return;
+            }
+
             boolean accepted = ClipboardSyncLoopbackIngressClient.submitPhoneClipboard(
                     normalizedText,
                     runtimeLookup.config.port,
                     runtimeLookup.config.loopbackIngressToken);
+            if (accepted) {
+                lastDispatchedHash = hash;
+                lastDispatchedElapsedMs = SystemClock.elapsedRealtime();
+            }
+        } catch (Throwable ignored) {
+            // Best effort.
+        }
+    }
+
+    private static void dispatchImageUriLoopbackIngress(Context context, String uriString) {
+        try {
+            if (context == null || uriString == null || uriString.isBlank()) {
+                return;
+            }
+            RuntimeLookup runtimeLookup = webClipboardRuntimeConfig(context);
+            if (runtimeLookup.config == null) {
+                return;
+            }
+            if (!isExpectedPortalWithRetry(runtimeLookup.config)) {
+                return;
+            }
+            Uri uri;
+            try {
+                uri = Uri.parse(uriString);
+            } catch (Throwable ignored) {
+                return;
+            }
+            if (uri == null || !"content".equalsIgnoreCase(uri.getScheme())) {
+                return;
+            }
+            String declaredMime = null;
+            try {
+                declaredMime = context.getContentResolver().getType(uri);
+            } catch (Throwable ignored) {
+                // Fall back to magic-byte sniffing.
+            }
+            dispatchImageUriWithConfig(context, uri, declaredMime, runtimeLookup.config);
+        } catch (Throwable ignored) {
+            // Best effort.
+        }
+    }
+
+    private static void dispatchImageUriWithConfig(Context context, Uri uri, String declaredMime,
+            RuntimeConfig config) {
+        if (context == null || uri == null || config == null) {
+            return;
+        }
+        byte[] imageBytes = readUriBytesBounded(
+                context,
+                uri,
+                WebClipboardMediaStore.MAX_IMAGE_BYTES);
+        if (imageBytes == null || imageBytes.length == 0) {
+            return;
+        }
+        String resolvedMime = WebClipboardMediaStore.detectMimeType(imageBytes, declaredMime);
+        if (resolvedMime == null) {
+            return;
+        }
+        String hash = WebClipboardMediaStore.sha256Hex(imageBytes);
+        long now = SystemClock.elapsedRealtime();
+        if (hash.equals(lastDispatchedHash)
+                && now - lastDispatchedElapsedMs <= IMAGE_DUPLICATE_SUPPRESSION_WINDOW_MS) {
+            return;
+        }
+        String fileName = uri.getLastPathSegment();
+        try {
+            boolean accepted = ClipboardSyncLoopbackIngressClient.submitPhoneClipboardImage(
+                    imageBytes,
+                    resolvedMime,
+                    fileName,
+                    config.port,
+                    config.loopbackIngressToken);
             if (accepted) {
                 lastDispatchedHash = hash;
                 lastDispatchedElapsedMs = SystemClock.elapsedRealtime();
@@ -207,6 +329,79 @@ public final class GboardWebClipboardCaptureBootstrap {
             return clipData.getItemAt(0).coerceToText(context);
         } catch (Throwable ignored) {
             return null;
+        }
+    }
+
+    private static Uri extractImageClipUri(Context context, ClipData clipData) {
+        try {
+            if (clipData == null || clipData.getItemCount() <= 0) {
+                return null;
+            }
+            ClipData.Item item = clipData.getItemAt(0);
+            Uri uri = item == null ? null : item.getUri();
+            if (uri == null || !"content".equalsIgnoreCase(uri.getScheme())) {
+                return null;
+            }
+            String mimeType = resolveImageClipMimeType(context, clipData, uri);
+            return mimeType != null && mimeType.toLowerCase(Locale.US).startsWith("image/")
+                    ? uri
+                    : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static String resolveImageClipMimeType(Context context, ClipData clipData, Uri uri) {
+        try {
+            ClipDescription description = clipData == null ? null : clipData.getDescription();
+            if (description != null) {
+                int count = description.getMimeTypeCount();
+                for (int index = 0; index < count; index++) {
+                    String mime = description.getMimeType(index);
+                    if (mime != null && mime.toLowerCase(Locale.US).startsWith("image/")) {
+                        return mime;
+                    }
+                }
+            }
+            if (context != null && uri != null) {
+                String resolved = context.getContentResolver().getType(uri);
+                if (resolved != null && resolved.toLowerCase(Locale.US).startsWith("image/")) {
+                    return resolved;
+                }
+            }
+        } catch (Throwable ignored) {
+            // Best effort.
+        }
+        return null;
+    }
+
+    private static byte[] readUriBytesBounded(Context context, Uri uri, int maxBytes) {
+        try (InputStream input = context.getContentResolver().openInputStream(uri)) {
+            if (input == null) {
+                return null;
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16_384];
+            int total = 0;
+            int read;
+            while ((read = input.read(buffer)) >= 0) {
+                total += read;
+                if (total > maxBytes) {
+                    return null;
+                }
+                output.write(buffer, 0, read);
+            }
+            return output.toByteArray();
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static void logWarn(String message, Throwable throwable) {
+        try {
+            Log.w(TAG, message, throwable);
+        } catch (Throwable ignored) {
+            // android.util.Log is unavailable in local JVM unit tests.
         }
     }
 
