@@ -47,6 +47,21 @@ public final class GboardSettingsText {
         return GboardSettingsTextCatalog.template(resId, normalizeLanguageTag(languageTag));
     }
 
+    /**
+     * The packaged, unformatted text of {@code resId} in the settings language for
+     * {@code context}, or {@code fallback} when none is packaged. It never reads
+     * {@code context}'s resources, so it is safe with a host context whose resource table does
+     * not hold these ids, such as labels drawn inside the keyboard.
+     */
+    public static String packagedOrDefault(Context context, int resId, String fallback) {
+        try {
+            String text = GboardSettingsTextCatalog.template(resId, resolveLanguageTag(context));
+            return text == null || text.isEmpty() ? fallback : text;
+        } catch (Throwable ignored) {
+            return fallback;
+        }
+    }
+
     static String resolveStableTextForTesting(int resId, String languageTag, Object... args) {
         return resolveStableText(resId, normalizeLanguageTag(languageTag), args);
     }

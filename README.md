@@ -83,8 +83,10 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 <details>
   <summary><code>Toolbar Editing Buttons</code></summary>
 
-  Add Select All, Copy, Cut and Paste to the menu. Drag them to the top toolbar and
-  use them with different keyboard languages in supported editors.
+  Add editing and cursor buttons such as Select All, Copy, Cut, Paste, Forward Delete,
+  Home/End, Tab, and arrows to the menu. Drag them to the top toolbar and use them with
+  different keyboard languages in supported editors. Button labels follow the Patches
+  settings language.
 </details>
 
 <details>

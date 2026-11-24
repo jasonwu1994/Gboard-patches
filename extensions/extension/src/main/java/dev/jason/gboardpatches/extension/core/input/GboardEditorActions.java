@@ -3,7 +3,10 @@ package dev.jason.gboardpatches.extension.core.input;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.inputmethodservice.InputMethodService;
+import android.os.SystemClock;
 import android.text.InputType;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import java.util.function.BooleanSupplier;
@@ -25,13 +28,47 @@ public final class GboardEditorActions {
         BooleanSupplier current = () -> isCurrentEditor.getAsBoolean()
                 && service.getCurrentInputConnection() == connection
                 && service.getCurrentInputEditorInfo() == info;
-        if (actionId == android.R.id.paste && info != null
+        if ((actionId == android.R.id.paste || actionId == android.R.id.pasteAsPlainText)
+                && info != null
                 && (info.inputType & InputType.TYPE_MASK_CLASS) == InputType.TYPE_NULL) {
             // Raw editors may acknowledge context-menu delivery without implementing Paste.
             // Choose the text route before sending anything; never send a second paste as fallback.
             return pasteRawText(service, connection, current);
         }
         return perform(connection, actionId, selectAllWhenUnselected, current);
+    }
+
+    public static boolean sendKey(InputMethodService service, int keyCode,
+            BooleanSupplier isCurrentEditor) {
+        if (service == null || keyCode <= 0 || !isCurrentEditor.getAsBoolean()) {
+            return false;
+        }
+        InputConnection connection = service.getCurrentInputConnection();
+        EditorInfo info = service.getCurrentInputEditorInfo();
+        if (connection == null) {
+            return false;
+        }
+        BooleanSupplier current = () -> isCurrentEditor.getAsBoolean()
+                && service.getCurrentInputConnection() == connection
+                && service.getCurrentInputEditorInfo() == info;
+        return sendKey(connection, keyCode, current);
+    }
+
+    public static boolean sendKey(InputConnection connection, int keyCode,
+            BooleanSupplier isCurrentEditor) {
+        if (connection == null || keyCode <= 0 || !isCurrentEditor.getAsBoolean()) {
+            return false;
+        }
+        long eventTime = SystemClock.uptimeMillis();
+        int flags = KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE;
+        KeyEvent down = new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN,
+                keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags);
+        if (!connection.sendKeyEvent(down)) {
+            return false;
+        }
+        KeyEvent up = new KeyEvent(eventTime, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP,
+                keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags);
+        return connection.sendKeyEvent(up);
     }
 
     private static boolean pasteRawText(InputMethodService service, InputConnection connection,

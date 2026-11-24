@@ -110,6 +110,13 @@ public final class GboardPatchesIcons {
         }
     }
 
+    public static Path parsePathData(String data) {
+        if (data == null || data.isEmpty()) {
+            throw new IllegalArgumentException("Path data required");
+        }
+        return PathDataParser.parse(data);
+    }
+
     public static Drawable create(int icon, int color, float density) {
         String data = pathData(icon);
         if (data == null) {

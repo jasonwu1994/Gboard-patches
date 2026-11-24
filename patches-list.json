@@ -1,5 +1,5 @@
 {
-  "version": "4.5.0-dev.2",
+  "version": "4.5.0-dev.3",
   "patches": [
     {
       "name": "AI Writing Tools",
@@ -499,7 +499,7 @@
     },
     {
       "name": "Toolbar Editing Buttons",
-      "description": "將全選、複製、剪下與貼上加入選單。\nAdd Select All, Copy, Cut and Paste to the menu.",
+      "description": "將全選、複製、剪下、貼上、向前刪除、行首／行尾、Tab 與方向鍵等按鈕加入選單。\nAdd editing and cursor buttons such as Select All, Copy, Cut, Paste, Forward Delete, Home/End, Tab, and arrows to the menu.",
       "use": true,
       "dependencies": [],
       "compatiblePackages": {

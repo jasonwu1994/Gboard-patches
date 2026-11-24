@@ -3,6 +3,7 @@ package dev.jason.gboardpatches.extension.editingaccesspoints;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,7 @@ import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
 public class GboardEditingAccessPointsSettingsFeatureTest {
+    private static final int SELECT_ALL_OPTION_ROW = EditorAction.values().length + 1;
     private Context context;
     private SharedPreferences preferences;
     private GboardEditingAccessPointsSettingsFeature feature;
@@ -45,8 +47,10 @@ public class GboardEditingAccessPointsSettingsFeatureTest {
     @Test public void featureSwitchesAndIndependentSelectAllPersist() {
         GboardPatchesSettingsContract.Screen screen = feature.buildScreen(host);
         assertEquals("Feature", screen.getSections().get(0).getTitle());
-        assertEquals("Add Select All, Copy, Cut and Paste to the menu.", screen.getHeaderSummary());
-        assertEquals(6, screen.getRows().size());
+        assertEquals("Add editing and cursor buttons such as Select All, Copy, Cut, Paste, "
+                + "Forward Delete, Home/End, Tab, and arrows to the menu.", screen.getHeaderSummary());
+        // Master toggle, one row per button, then the select-all option.
+        assertEquals(EditorAction.values().length + 2, screen.getRows().size());
         GboardPatchesSettingsContract.ToggleRow overall =
                 (GboardPatchesSettingsContract.ToggleRow) screen.getRows().get(0);
         assertTrue(overall.isChecked());
@@ -68,9 +72,27 @@ public class GboardEditingAccessPointsSettingsFeatureTest {
         assertTrue(GboardEditingAccessPointsRuntime.enabled(context, EditorAction.CUT));
     }
 
+    @Test public void extendedButtonsStartOffAndFollowTheMasterSwitch() {
+        List<GboardPatchesSettingsContract.Row> rows = feature.buildScreen(host).getRows();
+        for (EditorAction action : EditorAction.values()) {
+            GboardPatchesSettingsContract.ToggleRow row =
+                    (GboardPatchesSettingsContract.ToggleRow) rows.get(action.ordinal() + 1);
+            assertEquals(action.name(), action.defaultEnabled, row.isChecked());
+            assertEquals(action.name(), action.defaultEnabled,
+                    GboardEditingAccessPointsRuntime.enabled(context, action));
+        }
+        GboardPatchesSettingsContract.ToggleRow home =
+                (GboardPatchesSettingsContract.ToggleRow) rows.get(EditorAction.HOME.ordinal() + 1);
+        assertEquals("Home", home.getTitle());
+        home.getToggleAction().accept(true);
+        assertTrue(GboardEditingAccessPointsRuntime.enabled(context, EditorAction.HOME));
+        preferences.edit().putBoolean(GboardEditingAccessPointsSettings.ENABLED, false).commit();
+        assertFalse(GboardEditingAccessPointsRuntime.enabled(context, EditorAction.HOME));
+    }
+
     @Test public void selectAllDefaultsOffAndKeepsItsOwnPreference() {
         GboardPatchesSettingsContract.SwitchRow row =
-                (GboardPatchesSettingsContract.SwitchRow) feature.buildScreen(host).getRows().get(5);
+                (GboardPatchesSettingsContract.SwitchRow) feature.buildScreen(host).getRows().get(SELECT_ALL_OPTION_ROW);
         assertFalse(row.isChecked());
         assertTrue(row.isEnabled());
         assertEquals("Select all when nothing is selected", row.getTitle());
@@ -79,16 +101,17 @@ public class GboardEditingAccessPointsSettingsFeatureTest {
                 GboardEditingAccessPointsSettings.SELECT_ALL_WHEN_UNSELECTED, false));
         assertFalse(preferences.contains("pref_long_press_quick_actions_select_all_when_unselected"));
         preferences.edit().putBoolean(GboardEditingAccessPointsSettings.ENABLED, false).commit();
-        assertFalse(feature.buildScreen(host).getRows().get(5).isEnabled());
+        assertFalse(feature.buildScreen(host).getRows().get(SELECT_ALL_OPTION_ROW).isEnabled());
     }
 
     @Test public void traditionalChineseCopyAndRenderFailureAreSafe() {
         preferences.edit().putString("pref_settings_ui_language", "zh-Hant").commit();
         GboardPatchesSettingsContract.Screen screen = feature.buildScreen(host);
         assertEquals("功能", screen.getSections().get(0).getTitle());
-        assertEquals("將全選、複製、剪下與貼上加入選單。", screen.getHeaderSummary());
+        assertEquals("將全選、複製、剪下、貼上、向前刪除、行首／行尾、Tab 與方向鍵等按鈕加入選單。",
+                screen.getHeaderSummary());
         assertEquals("強制停止並重新啟動 Gboard 後生效", screen.getRows().get(0).getSummary());
-        assertEquals("未選取時自動全選", screen.getRows().get(5).getTitle());
+        assertEquals("未選取時自動全選", screen.getRows().get(SELECT_ALL_OPTION_ROW).getTitle());
         assertEquals(1, feature.buildScreen(null).getStatusBlocks().size());
     }
 }

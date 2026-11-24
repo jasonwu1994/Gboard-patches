@@ -1,3 +1,23 @@
+## [4.5.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.2...v4.5.0-dev.3) (2026-11-23)
+
+### ✨ New Features
+
+* **Gboard:** add 9 more buttons to the `Toolbar Editing Buttons` patch: Forward Delete, Paste as plain text, Home, End, Tab, and the Left, Right, Up, and Down arrow keys.
+* **Gboard:** toolbar button labels for `Toolbar Editing Buttons`, `Floating Web Search`, and `Incognito Mode Toggle` now follow the **Language** setting on the `Patches` settings page instead of always showing English.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** **Toolbar Editing Buttons**: redraw the Select All icon so it no longer looks identical to Gboard's built-in Resize button.
+
+### ✨ 新功能
+
+* **Gboard:** `Toolbar Editing Buttons` Patch 新增 9 個按鈕：向前刪除、純文字貼上、行首、行尾、Tab，以及上、下、左、右方向鍵。
+* **Gboard:** `Toolbar Editing Buttons`、`Floating Web Search` 與 `Incognito Mode Toggle` 的工具列按鈕文字改為跟隨 `Patches` 設定頁的「語言」設定，不再固定顯示英文。
+
+### 🐛 修復
+
+* **Gboard:** **Toolbar Editing Buttons**：重新繪製「全選」圖示，不再與 Gboard 內建的「調整大小」按鈕完全相同。
+
 ## [4.5.0-dev.2](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.1...v4.5.0-dev.2) (2026-11-23)
 
 ### ✨ New Features

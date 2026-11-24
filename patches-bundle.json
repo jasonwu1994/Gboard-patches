@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-23T09:47:48",
-  "description": "### ✨ New Features\n\n* **Gboard:** add 11 more languages to the `Patches` settings page: Simplified Chinese, Japanese, Korean, Spanish, Brazilian Portuguese, Russian, German, French, Vietnamese, Indonesian, and Turkish. When **Language** is set to **System default**, the settings page follows your system language if it is supported; you can also pick any of the 13 bundled languages manually. Any text that is not translated yet is shown in English.\n\n### ✨ 新功能\n\n* **Gboard:** `Patches` 設定頁新增 11 種語言：簡體中文、日文、韓文、西班牙文、巴西葡萄牙文、俄文、德文、法文、越南文、印尼文與土耳其文。「語言」設為「跟隨系統」時，若系統語言在支援範圍內，設定頁會自動切換；也可以手動選擇任一種內建語言（共 13 種）。尚未翻譯的文字會以英文顯示。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.5.0-dev.2/patches-4.5.0-dev.2.mpp",
+  "created_at": "2026-11-24T01:24:05",
+  "description": "### ✨ New Features\n\n* **Gboard:** add 9 more buttons to the `Toolbar Editing Buttons` patch: Forward Delete, Paste as plain text, Home, End, Tab, and the Left, Right, Up, and Down arrow keys.\n* **Gboard:** toolbar button labels for `Toolbar Editing Buttons`, `Floating Web Search`, and `Incognito Mode Toggle` now follow the **Language** setting on the `Patches` settings page instead of always showing English.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** **Toolbar Editing Buttons**: redraw the Select All icon so it no longer looks identical to Gboard's built-in Resize button.\n\n### ✨ 新功能\n\n* **Gboard:** `Toolbar Editing Buttons` Patch 新增 9 個按鈕：向前刪除、純文字貼上、行首、行尾、Tab，以及上、下、左、右方向鍵。\n* **Gboard:** `Toolbar Editing Buttons`、`Floating Web Search` 與 `Incognito Mode Toggle` 的工具列按鈕文字改為跟隨 `Patches` 設定頁的「語言」設定，不再固定顯示英文。\n\n### 🐛 修復\n\n* **Gboard:** **Toolbar Editing Buttons**：重新繪製「全選」圖示，不再與 Gboard 內建的「調整大小」按鈕完全相同。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.5.0-dev.3/patches-4.5.0-dev.3.mpp",
   "signature_download_url": "",
-  "version": "4.5.0-dev.2"
+  "version": "4.5.0-dev.3"
 }
