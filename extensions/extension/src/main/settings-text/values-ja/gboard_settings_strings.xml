@@ -963,4 +963,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + Backspace で前方削除</string>
     <string name="gboard_patches_shift_delete_entry_summary">Shift を押しながら Backspace を押すと、カーソル右側の文字を削除します。</string>
     <string name="gboard_patches_shift_delete_summary">Shift を押しながら Backspace を押すと、パソコンキーボードの Delete キーのようにカーソル右側の文字を削除します。長押しで連続削除でき、Shift を離すと通常の後方削除に戻ります。</string>
+    <string name="gboard_clipboard_no_items">このリストにクリップがありません</string>
+    <string name="gboard_clipboard_no_unpinned">このリストに固定されていないクリップはありません</string>
+    <string name="gboard_clipboard_select_all_toggle">編集モードにすべて選択ボタンを追加</string>
+    <string name="gboard_clipboard_select_all_summary">複数のクリップを選択し、削除ボタンを押してまとめて削除できます。</string>
+    <string name="gboard_clipboard_exclude_pinned">固定済みのクリップを除外</string>
 </resources>

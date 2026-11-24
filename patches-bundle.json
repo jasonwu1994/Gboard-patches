@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-24T01:24:05",
-  "description": "### ✨ New Features\n\n* **Gboard:** add 9 more buttons to the `Toolbar Editing Buttons` patch: Forward Delete, Paste as plain text, Home, End, Tab, and the Left, Right, Up, and Down arrow keys.\n* **Gboard:** toolbar button labels for `Toolbar Editing Buttons`, `Floating Web Search`, and `Incognito Mode Toggle` now follow the **Language** setting on the `Patches` settings page instead of always showing English.\n\n### 🐛 Bug Fixes\n\n* **Gboard:** **Toolbar Editing Buttons**: redraw the Select All icon so it no longer looks identical to Gboard's built-in Resize button.\n\n### ✨ 新功能\n\n* **Gboard:** `Toolbar Editing Buttons` Patch 新增 9 個按鈕：向前刪除、純文字貼上、行首、行尾、Tab，以及上、下、左、右方向鍵。\n* **Gboard:** `Toolbar Editing Buttons`、`Floating Web Search` 與 `Incognito Mode Toggle` 的工具列按鈕文字改為跟隨 `Patches` 設定頁的「語言」設定，不再固定顯示英文。\n\n### 🐛 修復\n\n* **Gboard:** **Toolbar Editing Buttons**：重新繪製「全選」圖示，不再與 Gboard 內建的「調整大小」按鈕完全相同。",
-  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.5.0-dev.3/patches-4.5.0-dev.3.mpp",
+  "created_at": "2026-11-24T20:58:36",
+  "description": "### ✨ New Features\n\n* **Gboard:** **Clipboard Enhancements** adds an optional **Select All** button at the far left of the clipboard edit toolbar. Enable it under **Patches → Clipboard → General**, where the setting includes a description and preview. **Select All** includes pinned clips by default. Turn on **Exclude pinned clips** to select only unpinned clips, then use Gboard’s built-in **Delete** button to remove the selection.\n\n### ✨ 新功能\n\n* **Gboard:** **剪貼簿增強**新增「編輯時新增全選按鈕」，預設關閉。可在 **Patches → 剪貼簿 → 一般**查看說明、預覽並開啟。啟用後，「全選」會出現在編輯工具列最左側，預設包含釘選項目。開啟「排除釘選」後，全選只勾選未釘選項目，再按 Gboard 原生刪除鍵即可批次刪除。",
+  "download_url": "https://github.com/jasonwu1994/Gboard-patches/releases/download/v4.5.0-dev.4/patches-4.5.0-dev.4.mpp",
   "signature_download_url": "",
-  "version": "4.5.0-dev.3"
+  "version": "4.5.0-dev.4"
 }

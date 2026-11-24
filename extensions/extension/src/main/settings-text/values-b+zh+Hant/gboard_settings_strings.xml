@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Shift+退格向前刪除</string>
     <string name="gboard_patches_shift_delete_entry_summary">按住 Shift 再按退格鍵，會刪除游標右邊的字。</string>
     <string name="gboard_patches_shift_delete_summary">按住 Shift 再按退格鍵，會刪除游標右邊的字，作用等同電腦鍵盤的 Delete 鍵。長按可連續刪除，放開 Shift 後恢復向左刪除。</string>
+    <string name="gboard_clipboard_no_items">目前列表沒有剪貼簿項目</string>
+    <string name="gboard_clipboard_no_unpinned">目前列表沒有未釘選項目</string>
+    <string name="gboard_clipboard_select_all_toggle">編輯時新增全選按鈕</string>
+    <string name="gboard_clipboard_select_all_summary">一次勾選多筆剪貼簿項目，再按刪除鍵一起刪除。</string>
+    <string name="gboard_clipboard_exclude_pinned">排除釘選</string>
 </resources>

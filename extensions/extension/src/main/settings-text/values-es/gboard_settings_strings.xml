@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Eliminar hacia adelante con Shift + Retroceso</string>
     <string name="gboard_patches_shift_delete_entry_summary">Mantén pulsado Shift y presiona Retroceso para eliminar el carácter posterior al cursor.</string>
     <string name="gboard_patches_shift_delete_summary">Mantén pulsado Shift y presiona Retroceso para eliminar el carácter posterior al cursor, como la tecla Supr (Delete) de un teclado de computadora. Mantén presionado para repetir; soltar Shift restaura el borrado hacia atrás.</string>
+    <string name="gboard_clipboard_no_items">No hay clips en esta lista</string>
+    <string name="gboard_clipboard_no_unpinned">No hay clips no fijados en esta lista</string>
+    <string name="gboard_clipboard_select_all_toggle">Añadir un botón Seleccionar todo en el modo de edición</string>
+    <string name="gboard_clipboard_select_all_summary">Selecciona varios clips y toca Eliminar para borrarlos juntos.</string>
+    <string name="gboard_clipboard_exclude_pinned">Excluir los clips fijados</string>
 </resources>

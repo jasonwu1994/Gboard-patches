@@ -24,6 +24,7 @@ import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculat
 import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.about.gboardAboutPageResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardCustomSymbolsFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardSelectAllPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardAdapterTrimPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardColumnCountPatch
@@ -644,7 +645,8 @@ val gboardClipboardEnhancementsPatch = gboardPublicResourcePatch(
         gboardClipboardPrunePatch,
         gboardClipboardColumnCountPatch,
         gboardClipboardAdapterTrimPatch,
-        gboardClipboardItemBindPatch
+        gboardClipboardItemBindPatch,
+        gboardClipboardSelectAllPatch
     )
 }
 

@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + Backspace para excluir para a frente</string>
     <string name="gboard_patches_shift_delete_entry_summary">Mantenha Shift pressionado e aperte Backspace para excluir o caractere após o cursor.</string>
     <string name="gboard_patches_shift_delete_summary">Mantenha Shift pressionado e aperte Backspace para excluir o caractere após o cursor, como a tecla Delete de um teclado de computador. Mantenha pressionado para repetir; soltar Shift restaura a exclusão para trás.</string>
+    <string name="gboard_clipboard_no_items">Não há clipes nesta lista</string>
+    <string name="gboard_clipboard_no_unpinned">Não há clipes desafixados nesta lista</string>
+    <string name="gboard_clipboard_select_all_toggle">Adicionar o botão Selecionar tudo no modo de edição</string>
+    <string name="gboard_clipboard_select_all_summary">Selecione vários clipes e toque em Excluir para removê-los de uma vez.</string>
+    <string name="gboard_clipboard_exclude_pinned">Excluir clipes fixados</string>
 </resources>

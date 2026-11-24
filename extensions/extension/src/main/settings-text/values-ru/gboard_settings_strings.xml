@@ -471,7 +471,7 @@
     <string name="gboard_patches_long_press_quick_actions_placement_first">В начале</string>
     <string name="gboard_patches_long_press_quick_actions_placement_last">В конце</string>
     <string name="gboard_patches_long_press_quick_actions_section_mappings">Соответствия</string>
-    <string name="gboard_patches_long_press_quick_actions_action_select_all">Выбрать всё</string>
+    <string name="gboard_patches_long_press_quick_actions_action_select_all">Выделить все</string>
     <string name="gboard_patches_long_press_quick_actions_action_undo">Отменить</string>
     <string name="gboard_patches_long_press_quick_actions_action_copy">Копировать</string>
     <string name="gboard_patches_long_press_quick_actions_action_cut">Вырезать</string>
@@ -972,4 +972,9 @@
     <string name="gboard_patches_shift_delete_title">Удаление вперёд: Shift + Backspace</string>
     <string name="gboard_patches_shift_delete_entry_summary">Удерживайте Shift и нажмите Backspace, чтобы удалить символ после курсора.</string>
     <string name="gboard_patches_shift_delete_summary">Удерживайте Shift и нажмите Backspace, чтобы удалить символ после курсора, как клавишей Delete на компьютерной клавиатуре. Удерживайте для повтора; после отпускания Shift возвращается обычное удаление назад.</string>
+    <string name="gboard_clipboard_no_items">В этом списке нет фрагментов</string>
+    <string name="gboard_clipboard_no_unpinned">В этом списке нет незакреплённых фрагментов</string>
+    <string name="gboard_clipboard_select_all_toggle">Добавить кнопку «Выделить все» в режиме редактирования</string>
+    <string name="gboard_clipboard_select_all_summary">Выделите несколько фрагментов и нажмите «Удалить», чтобы удалить их все сразу.</string>
+    <string name="gboard_clipboard_exclude_pinned">Исключить закреплённые фрагменты</string>
 </resources>

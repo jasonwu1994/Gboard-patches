@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Suppression avant (Maj + Retour arrière)</string>
     <string name="gboard_patches_shift_delete_entry_summary">Maintenez Maj et appuyez sur Retour arrière pour supprimer le caractère après le curseur.</string>
     <string name="gboard_patches_shift_delete_summary">Maintenez Maj et appuyez sur Retour arrière pour supprimer le caractère après le curseur, comme la touche Suppr sur un clavier d\'ordinateur. Maintenez pour répéter ; relâcher Maj rétablit la suppression vers l\'arrière.</string>
+    <string name="gboard_clipboard_no_items">Aucun élément dans cette liste</string>
+    <string name="gboard_clipboard_no_unpinned">Aucun élément non épinglé dans cette liste</string>
+    <string name="gboard_clipboard_select_all_toggle">Ajouter un bouton Tout sélectionner en mode édition</string>
+    <string name="gboard_clipboard_select_all_summary">Sélectionnez plusieurs éléments du presse-papiers, puis appuyez sur Supprimer pour les effacer ensemble.</string>
+    <string name="gboard_clipboard_exclude_pinned">Exclure les éléments épinglés</string>
 </resources>

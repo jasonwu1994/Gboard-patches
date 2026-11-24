@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + Rücktaste: Vorwärtslöschen</string>
     <string name="gboard_patches_shift_delete_entry_summary">Halte Shift gedrückt und drücke die Rücktaste, um das Zeichen nach dem Cursor zu löschen.</string>
     <string name="gboard_patches_shift_delete_summary">Halte Shift gedrückt und drücke die Rücktaste, um das Zeichen nach dem Cursor zu löschen – wie bei der Entf-Taste einer Computertastatur. Zum Wiederholen gedrückt halten; beim Loslassen von Shift wird wieder rückwärts gelöscht.</string>
+    <string name="gboard_clipboard_no_items">Diese Liste enthält keine Elemente</string>
+    <string name="gboard_clipboard_no_unpinned">Diese Liste enthält keine nicht angepinnten Elemente</string>
+    <string name="gboard_clipboard_select_all_toggle">Schaltfläche „Alle auswählen“ im Bearbeitungsmodus hinzufügen</string>
+    <string name="gboard_clipboard_select_all_summary">Wähle mehrere Elemente der Zwischenablage aus und tippe auf „Löschen“, um sie gemeinsam zu entfernen.</string>
+    <string name="gboard_clipboard_exclude_pinned">Angepinnte Elemente ausschließen</string>
 </resources>

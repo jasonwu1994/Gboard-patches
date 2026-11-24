@@ -963,4 +963,9 @@
     <string name="gboard_patches_shift_delete_title">Xóa tiến bằng Shift + Backspace</string>
     <string name="gboard_patches_shift_delete_entry_summary">Giữ Shift và nhấn Backspace để xóa ký tự phía sau con trỏ.</string>
     <string name="gboard_patches_shift_delete_summary">Giữ Shift và nhấn Backspace để xóa ký tự phía sau con trỏ, tương tự phím Delete trên bàn phím máy tính. Giữ để xóa liên tục; thả Shift để quay lại xóa lùi.</string>
+    <string name="gboard_clipboard_no_items">Danh sách này không có đoạn nào</string>
+    <string name="gboard_clipboard_no_unpinned">Danh sách này không có đoạn chưa ghim</string>
+    <string name="gboard_clipboard_select_all_toggle">Thêm nút Chọn tất cả trong chế độ chỉnh sửa</string>
+    <string name="gboard_clipboard_select_all_summary">Chọn nhiều đoạn trong bảng nhớ tạm rồi nhấn Xóa để xóa tất cả cùng lúc.</string>
+    <string name="gboard_clipboard_exclude_pinned">Loại trừ các đoạn đã ghim</string>
 </resources>

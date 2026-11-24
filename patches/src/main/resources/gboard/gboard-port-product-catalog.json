@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.21.0",
+  "catalog_version": "1.22.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -62,6 +62,11 @@
     "clipboard_recent_header": "field",
     "clipboard_recycler_manager": "field",
     "clipboard_refresh": "method",
+    "clipboard_select_all_close": "method",
+    "clipboard_select_all_data": "method",
+    "clipboard_select_all_reset": "method",
+    "clipboard_select_all_state": "method",
+    "clipboard_select_all_touch": "method",
     "clipboard_set_span": "method",
     "clipboard_span_count": "field",
     "clipboard_special_header": "field",
@@ -583,6 +588,7 @@
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPatchOptions.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPatchValidation.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPrunePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardSelectAllPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
       ],
       "contributions": [
@@ -632,6 +638,11 @@
             "clipboard_recent_header",
             "clipboard_recycler_manager",
             "clipboard_refresh",
+            "clipboard_select_all_close",
+            "clipboard_select_all_data",
+            "clipboard_select_all_reset",
+            "clipboard_select_all_state",
+            "clipboard_select_all_touch",
             "clipboard_set_span",
             "clipboard_span_count",
             "clipboard_special_header",
@@ -647,7 +658,12 @@
             "CLIPBOARD_RUNTIME_BEFORE_ITEM_BIND",
             "CLIPBOARD_RUNTIME_HANDLE_CUSTOM_PRUNE",
             "CLIPBOARD_RUNTIME_MAYBE_BUILD_LOADER_RESULT",
-            "CLIPBOARD_RUNTIME_RESOLVE_COLUMN_COUNT"
+            "CLIPBOARD_RUNTIME_RESOLVE_COLUMN_COUNT",
+            "CLIPBOARD_SELECT_ALL_AFTER_DATA",
+            "CLIPBOARD_SELECT_ALL_AFTER_OPEN",
+            "CLIPBOARD_SELECT_ALL_AFTER_STATE",
+            "CLIPBOARD_SELECT_ALL_BEFORE_OPEN_OR_CLOSE",
+            "CLIPBOARD_SELECT_ALL_INTERCEPT_TOUCH"
           ]
         }
       ]

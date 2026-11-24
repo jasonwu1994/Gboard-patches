@@ -1,3 +1,13 @@
+## [4.5.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.3...v4.5.0-dev.4) (2026-11-24)
+
+### ✨ New Features
+
+* **Gboard:** **Clipboard Enhancements** adds an optional **Select All** button at the far left of the clipboard edit toolbar. Enable it under **Patches → Clipboard → General**, where the setting includes a description and preview. **Select All** includes pinned clips by default. Turn on **Exclude pinned clips** to select only unpinned clips, then use Gboard’s built-in **Delete** button to remove the selection.
+
+### ✨ 新功能
+
+* **Gboard:** **剪貼簿增強**新增「編輯時新增全選按鈕」，預設關閉。可在 **Patches → 剪貼簿 → 一般**查看說明、預覽並開啟。啟用後，「全選」會出現在編輯工具列最左側，預設包含釘選項目。開啟「排除釘選」後，全選只勾選未釘選項目，再按 Gboard 原生刪除鍵即可批次刪除。
+
 ## [4.5.0-dev.3](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.2...v4.5.0-dev.3) (2026-11-23)
 
 ### ✨ New Features

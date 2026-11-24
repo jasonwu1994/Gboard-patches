@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + Backspace Forward Delete</string>
     <string name="gboard_patches_shift_delete_entry_summary">Hold Shift and press Backspace to delete the character after the cursor.</string>
     <string name="gboard_patches_shift_delete_summary">Hold Shift and press Backspace to delete the character after the cursor, like the Delete key on a computer keyboard. Hold to repeat; releasing Shift restores backward deletion.</string>
+    <string name="gboard_clipboard_no_items">No clips in this list</string>
+    <string name="gboard_clipboard_no_unpinned">No unpinned clips in this list</string>
+    <string name="gboard_clipboard_select_all_toggle">Add a Select All button in edit mode</string>
+    <string name="gboard_clipboard_select_all_summary">Select multiple clipboard items, then tap Delete to remove them together.</string>
+    <string name="gboard_clipboard_exclude_pinned">Exclude pinned clips</string>
 </resources>

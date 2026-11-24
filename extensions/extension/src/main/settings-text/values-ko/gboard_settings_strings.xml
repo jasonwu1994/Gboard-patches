@@ -963,4 +963,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + 백스페이스 앞으로 삭제</string>
     <string name="gboard_patches_shift_delete_entry_summary">Shift를 누른 상태에서 백스페이스를 눌러 커서 뒤의 문자를 삭제합니다.</string>
     <string name="gboard_patches_shift_delete_summary">컴퓨터 키보드의 Delete 키처럼 Shift를 누른 상태에서 백스페이스를 눌러 커서 뒤의 문자를 삭제합니다. 길게 누르면 연속 삭제되며, Shift를 놓으면 뒤로 삭제 모드로 돌아갑니다.</string>
+    <string name="gboard_clipboard_no_items">이 목록에 클립이 없습니다</string>
+    <string name="gboard_clipboard_no_unpinned">이 목록에 고정되지 않은 클립이 없습니다</string>
+    <string name="gboard_clipboard_select_all_toggle">편집 모드에 모두 선택 버튼 추가</string>
+    <string name="gboard_clipboard_select_all_summary">클립을 여러 개 선택한 다음 삭제 버튼을 탭하여 한꺼번에 삭제합니다.</string>
+    <string name="gboard_clipboard_exclude_pinned">고정된 클립 제외</string>
 </resources>

@@ -963,4 +963,9 @@
     <string name="gboard_patches_shift_delete_title">Hapus Maju dengan Shift + Backspace</string>
     <string name="gboard_patches_shift_delete_entry_summary">Tahan Shift lalu tekan Backspace untuk menghapus karakter setelah kursor.</string>
     <string name="gboard_patches_shift_delete_summary">Tahan Shift lalu tekan Backspace untuk menghapus karakter setelah kursor, seperti tombol Delete pada keyboard komputer. Tahan untuk mengulang; melepaskan Shift mengembalikan penghapusan ke belakang.</string>
+    <string name="gboard_clipboard_no_items">Tidak ada klip dalam daftar ini</string>
+    <string name="gboard_clipboard_no_unpinned">Tidak ada klip yang tidak disematkan dalam daftar ini</string>
+    <string name="gboard_clipboard_select_all_toggle">Tambahkan tombol Pilih semua dalam mode edit</string>
+    <string name="gboard_clipboard_select_all_summary">Pilih beberapa klip, lalu ketuk Hapus untuk menghapusnya sekaligus.</string>
+    <string name="gboard_clipboard_exclude_pinned">Kecualikan klip yang disematkan</string>
 </resources>

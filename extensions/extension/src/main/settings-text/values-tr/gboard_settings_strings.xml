@@ -966,4 +966,9 @@
     <string name="gboard_patches_shift_delete_title">Shift + Backspace ile İleri Silme</string>
     <string name="gboard_patches_shift_delete_entry_summary">İmleçten sonraki karakteri silmek için Shift tuşunu basılı tutup Backspace tuşuna basın.</string>
     <string name="gboard_patches_shift_delete_summary">Bilgisayar klavyesindeki Delete tuşu gibi imleçten sonraki karakteri silmek için Shift tuşunu basılı tutup Backspace tuşuna basın. Yinelemek için basılı tutun; Shift tuşunu bıraktığınızda geriye doğru silmeye dönülür.</string>
+    <string name="gboard_clipboard_no_items">Bu listede klip yok</string>
+    <string name="gboard_clipboard_no_unpinned">Bu listede sabitlenmemiş klip yok</string>
+    <string name="gboard_clipboard_select_all_toggle">Düzenleme moduna Tümünü seç düğmesi ekle</string>
+    <string name="gboard_clipboard_select_all_summary">Birden fazla klip seçip Sil düğmesine dokunarak hepsini bir kerede silin.</string>
+    <string name="gboard_clipboard_exclude_pinned">Sabitlenmiş klipleri hariç tut</string>
 </resources>

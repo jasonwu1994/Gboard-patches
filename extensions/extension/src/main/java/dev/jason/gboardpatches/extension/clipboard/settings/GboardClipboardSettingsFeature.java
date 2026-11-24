@@ -167,6 +167,8 @@ public final class GboardClipboardSettingsFeature
                                         value)
                                 .apply()));
 
+                appendSelectAllRows(generalRows, host, context, preferences, clipboardEnabled);
+
                 List<GboardPatchesSettingsContract.Row> metadataRows =
                         new ArrayList<GboardPatchesSettingsContract.Row>();
                 metadataSection.appendRows(metadataRows, host, preferences, clipboardEnabled);
@@ -223,6 +225,39 @@ public final class GboardClipboardSettingsFeature
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to render clipboard settings screen", throwable);
             return buildErrorScreen();
+        }
+    }
+
+    private void appendSelectAllRows(List<GboardPatchesSettingsContract.Row> rows,
+            GboardPatchesSettingsContract.FeatureHost host, Context context,
+            SharedPreferences preferences, boolean clipboardEnabled) {
+        String title = GboardSettingsText.get(context, R.string.gboard_clipboard_select_all_toggle);
+        boolean enabled = GboardClipboardSettings.readSelectAll(preferences);
+        rows.add(new GboardPatchesSettingsContract.ToggleRow(
+                title,
+                GboardSettingsText.get(context, R.string.gboard_clipboard_select_all_summary),
+                clipboardEnabled,
+                enabled,
+                value -> {
+                    preferences.edit()
+                            .putBoolean(GboardClipboardSettings.PREF_KEY_SELECT_ALL, value)
+                            .apply();
+                    GboardPatchesSettingsContract.refresh(host);
+                },
+                new GboardPatchesSettingsContract.PreviewSpec(
+                        title, EMPTY_PREVIEW_MESSAGE,
+                        GboardPatchesSettingsContract.PreviewLayout.STACKED,
+                        new GboardPatchesSettingsContract.PreviewImage(
+                                "settings-previews/clipboard/select_all_in_edit_mode.png", ""))));
+        if (enabled) {
+            rows.add(new GboardPatchesSettingsContract.ToggleRow(
+                    GboardSettingsText.get(context, R.string.gboard_clipboard_exclude_pinned),
+                    "",
+                    clipboardEnabled,
+                    GboardClipboardSettings.readExcludePinned(preferences),
+                    value -> preferences.edit()
+                            .putBoolean(GboardClipboardSettings.PREF_KEY_EXCLUDE_PINNED, value)
+                            .apply()));
         }
     }
 

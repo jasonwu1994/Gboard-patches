@@ -240,6 +240,7 @@ final class GboardSettingsSearchIndexData {
             {35, R.string.gboard_patches_clipboard_title, R.string.gboard_patches_clipboard_summary, 1},
             {35, R.string.gboard_patches_clipboard_show_sensitive_content_title, R.string.gboard_patches_clipboard_show_sensitive_content_summary, 0},
             {35, R.string.gboard_patches_clipboard_card_preview_limit_title, R.string.gboard_patches_clipboard_card_preview_limit_summary, 0},
+            {35, R.string.gboard_clipboard_select_all_toggle, R.string.gboard_clipboard_select_all_summary, 0},
             {35, R.string.gboard_patches_pref_show_expiry_countdown, R.string.gboard_patches_pref_show_expiry_countdown_summary, 0},
             {35, R.string.gboard_patches_pref_show_creation_time, R.string.gboard_patches_pref_show_creation_time_summary, 0},
             {35, R.string.gboard_patches_pref_show_order_index, R.string.gboard_patches_pref_show_order_index_summary, 0},
