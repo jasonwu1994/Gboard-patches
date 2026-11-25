@@ -10,6 +10,8 @@ import java.util.Set;
 
 import dev.jason.gboardpatches.extension.R;
 import dev.jason.gboardpatches.extension.backuprestore.flagstore.GboardFlagStoreSettingsFeature;
+import dev.jason.gboardpatches.extension.backuprestore.gboarddata.GboardDataBackupSettings;
+import dev.jason.gboardpatches.extension.backuprestore.gboarddata.GboardDataBackupTargetBinding;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesIcons;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesFeatureAvailability;
@@ -71,12 +73,12 @@ public final class GboardBackupRestoreSettingsFeature
                 new ArrayList<GboardPatchesSettingsContract.Row>();
         patchesRows.add(new GboardPatchesSettingsContract.CommandRow(
                 text(context, R.string.gboard_patches_backup_export_title),
-                null,
+                text(context, R.string.gboard_patches_backup_export_summary),
                 true,
                 () -> exportPatches(host)));
         patchesRows.add(new GboardPatchesSettingsContract.CommandRow(
                 text(context, R.string.gboard_patches_backup_restore_action_title),
-                null,
+                text(context, R.string.gboard_patches_backup_import_summary),
                 true,
                 () -> importPatches(host)));
 
@@ -95,6 +97,8 @@ public final class GboardBackupRestoreSettingsFeature
                 null,
                 GboardPatchesSettingsContract.SectionStyle.DEFAULT,
                 patchesRows));
+        sections.add(GboardDataBackupSettings.section(host,
+                GboardDataBackupTargetBinding.gateway()));
         sections.add(new GboardPatchesSettingsContract.Section(
                 text(context, R.string.gboard_patches_backup_section_flags),
                 null,
@@ -145,7 +149,8 @@ public final class GboardBackupRestoreSettingsFeature
         boolean[] selected = new boolean[modules.size()];
         for (int index = 0; index < modules.size(); index++) {
             GboardPatchesBackupManager.ModulePlan module = modules.get(index);
-            labels[index] = module.getModuleName()
+            labels[index] = GboardPatchesBackupModuleLabels.label(host.getContext(),
+                    module.getModuleId(), module.getModuleName())
                     + " (" + module.getKeys().size() + ")";
             values[index] = module.getModuleId();
             selected[index] = true;

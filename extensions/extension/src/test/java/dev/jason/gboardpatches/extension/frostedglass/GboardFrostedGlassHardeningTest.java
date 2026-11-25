@@ -218,6 +218,22 @@ public class GboardFrostedGlassHardeningTest {
         }
     }
 
+    @Test public void aFailingBlurCommitPostCannotEscapeOrLeaveDanglingCallback() throws Exception {
+        try (Fixture f = new Fixture()) {
+            View host = new View(f.controller.get()) {
+                @Override public void postOnAnimation(Runnable action) {
+                    throw new IllegalStateException("Injected postOnAnimation failure");
+                }
+            };
+            Method schedule = GboardFrostedGlassRuntime.class.getDeclaredMethod(
+                    "scheduleBlurCommitRedraw", Window.class, View.class, f.stateClass);
+            schedule.setAccessible(true);
+            schedule.invoke(null, f.window, host, f.state);
+            assertNull(f.field("blurCommitRedraw"));
+            assertNull(f.field("blurCommitRedrawHost"));
+        }
+    }
+
     @Test public void hideRestoreRunnableIsGuardedAndStillRestores() throws Exception {
         try (Fixture f = new Fixture()) {
             f.apply();

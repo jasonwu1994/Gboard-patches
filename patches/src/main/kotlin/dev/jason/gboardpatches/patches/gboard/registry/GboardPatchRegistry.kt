@@ -599,8 +599,8 @@ val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
 val gboardBackupRestorePatch = gboardPublicResourcePatch(
     featureId = "backup_restore",
     name = "Backup & Restore",
-    description = "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\n" +
-        "Export or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
+    description = "匯出或還原 Patches 設定與 Gboard 個人化資料，並備份、比較及還原 Gboard PB/XML flag store\n" +
+        "Export or restore Patches settings and Gboard personal data, and back up, compare, or restore the Gboard PB/XML flag store.",
     default = true,
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)

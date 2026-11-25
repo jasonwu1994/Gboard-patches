@@ -173,6 +173,29 @@ public final class GboardFrostedGlassEnergyTest {
         }
     }
 
+    @Test public void newNavigationBlurSchedulesOneCommitRedrawAndSteadyFramesScheduleNone() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.show();
+            f.idle(50);
+            assertNull(f.pendingBlurCommitRedraw());
+            Object state = f.state();
+            Field nav = state.getClass().getDeclaredField("navigationEnabled");
+            nav.setAccessible(true);
+            nav.setBoolean(state, true);
+            f.preDraw();
+            assertTrue("navigation glass must be active", f.input.willNotDraw());
+            assertNotNull("creating navigation BackgroundBlurDrawable must schedule one commit redraw",
+                    f.pendingBlurCommitRedraw());
+            f.idle(20);
+            assertNull(f.pendingBlurCommitRedraw());
+            for (int i = 0; i < 20; i++) {
+                f.preDraw();
+                assertNull("steady-state navigation frames must leave no commit redraw queued",
+                        f.pendingBlurCommitRedraw());
+            }
+        }
+    }
+
     private static final class Fixture implements AutoCloseable {
         final ActivityController<Activity> host = Robolectric.buildActivity(Activity.class).setup().visible();
         final Context context = host.get();
@@ -254,6 +277,13 @@ public final class GboardFrostedGlassEnergyTest {
             Field fallback = state.getClass().getDeclaredField("fallback");
             fallback.setAccessible(true);
             return fallback.get(state);
+        }
+
+        Object pendingBlurCommitRedraw() throws Exception {
+            Object state = state();
+            Field redraw = state.getClass().getDeclaredField("blurCommitRedraw");
+            redraw.setAccessible(true);
+            return redraw.get(state);
         }
 
         /** The seamless-nav setting has no host provider; set the loaded snapshot directly. */

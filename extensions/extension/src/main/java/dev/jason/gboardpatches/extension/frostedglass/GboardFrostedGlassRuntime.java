@@ -196,6 +196,10 @@ public final class GboardFrostedGlassRuntime {
         }
         ++state.layoutGeneration;
         state.hiding = true;
+        if (state.blurCommitRedraw != null) {
+            state.blurCommitPending = true;
+        }
+        cleanupStep(() -> cancelBlurCommitRedraw(state));
         cleanupStep(() -> cancelFallback(state));
         cleanupStep(() -> detachObservers(state));
         cancelHideRestore(state);
@@ -296,6 +300,54 @@ public final class GboardFrostedGlassRuntime {
         state.fallback = null;
     }
 
+    /**
+     * A BackgroundBlurDrawable created during dispatchOnPreDraw registers the framework's
+     * blur pre-draw listener into a copy-on-write list after the current snapshot has started,
+     * and its first RenderNode position arrives after that draw. Schedule one next-frame redraw
+     * so the framework listener runs and commits the blur region even if the keyboard stays idle.
+     */
+    private static void scheduleBlurCommitRedraw(Window window, View decor, State state) {
+        cancelBlurCommitRedraw(state);
+        if (decor == null || !isCurrent(window, state) || state.hiding) return;
+        Runnable[] slot = new Runnable[1];
+        Runnable redraw = () -> cleanupStep(() -> {
+            if (state.blurCommitRedraw != slot[0]) return;
+            state.blurCommitRedraw = null;
+            state.blurCommitRedrawHost = null;
+            if (!isCurrent(window, state) || state.hiding) return;
+            View blurView = state.localBlurView;
+            if (blurView != null && blurView.isAttachedToWindow()) {
+                blurView.invalidate();
+            }
+            View navInput = state.navigation.input;
+            if (navInput != null && navInput.isAttachedToWindow()) {
+                navInput.invalidate();
+            }
+            if (decor.isAttachedToWindow()) {
+                decor.invalidate();
+            }
+        });
+        slot[0] = redraw;
+        state.blurCommitRedraw = redraw;
+        state.blurCommitRedrawHost = decor;
+        try {
+            decor.postOnAnimation(redraw);
+        } catch (Throwable ignored) {
+            state.blurCommitRedraw = null;
+            state.blurCommitRedrawHost = null;
+        }
+    }
+
+    private static void cancelBlurCommitRedraw(State state) {
+        Runnable pending = state.blurCommitRedraw;
+        View host = state.blurCommitRedrawHost;
+        state.blurCommitRedraw = null;
+        state.blurCommitRedrawHost = null;
+        if (pending != null && host != null) {
+            cleanupStep(() -> host.removeCallbacks(pending));
+        }
+    }
+
     private static void installDecorLayoutObserver(Window window,
             Context context, View decor, State state) {
         installPreDrawObserver(window, context, decor, state);
@@ -352,6 +404,10 @@ public final class GboardFrostedGlassRuntime {
                 // The single per-frame unlock query; a locked frame skips without disposing.
                 if (isCurrent(window, state) && !state.hiding && isUserUnlocked(context)) {
                     applyUnlocked(window, context, state);
+                    if (state.blurCommitPending && isCurrent(window, state) && !state.hiding) {
+                        state.blurCommitPending = false;
+                        scheduleBlurCommitRedraw(window, decor, state);
+                    }
                 }
             } catch (Throwable ignored) {
                 cleanupStep(() -> disable(window));
@@ -551,7 +607,12 @@ public final class GboardFrostedGlassRuntime {
             if (state.navigation.blurFailureListener == null) {
                 state.navigation.blurFailureListener = blurFailureListener(window, state);
             }
+            Object previousNavBlur = state.navigation.blur;
             navigationApplied = state.navigation.update(root, state.navInput, state.navTint, radiusPx);
+            if (navigationApplied && state.navigation.blur != null
+                    && state.navigation.blur != previousNavBlur) {
+                state.blurCommitPending = true;
+            }
             if (!navigationApplied && state.navInput != null && NavigationSurface.supportsTint(state.navTint)
                     && !"strip backdrop unavailable".equals(state.navReason)) {
                 state.navReason = "strip backdrop unavailable";
@@ -820,6 +881,7 @@ public final class GboardFrostedGlassRuntime {
                 state.localCombinedBackground = combined;
                 state.localRadiusPx = radiusPx;
                 state.localShape = shape;
+                state.blurCommitPending = true;
                 state.applied = true;
                 Log.i(TAG, "applied local radius=" + radiusPx + " corners="
                         + shape.topLeft + "," + shape.topRight + ","
@@ -1343,6 +1405,8 @@ public final class GboardFrostedGlassRuntime {
         }
         ++state.layoutGeneration;
         state.hiding = false;
+        state.blurCommitPending = false;
+        cleanupStep(() -> cancelBlurCommitRedraw(state));
         cleanupStep(() -> cancelHideRestore(state));
         cleanupStep(() -> cancelFallback(state));
         cleanupStep(() -> detachObservers(state));
@@ -1721,6 +1785,9 @@ public final class GboardFrostedGlassRuntime {
         boolean ready;
         Runnable fallback;
         View fallbackHost;
+        boolean blurCommitPending;
+        Runnable blurCommitRedraw;
+        View blurCommitRedrawHost;
         // Apply-pass bookkeeping: each pre-draw/show/layout fallback is one pass.
         long pass;
         boolean structureDirty = true;

@@ -492,12 +492,16 @@
       "feature_id": "backup_restore",
       "public_patch_name": "Backup & Restore",
       "feature_marker": "dev.jason.gboardpatches.feature.backup_restore",
-      "target_family_ids": [],
-      "migration_scope": "version-neutral-extension",
+      "target_family_ids": [
+        "flag.reader"
+      ],
+      "migration_scope": "version-sensitive",
       "consumer_files": [
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreFeatureMarkerPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreManifestPatch.kt",
-        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardDataBackupFlagValuePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
       ],
       "contributions": [
         {
@@ -507,6 +511,19 @@
           "order": 100,
           "required_bindings": [],
           "runtime_calls": []
+        },
+        {
+          "contribution_id": "backup_restore.flag",
+          "anchor_family_id": "flag_bool_getter",
+          "phase": "after_stock_result",
+          "order": 1500,
+          "required_bindings": [
+            "flag_bool_getter",
+            "flag_name_field"
+          ],
+          "runtime_calls": [
+            "GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE"
+          ]
         }
       ]
     },

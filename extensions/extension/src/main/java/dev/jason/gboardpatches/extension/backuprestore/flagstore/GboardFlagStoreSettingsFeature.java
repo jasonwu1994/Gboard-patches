@@ -49,11 +49,11 @@ public final class GboardFlagStoreSettingsFeature
                         backendSummary(context, status), backendTone(status)));
 
         List<GboardPatchesSettingsContract.Row> exportRows = new ArrayList<>();
-        exportRows.add(exportRow(featureHost, GboardFlagStoreFiles.PROTO_FILE,
+        exportRows.add(exportRow(featureHost, status, GboardFlagStoreFiles.PROTO_FILE,
                 status.isProtoStorePresent()));
-        exportRows.add(exportRow(featureHost, GboardFlagStoreFiles.LEGACY_OVERRIDE_FILE,
+        exportRows.add(exportRow(featureHost, status, GboardFlagStoreFiles.LEGACY_OVERRIDE_FILE,
                 status.isLegacyOverridePresent()));
-        exportRows.add(exportRow(featureHost, GboardFlagStoreFiles.LEGACY_VALUE_FILE,
+        exportRows.add(exportRow(featureHost, status, GboardFlagStoreFiles.LEGACY_VALUE_FILE,
                 status.isLegacyValuePresent()));
 
         List<GboardPatchesSettingsContract.Row> importRows = new ArrayList<>();
@@ -78,11 +78,17 @@ public final class GboardFlagStoreSettingsFeature
     }
 
     private GboardPatchesSettingsContract.Row exportRow(
-            GboardPatchesSettingsContract.FeatureHost host, String fileName, boolean enabled) {
+            GboardPatchesSettingsContract.FeatureHost host, GboardFlagStorageStatus status,
+            String fileName, boolean enabled) {
+        boolean known = status.getBackend() != GboardFlagStorageStatus.Backend.LOADING
+                && status.getBackend() != GboardFlagStorageStatus.Backend.UNAVAILABLE;
         return new GboardPatchesSettingsContract.CommandRow(
                 text(host.getContext(), R.string.gboard_flag_store_replacement_export_file,
                         fileName),
-                null,
+                !enabled && known
+                        ? text(host.getContext(),
+                                R.string.gboard_flag_store_replacement_file_missing)
+                        : null,
                 enabled,
                 () -> exportFile(host, fileName));
     }

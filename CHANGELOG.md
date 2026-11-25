@@ -1,3 +1,23 @@
+## [4.5.0-dev.7](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.4...v4.5.0-dev.7) (2026-11-25)
+
+### ✨ New Features
+
+* **Gboard:** **Backup & Restore** can now export Gboard's own personal data to a ZIP file. You choose what to include: learned words, personal dictionary, blocked suggestions, emoji and GIF history, custom themes, pinned clipboard items, and Gboard settings.
+* **Gboard:** **Import Gboard data** restores the items you choose. Before importing, it lists everything that will be replaced. Afterwards, it shows the result for each item and offers **Restart Gboard**. Backups from a newer Gboard are rejected. Only pinned clipboard items are included, and Gboard may ask for contacts access after you restore settings.
+
+### 🐛 Bug Fixes
+
+* **Gboard:** **Frosted Glass**: fix an issue where invoking the keyboard could leave the background transparent without blur until you tap a key, by scheduling a single next-frame redraw after a new blur surface is created.
+
+### ✨ 新功能
+
+* **Gboard:** **備份與還原**新增 Gboard 個人化資料匯出，可以自選要存進 ZIP 檔的項目：記憶字詞、個人字典、封鎖的建議字詞、表情符號與 GIF 紀錄、自訂主題、已固定的剪貼簿項目和 Gboard 設定。
+* **Gboard:** 「匯入 Gboard 資料」可以自選要還原的項目。匯入前會列出所有會被覆蓋的內容，完成後逐項顯示結果，並提供「重新啟動 Gboard」。較新版本 Gboard 的備份無法匯入。剪貼簿只包含已固定的項目；還原 Gboard 設定後，Gboard 可能會要求聯絡人權限。
+
+### 🐛 修復
+
+* **Gboard:** **磨砂玻璃**：修復開啟鍵盤時背景可能只剩透明、沒有顯示模糊效果，必須按下任意按鍵後才恢復的問題；現在建立新的模糊表面後會自動補排一次下一幀重繪。
+
 ## [4.5.0-dev.4](https://github.com/jasonwu1994/Gboard-patches/compare/v4.5.0-dev.3...v4.5.0-dev.4) (2026-11-24)
 
 ### ✨ New Features
