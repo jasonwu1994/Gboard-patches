@@ -23,6 +23,9 @@ public final class GboardClipboardSettings {
     public static final String PREF_FILE = GboardClipboardRuntime.SETTINGS_PREF_FILE;
     public static final String LEGACY_PREF_FILE = GboardClipboardRuntime.LEGACY_SETTINGS_PREF_FILE;
 
+    static final String PREF_KEY_SELECT_ALL = "pref_clipboard_select_unpinned_enabled";
+    static final String PREF_KEY_EXCLUDE_PINNED = "pref_clipboard_exclude_pinned";
+
     public static final String PREF_KEY_CLIPBOARD_ENABLED = "pref_clipboard_enabled";
     public static final String PREF_KEY_CLIPBOARD_SHOW_COUNTDOWN =
             "pref_clipboard_show_countdown";
@@ -136,6 +139,14 @@ public final class GboardClipboardSettings {
         SharedPreferences preferences = preferences(context);
         ensureDefaults(preferences);
         return readClipboardEnabled(preferences);
+    }
+
+    static boolean readSelectAll(SharedPreferences preferences) {
+        return readBooleanPreference(preferences, PREF_KEY_SELECT_ALL, false);
+    }
+
+    static boolean readExcludePinned(SharedPreferences preferences) {
+        return readBooleanPreference(preferences, PREF_KEY_EXCLUDE_PINNED, false);
     }
 
     public static boolean readClipboardEnabled(SharedPreferences preferences) {

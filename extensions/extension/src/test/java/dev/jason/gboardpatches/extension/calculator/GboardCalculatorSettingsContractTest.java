@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.calculator;
 
+import dev.jason.gboardpatches.extension.settings.GboardSettingsTextFiles;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public final class GboardCalculatorSettingsContractTest {
     public void usageSectionContainsTheTwoRequestedRowsAndAllLimits() throws Exception {
         String feature = read("src/main/java/dev/jason/gboardpatches/extension/calculator/"
                 + "GboardCalculatorSettingsFeature.java");
-        String text = read("src/main/settings-text/gboard_settings_text.xml");
+        String text = GboardSettingsTextFiles.englishAndTraditionalChinese();
 
         Assert.assertTrue(feature.indexOf("usageTitle,") < feature.indexOf("limitsTitle,"));
         Assert.assertTrue(text.contains("Inline result suggestion"));

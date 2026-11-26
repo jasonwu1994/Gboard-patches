@@ -287,12 +287,62 @@ public final class GboardFrostedGlassFirstFrameTest {
         }
     }
 
+    @Test public void newBlurCreatedDuringPreDrawSchedulesOneNextFrameCommitRedraw() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.root.setTag("not-a-keyboard-yet");
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            assertNull(f.stateField("blurCommitRedraw"));
+            f.root.setTag(".keyboard-base-area.keyboard-outline");
+            f.draw();
+            assertNotNull("creating BackgroundBlurDrawable during pre-draw must schedule a commit redraw",
+                    f.stateField("blurCommitRedraw"));
+            assertEquals(Boolean.FALSE, f.stateField("blurCommitPending"));
+            int invalidatesBefore = f.root.invalidates;
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(20));
+            assertNull("commit redraw is one-shot and clears itself after running",
+                    f.stateField("blurCommitRedraw"));
+            assertTrue("commit redraw must invalidate the blur root on the next frame",
+                    f.root.invalidates > invalidatesBefore);
+            int invalidatesAfterCommit = f.root.invalidates;
+            for (int i = 0; i < 10; i++) f.draw();
+            assertNull("steady-state frames must not schedule additional commit redraws",
+                    f.stateField("blurCommitRedraw"));
+            assertEquals(invalidatesAfterCommit, f.root.invalidates);
+        }
+    }
+
+    @Test public void hidingCancelsPendingBlurCommitRedrawAndResumeRecommits() throws Exception {
+        try (Fixture f = new Fixture()) {
+            f.root.setTag("not-a-keyboard-yet");
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.root.setTag(".keyboard-base-area.keyboard-outline");
+            f.draw();
+            assertNotNull(f.stateField("blurCommitRedraw"));
+            int invalidatesBeforeHide = f.root.invalidates;
+            GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(f.ime);
+            assertNull("hide must cancel the pending commit redraw immediately",
+                    f.stateField("blurCommitRedraw"));
+            assertEquals("an interrupted commit must stay pending for a quick resume",
+                    Boolean.TRUE, f.stateField("blurCommitPending"));
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(50));
+            assertEquals("cancelled commit redraw must not run while hiding",
+                    invalidatesBeforeHide, f.root.invalidates);
+            GboardFrostedGlassLifecycleRuntime.onInputViewStarted(f.ime);
+            f.draw();
+            assertNotNull("resuming before hide restore must schedule the pending commit redraw",
+                    f.stateField("blurCommitRedraw"));
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(20));
+            assertNull(f.stateField("blurCommitRedraw"));
+            assertTrue(f.root.invalidates > invalidatesBeforeHide);
+        }
+    }
+
     private static final class Fixture implements AutoCloseable {
         final ActivityController<Activity> host = Robolectric.buildActivity(Activity.class).setup().visible();
         final Dialog dialog = new Dialog(host.get());
         final GboardFrostedGlassLifecycleDirectBootTest.GuardedIme ime =
                 Robolectric.setupService(GboardFrostedGlassLifecycleDirectBootTest.GuardedIme.class);
-        final FrameLayout root = new FrameLayout(host.get());
+        final CountingFrameLayout root = new CountingFrameLayout(host.get());
         final CountingGradient theme = new CountingGradient();
         final Window window;
 
@@ -324,12 +374,31 @@ public final class GboardFrostedGlassFirstFrameTest {
             window.getDecorView().getViewTreeObserver().dispatchOnDraw();
         }
 
+        Object stateField(String name) throws Exception {
+            Field states = GboardFrostedGlassRuntime.class.getDeclaredField("STATES");
+            states.setAccessible(true);
+            Object state = ((Map<?, ?>) states.get(null)).get(window);
+            assertNotNull(state);
+            Field field = state.getClass().getDeclaredField(name);
+            field.setAccessible(true);
+            return field.get(state);
+        }
+
         @Override public void close() {
             shadowOf(RuntimeEnvironment.getApplication().getSystemService(UserManager.class))
                     .setUserUnlocked(true);
             GboardFrostedGlassLifecycleRuntime.onInputWindowHidden(ime);
             dialog.dismiss();
             host.close();
+        }
+    }
+
+    private static final class CountingFrameLayout extends FrameLayout {
+        int invalidates;
+        CountingFrameLayout(android.content.Context context) { super(context); }
+        @Override public void invalidate() {
+            invalidates++;
+            super.invalidate();
         }
     }
 

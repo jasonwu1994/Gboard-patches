@@ -1,7 +1,7 @@
 {
   "$schema": "gboard-port-product-catalog.schema.json",
   "format": "gboard-port-product-catalog.v1",
-  "catalog_version": "1.21.0",
+  "catalog_version": "1.22.0",
   "composition": {
     "selected_only_call_chain": true,
     "runtime_feature_mask": false
@@ -62,6 +62,11 @@
     "clipboard_recent_header": "field",
     "clipboard_recycler_manager": "field",
     "clipboard_refresh": "method",
+    "clipboard_select_all_close": "method",
+    "clipboard_select_all_data": "method",
+    "clipboard_select_all_reset": "method",
+    "clipboard_select_all_state": "method",
+    "clipboard_select_all_touch": "method",
     "clipboard_set_span": "method",
     "clipboard_span_count": "field",
     "clipboard_special_header": "field",
@@ -487,12 +492,16 @@
       "feature_id": "backup_restore",
       "public_patch_name": "Backup & Restore",
       "feature_marker": "dev.jason.gboardpatches.feature.backup_restore",
-      "target_family_ids": [],
-      "migration_scope": "version-neutral-extension",
+      "target_family_ids": [
+        "flag.reader"
+      ],
+      "migration_scope": "version-sensitive",
       "consumer_files": [
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreFeatureMarkerPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardBackupRestoreManifestPatch.kt",
-        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/backuprestore/GboardDataBackupFlagValuePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/shared/GboardFlagFamilyComposer.kt"
       ],
       "contributions": [
         {
@@ -502,6 +511,19 @@
           "order": 100,
           "required_bindings": [],
           "runtime_calls": []
+        },
+        {
+          "contribution_id": "backup_restore.flag",
+          "anchor_family_id": "flag_bool_getter",
+          "phase": "after_stock_result",
+          "order": 1500,
+          "required_bindings": [
+            "flag_bool_getter",
+            "flag_name_field"
+          ],
+          "runtime_calls": [
+            "GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE"
+          ]
         }
       ]
     },
@@ -583,6 +605,7 @@
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPatchOptions.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPatchValidation.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardPrunePatch.kt",
+        "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/features/clipboard/GboardClipboardSelectAllPatch.kt",
         "patches/src/main/kotlin/dev/jason/gboardpatches/patches/gboard/registry/GboardPatchRegistry.kt"
       ],
       "contributions": [
@@ -632,6 +655,11 @@
             "clipboard_recent_header",
             "clipboard_recycler_manager",
             "clipboard_refresh",
+            "clipboard_select_all_close",
+            "clipboard_select_all_data",
+            "clipboard_select_all_reset",
+            "clipboard_select_all_state",
+            "clipboard_select_all_touch",
             "clipboard_set_span",
             "clipboard_span_count",
             "clipboard_special_header",
@@ -647,7 +675,12 @@
             "CLIPBOARD_RUNTIME_BEFORE_ITEM_BIND",
             "CLIPBOARD_RUNTIME_HANDLE_CUSTOM_PRUNE",
             "CLIPBOARD_RUNTIME_MAYBE_BUILD_LOADER_RESULT",
-            "CLIPBOARD_RUNTIME_RESOLVE_COLUMN_COUNT"
+            "CLIPBOARD_RUNTIME_RESOLVE_COLUMN_COUNT",
+            "CLIPBOARD_SELECT_ALL_AFTER_DATA",
+            "CLIPBOARD_SELECT_ALL_AFTER_OPEN",
+            "CLIPBOARD_SELECT_ALL_AFTER_STATE",
+            "CLIPBOARD_SELECT_ALL_BEFORE_OPEN_OR_CLOSE",
+            "CLIPBOARD_SELECT_ALL_INTERCEPT_TOUCH"
           ]
         }
       ]
@@ -2084,8 +2117,8 @@
         "patches/src/main/resources/web-clipboard-assets/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
         "patches/src/main/resources/web-clipboard-assets/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
         "patches/src/main/resources/web-clipboard-assets/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2",
-        "patches/src/main/resources/web-clipboard-assets/assets/index-CrrbJfwz.js",
-        "patches/src/main/resources/web-clipboard-assets/assets/index-j-45Yer8.css",
+        "patches/src/main/resources/web-clipboard-assets/assets/index-D6QcYQar.css",
+        "patches/src/main/resources/web-clipboard-assets/assets/index-izxGW1n_.js",
         "patches/src/main/resources/web-clipboard-assets/favicon.svg",
         "patches/src/main/resources/web-clipboard-assets/icons.svg",
         "patches/src/main/resources/web-clipboard-assets/index.html",
@@ -2102,7 +2135,8 @@
             "web_clipboard_create"
           ],
           "runtime_calls": [
-            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_LATIN_IME_ON_CREATE"
+            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_LATIN_IME_ON_CREATE",
+            "WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_CLIPBOARD_PROVIDER_INSERT"
           ]
         }
       ]

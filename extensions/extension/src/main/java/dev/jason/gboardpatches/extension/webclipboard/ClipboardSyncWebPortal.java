@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -37,6 +38,8 @@ public final class ClipboardSyncWebPortal {
     private static final long WEB_ECHO_SUPPRESSION_WINDOW_MS = 2 * 60_000L;
     private static final long CLIENT_HEARTBEAT_INTERVAL_MS = 1_000L;
     private static final int MAX_REQUEST_BODY_BYTES = 1024 * 1024;
+    private static final int MAX_IMAGE_REQUEST_BODY_BYTES = WebClipboardMediaStore.MAX_IMAGE_BYTES;
+    private static final int IMAGE_READ_TIMEOUT_MS = 30_000;
     private static final AtomicLong NEXT_PORTAL_INSTANCE_SEQUENCE = new AtomicLong(1L);
 
     private final int requestedPort;
@@ -47,10 +50,13 @@ public final class ClipboardSyncWebPortal {
     private final String portalInstanceId =
             "portal-" + System.currentTimeMillis()
                     + "-" + NEXT_PORTAL_INSTANCE_SEQUENCE.getAndIncrement();
+    private final WebClipboardMediaStore mediaStore;
     private final Object clientsLock = new Object();
     private final List<EventClient> eventClients = new ArrayList<>();
     private final Set<String> revokedClientIds = new LinkedHashSet<>();
     private final WebClipboardEchoSuppressor webEchoSuppressor =
+            new WebClipboardEchoSuppressor(WEB_ECHO_SUPPRESSION_WINDOW_MS);
+    private final WebClipboardEchoSuppressor webImageEchoSuppressor =
             new WebClipboardEchoSuppressor(WEB_ECHO_SUPPRESSION_WINDOW_MS);
 
     private ServerSocket serverSocket;
@@ -59,8 +65,12 @@ public final class ClipboardSyncWebPortal {
     private Thread httpsAcceptThread;
     private Thread clientHeartbeatThread;
     private volatile boolean stopped = true;
+    private volatile String latestPhoneKind = "";
     private volatile String latestPhoneClipboardText = "";
     private volatile long latestPhoneClipboardAtMs;
+    private volatile WebClipboardMediaStore.MediaEntry latestPhoneImage;
+    private volatile long latestPhoneImageAtMs;
+    private volatile String latestPhoneImageSha256 = "";
     private volatile String latestWebClipboardText = "";
     private volatile long latestWebClipboardAtMs;
     private long nextEventClientId = 1L;
@@ -79,21 +89,38 @@ public final class ClipboardSyncWebPortal {
                 securityConfig);
     }
 
+    ClipboardSyncWebPortal(int port, ClipboardBridge bridge, WebAssets webAssets,
+            File mediaCacheRoot, SecurityConfig securityConfig) {
+        this(port, ClipboardSyncHttpsSocketFactory.defaultHttpsPortFor(port), bridge, webAssets,
+                securityConfig, mediaCacheRoot);
+    }
+
     ClipboardSyncWebPortal(int port, int httpsPort, ClipboardBridge bridge, WebAssets webAssets) {
         this(port, httpsPort, bridge, webAssets, SecurityConfig.disabled());
     }
 
     ClipboardSyncWebPortal(int port, int httpsPort, ClipboardBridge bridge, WebAssets webAssets,
             SecurityConfig securityConfig) {
+        this(port, httpsPort, bridge, webAssets, securityConfig, null);
+    }
+
+    ClipboardSyncWebPortal(int port, int httpsPort, ClipboardBridge bridge, WebAssets webAssets,
+            SecurityConfig securityConfig, File mediaCacheRoot) {
         requestedPort = port;
         requestedHttpsPort = httpsPort;
         this.bridge = bridge;
         this.webAssets = webAssets == null ? WebAssets.empty() : webAssets;
         this.securityConfig = securityConfig == null ? SecurityConfig.disabled() : securityConfig;
+        File instanceMediaDir = mediaCacheRoot == null ? null : new File(mediaCacheRoot, portalInstanceId);
+        this.mediaStore = new WebClipboardMediaStore(instanceMediaDir);
     }
 
     interface ClipboardBridge {
         void applyDesktopClipboard(String text);
+
+        default void applyDesktopClipboardImage(byte[] imageBytes, String mimeType, String fileName) {
+            throw new UnsupportedOperationException("Image clipboard apply is not supported");
+        }
     }
 
     interface WebAssets {
@@ -225,6 +252,7 @@ public final class ClipboardSyncWebPortal {
         for (EventClient client : clientsToClose) {
             client.close();
         }
+        mediaStore.close();
     }
 
     int getPort() {
@@ -282,6 +310,16 @@ public final class ClipboardSyncWebPortal {
         return !kickedClients.isEmpty();
     }
 
+    void clearPhoneClipboardState() {
+        latestPhoneKind = "";
+        latestPhoneClipboardText = "";
+        latestPhoneClipboardAtMs = 0L;
+        latestPhoneImage = null;
+        latestPhoneImageAtMs = 0L;
+        latestPhoneImageSha256 = "";
+        mediaStore.clear();
+    }
+
     void publishPhoneClipboard(String text) {
         if (!hasClipboardText(text)) {
             return;
@@ -292,15 +330,61 @@ public final class ClipboardSyncWebPortal {
                     + " len=" + text.length());
             return;
         }
-        if (text.equals(latestPhoneClipboardText)
+        if ("text".equals(latestPhoneKind)
+                && text.equals(latestPhoneClipboardText)
                 && nowMs - latestPhoneClipboardAtMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
             logInfo(LOG_PREFIX + " portal publish suppressed duplicate"
                     + " len=" + text.length());
             return;
         }
+        latestPhoneKind = "text";
         latestPhoneClipboardText = text;
         latestPhoneClipboardAtMs = nowMs;
+        latestPhoneImage = null;
+        latestPhoneImageAtMs = 0L;
+        latestPhoneImageSha256 = "";
         broadcastClipboardEvent(text, latestPhoneClipboardAtMs, "phone", "Phone", null);
+    }
+
+    boolean publishPhoneClipboardImage(byte[] imageBytes, String mimeType, String fileName) {
+        if (imageBytes == null || imageBytes.length == 0
+                || imageBytes.length > MAX_IMAGE_REQUEST_BODY_BYTES) {
+            return false;
+        }
+        String detectedMime = WebClipboardMediaStore.detectMimeType(imageBytes, mimeType);
+        if (detectedMime == null) {
+            return false;
+        }
+        long nowMs = System.currentTimeMillis();
+        String sha256 = WebClipboardMediaStore.sha256Hex(imageBytes);
+        if (webImageEchoSuppressor.shouldSuppressClipboardEvent(sha256, nowMs)) {
+            logInfo(LOG_PREFIX + " portal image publish suppressed web echo"
+                    + " bytes=" + imageBytes.length);
+            return true;
+        }
+        if ("image".equals(latestPhoneKind)
+                && sha256.equals(latestPhoneImageSha256)
+                && nowMs - latestPhoneImageAtMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
+            logInfo(LOG_PREFIX + " portal image publish suppressed duplicate"
+                    + " bytes=" + imageBytes.length);
+            return true;
+        }
+        WebClipboardMediaStore.MediaEntry entry;
+        try {
+            entry = mediaStore.put(imageBytes, detectedMime, fileName);
+        } catch (Throwable throwable) {
+            logInfo(LOG_PREFIX + " portal image store failed: "
+                    + throwable.getClass().getSimpleName());
+            return false;
+        }
+        latestPhoneKind = "image";
+        latestPhoneImage = entry;
+        latestPhoneImageAtMs = nowMs;
+        latestPhoneImageSha256 = sha256;
+        latestPhoneClipboardText = "";
+        latestPhoneClipboardAtMs = 0L;
+        broadcastImageClipboardEvent(entry, nowMs, "phone", "Phone", null);
+        return true;
     }
 
     private long publishWebClipboard(String text, String senderLabel, String clientId) {
@@ -318,6 +402,7 @@ public final class ClipboardSyncWebPortal {
             String senderLabel, String clientId) {
         JSONObject payload = new JSONObject();
         try {
+            payload.put("kind", "text");
             payload.put("text", text);
             payload.put("updatedAtMs", updatedAtMs);
             payload.put("source", source);
@@ -340,6 +425,54 @@ public final class ClipboardSyncWebPortal {
                 + ", clients=" + clients.size());
         List<EventClient> failedClients = writeFrameToClients(clients, frame, "clipboard");
         removeFailedEventClients(failedClients);
+    }
+
+    private void broadcastImageClipboardEvent(WebClipboardMediaStore.MediaEntry entry,
+            long updatedAtMs, String source, String senderLabel, String clientId) {
+        if (entry == null) {
+            return;
+        }
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("kind", "image");
+            payload.put("text", "");
+            payload.put("updatedAtMs", updatedAtMs);
+            payload.put("source", source);
+            putImageMetadata(payload, entry);
+            if (senderLabel != null && !senderLabel.isBlank()) {
+                payload.put("senderLabel", senderLabel);
+            }
+            if (clientId != null && !clientId.isBlank()) {
+                payload.put("clientId", clientId);
+            }
+        } catch (Throwable ignored) {
+            return;
+        }
+        String frame = "event: clipboard\r\n"
+                + "data: " + payload.toString() + "\r\n\r\n";
+        List<EventClient> clients = snapshotEventClients();
+        logInfo(LOG_PREFIX + " portal published image clipboard"
+                + " instance=" + portalInstanceId
+                + " source=" + source
+                + " bytes=" + entry.sizeBytes
+                + ", clients=" + clients.size());
+        List<EventClient> failedClients = writeFrameToClients(clients, frame, "clipboard");
+        removeFailedEventClients(failedClients);
+    }
+
+    private static void putImageMetadata(JSONObject payload, WebClipboardMediaStore.MediaEntry entry)
+            throws Exception {
+        payload.put("imageId", entry.id);
+        payload.put("imageUrl", "/media/" + entry.id);
+        payload.put("mimeType", entry.mimeType);
+        payload.put("sizeBytes", entry.sizeBytes);
+        if (entry.width > 0 && entry.height > 0) {
+            payload.put("width", entry.width);
+            payload.put("height", entry.height);
+        }
+        if (entry.fileName != null && !entry.fileName.isBlank()) {
+            payload.put("fileName", entry.fileName);
+        }
     }
 
     private void broadcastClientsEvent() {
@@ -525,7 +658,7 @@ public final class ClipboardSyncWebPortal {
                 closeQuietly(socket);
                 return;
             }
-            Request request = readRequest(requestLine, input);
+            Request request = readRequest(requestLine, input, socket);
             if (request.bodyTooLarge) {
                 writeResponse(socket, 413, "Payload Too Large",
                         "application/json; charset=utf-8",
@@ -572,6 +705,10 @@ public final class ClipboardSyncWebPortal {
                         buildLatestStateJson());
                 return;
             }
+            if ("GET".equals(request.method) && request.path.startsWith("/media/")) {
+                handleMediaGet(socket, request.path.substring("/media/".length()));
+                return;
+            }
             if ("GET".equals(request.method) && "/clients".equals(request.path)) {
                 synchronized (clientsLock) {
                     writeResponse(socket, 200, "OK", "application/json; charset=utf-8",
@@ -583,12 +720,24 @@ public final class ClipboardSyncWebPortal {
                 handleClipboardPost(socket, request.body);
                 return;
             }
+            if ("POST".equals(request.method) && "/clipboard-image".equals(request.path)) {
+                handleClipboardImagePost(socket, request);
+                return;
+            }
+            if ("POST".equals(request.method) && "/clear".equals(request.path)) {
+                handleClearPost(socket);
+                return;
+            }
             if ("POST".equals(request.method) && "/clients/kick".equals(request.path)) {
                 handleKickClientPost(socket, request.body);
                 return;
             }
             if ("POST".equals(request.method) && "/phone-clipboard".equals(request.path)) {
                 handlePhoneClipboardIngressPost(socket, request);
+                return;
+            }
+            if ("POST".equals(request.method) && "/phone-clipboard-image".equals(request.path)) {
+                handlePhoneClipboardImageIngressPost(socket, request);
                 return;
             }
             writeResponse(socket, 404, "Not Found", "application/json; charset=utf-8",
@@ -598,7 +747,7 @@ public final class ClipboardSyncWebPortal {
         }
     }
 
-    private Request readRequest(String requestLine, InputStream input) throws Exception {
+    private Request readRequest(String requestLine, InputStream input, Socket socket) throws Exception {
         String[] parts = requestLine.split(" ");
         Request request = new Request();
         request.method = parts.length > 0 ? parts[0].toUpperCase(Locale.US) : "";
@@ -610,7 +759,7 @@ public final class ClipboardSyncWebPortal {
             request.query = parseQuery(request.path.substring(queryIndex + 1));
             request.path = request.path.substring(0, queryIndex);
         }
-        int contentLength = 0;
+        long contentLength = 0L;
         String line;
         while ((line = readHttpLine(input)) != null && !line.isEmpty()) {
             int separator = line.indexOf(':');
@@ -623,16 +772,27 @@ public final class ClipboardSyncWebPortal {
                 request.headers.put(name.toLowerCase(Locale.US), value);
             }
             if ("content-length".equalsIgnoreCase(name)) {
-                contentLength = parsePositiveInt(value);
+                contentLength = parseContentLengthLong(value);
             }
         }
-        if (contentLength > 0) {
-            if (contentLength > MAX_REQUEST_BODY_BYTES) {
+        boolean isBinaryUpload = isBinaryImageUploadPath(request.method, request.path);
+        int maxAllowedBytes = isBinaryUpload ? MAX_IMAGE_REQUEST_BODY_BYTES : MAX_REQUEST_BODY_BYTES;
+        if (contentLength > 0L) {
+            if (contentLength > maxAllowedBytes) {
                 request.bodyTooLarge = true;
                 request.body = "";
+                request.rawBody = new byte[0];
                 return request;
             }
-            byte[] bytes = new byte[contentLength];
+            if (isBinaryUpload && !canAcceptBinaryUploadBody(request, socket)) {
+                request.body = "";
+                request.rawBody = new byte[0];
+                return request;
+            }
+            if (isBinaryUpload && socket != null) {
+                socket.setSoTimeout(IMAGE_READ_TIMEOUT_MS);
+            }
+            byte[] bytes = new byte[(int) contentLength];
             int read = 0;
             while (read < bytes.length) {
                 int count = input.read(bytes, read, bytes.length - read);
@@ -641,11 +801,37 @@ public final class ClipboardSyncWebPortal {
                 }
                 read += count;
             }
-            request.body = new String(bytes, 0, read, StandardCharsets.UTF_8);
+            if (read != bytes.length) {
+                request.bodyIncomplete = true;
+                byte[] truncated = new byte[read];
+                System.arraycopy(bytes, 0, truncated, 0, read);
+                bytes = truncated;
+            }
+            request.rawBody = bytes;
+            request.body = isBinaryUpload ? "" : new String(bytes, StandardCharsets.UTF_8);
         } else {
+            request.rawBody = new byte[0];
             request.body = "";
         }
         return request;
+    }
+
+    private boolean canAcceptBinaryUploadBody(Request request, Socket socket) {
+        if ("/phone-clipboard-image".equals(request.path)) {
+            return socket != null
+                    && socket.getInetAddress() != null
+                    && socket.getInetAddress().isLoopbackAddress()
+                    && isLoopbackIngressAuthorized(request);
+        }
+        if (requiresPairing(request, socket) && !isAuthorized(request)) {
+            return false;
+        }
+        return !isRevokedClientId(requestClientId(request));
+    }
+
+    private static boolean isBinaryImageUploadPath(String method, String path) {
+        return "POST".equals(method)
+                && ("/clipboard-image".equals(path) || "/phone-clipboard-image".equals(path));
     }
 
     private Map<String, String> parseQuery(String query) {
@@ -672,7 +858,9 @@ public final class ClipboardSyncWebPortal {
         if (!securityConfig.pairingRequired) {
             return false;
         }
-        if ("POST".equals(request.method) && "/phone-clipboard".equals(request.path)
+        if ("POST".equals(request.method)
+                && ("/phone-clipboard".equals(request.path)
+                || "/phone-clipboard-image".equals(request.path))
                 && socket != null
                 && socket.getInetAddress() != null
                 && socket.getInetAddress().isLoopbackAddress()) {
@@ -682,9 +870,13 @@ public final class ClipboardSyncWebPortal {
                 || "/state".equals(request.path)
                 || "/status".equals(request.path)
                 || "/clipboard".equals(request.path)
+                || "/clipboard-image".equals(request.path)
+                || "/clear".equals(request.path)
                 || "/clients".equals(request.path)
                 || "/clients/kick".equals(request.path)
-                || "/phone-clipboard".equals(request.path);
+                || "/phone-clipboard".equals(request.path)
+                || "/phone-clipboard-image".equals(request.path)
+                || request.path.startsWith("/media/");
     }
 
     private boolean isAuthorized(Request request) {
@@ -773,6 +965,120 @@ public final class ClipboardSyncWebPortal {
                 payload.toString());
     }
 
+    private void handleClipboardImagePost(Socket socket, Request request) throws Exception {
+        if (request != null && request.bodyIncomplete) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"incomplete_image\"}");
+            return;
+        }
+        byte[] rawBody = request == null ? null : request.rawBody;
+        if (rawBody == null || rawBody.length == 0) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"empty_image\"}");
+            return;
+        }
+        String declaredMime = request.header("content-type");
+        String detectedMime = WebClipboardMediaStore.detectMimeType(rawBody, declaredMime);
+        if (detectedMime == null) {
+            writeResponse(socket, 415, "Unsupported Media Type", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"unsupported_image_type\"}");
+            return;
+        }
+        String clientId = requestClientId(request);
+        String messageId = sanitizeMessageId(
+                !request.query("messageId").isBlank()
+                        ? request.query("messageId")
+                        : request.header("x-message-id"));
+        String fileName = !request.query("fileName").isBlank()
+                ? request.query("fileName")
+                : request.header("x-file-name");
+        WebClipboardMediaStore.MediaEntry entry;
+        try {
+            entry = mediaStore.put(rawBody, detectedMime, fileName);
+        } catch (Throwable throwable) {
+            writeResponse(socket, 500, "Internal Server Error", "application/json; charset=utf-8",
+                    buildAckJson(false, messageId, clientId, "failed", 0L, "store_failed"));
+            return;
+        }
+        long appliedAtMs = System.currentTimeMillis();
+        webImageEchoSuppressor.markWebApplied(entry.sha256, appliedAtMs);
+        try {
+            bridge.applyDesktopClipboardImage(rawBody, entry.mimeType, entry.fileName);
+        } catch (Throwable throwable) {
+            writeResponse(socket, 500, "Internal Server Error", "application/json; charset=utf-8",
+                    buildAckJson(false, messageId, clientId, "failed", 0L, "apply_failed"));
+            return;
+        }
+        broadcastImageClipboardEvent(entry, appliedAtMs, "web", senderLabelFor(socket), clientId);
+        String ackJson = buildImageAckJson(true, messageId, clientId, "applied", appliedAtMs, "", entry);
+        broadcastAckEvent(ackJson);
+        writeResponse(socket, 200, "OK", "application/json; charset=utf-8", ackJson);
+    }
+
+    private void handleClearPost(Socket socket) throws Exception {
+        clearPhoneClipboardState();
+        writeResponse(socket, 200, "OK", "application/json; charset=utf-8",
+                "{\"ok\":true}");
+    }
+
+    private void handleMediaGet(Socket socket, String imageId) throws Exception {
+        WebClipboardMediaStore.MediaEntry entry = mediaStore.get(imageId);
+        if (entry == null) {
+            writeResponse(socket, 404, "Not Found", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"media_not_found\"}");
+            return;
+        }
+        byte[] bytes = mediaStore.readBytes(imageId);
+        if (bytes == null) {
+            writeResponse(socket, 404, "Not Found", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"media_not_found\"}");
+            return;
+        }
+        writeResponse(socket, 200, "OK", entry.mimeType, bytes);
+    }
+
+    private void handlePhoneClipboardImageIngressPost(Socket socket, Request request) throws Exception {
+        if (socket == null || socket.getInetAddress() == null
+                || !socket.getInetAddress().isLoopbackAddress()) {
+            writeResponse(socket, 403, "Forbidden", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"loopback_required\"}");
+            return;
+        }
+        if (!isLoopbackIngressAuthorized(request)) {
+            writeResponse(socket, 403, "Forbidden", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"invalid_loopback_token\"}");
+            return;
+        }
+        if (request.bodyIncomplete) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"incomplete_image\"}");
+            return;
+        }
+        byte[] rawBody = request.rawBody;
+        if (rawBody == null || rawBody.length == 0) {
+            writeResponse(socket, 400, "Bad Request", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"empty_image\"}");
+            return;
+        }
+        String declaredMime = request.header("content-type");
+        if (WebClipboardMediaStore.detectMimeType(rawBody, declaredMime) == null) {
+            writeResponse(socket, 415, "Unsupported Media Type", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"unsupported_image_type\"}");
+            return;
+        }
+        String fileName = !request.header("x-file-name").isBlank()
+                ? request.header("x-file-name")
+                : request.query("fileName");
+        boolean published = publishPhoneClipboardImage(rawBody, declaredMime, fileName);
+        if (!published) {
+            writeResponse(socket, 500, "Internal Server Error", "application/json; charset=utf-8",
+                    "{\"ok\":false,\"error\":\"image_publish_failed\"}");
+            return;
+        }
+        writeResponse(socket, 200, "OK", "application/json; charset=utf-8",
+                "{\"ok\":true}");
+    }
+
     private void handlePhoneClipboardIngressPost(Socket socket, Request request) throws Exception {
         if (socket == null || socket.getInetAddress() == null
                 || !socket.getInetAddress().isLoopbackAddress()) {
@@ -799,8 +1105,19 @@ public final class ClipboardSyncWebPortal {
     private String buildLatestStateJson() {
         JSONObject payload = new JSONObject();
         try {
-            payload.put("text", latestPhoneClipboardText == null ? "" : latestPhoneClipboardText);
-            payload.put("updatedAtMs", Math.max(0L, latestPhoneClipboardAtMs));
+            if ("image".equals(latestPhoneKind) && latestPhoneImage != null) {
+                payload.put("kind", "image");
+                payload.put("text", "");
+                payload.put("updatedAtMs", Math.max(0L, latestPhoneImageAtMs));
+                putImageMetadata(payload, latestPhoneImage);
+            } else {
+                String text = latestPhoneClipboardText == null ? "" : latestPhoneClipboardText;
+                if (!text.isEmpty()) {
+                    payload.put("kind", "text");
+                }
+                payload.put("text", text);
+                payload.put("updatedAtMs", Math.max(0L, latestPhoneClipboardAtMs));
+            }
         } catch (Throwable ignored) {
             return "{\"text\":\"\",\"updatedAtMs\":0}";
         }
@@ -815,8 +1132,11 @@ public final class ClipboardSyncWebPortal {
                 || "/events".equals(request.path)
                 || "/state".equals(request.path)
                 || "/clipboard".equals(request.path)
+                || "/clipboard-image".equals(request.path)
+                || "/clear".equals(request.path)
                 || "/clients".equals(request.path)
-                || "/clients/kick".equals(request.path);
+                || "/clients/kick".equals(request.path)
+                || request.path.startsWith("/media/");
     }
 
     private String buildStatusJson(Request request, Socket socket) {
@@ -857,6 +1177,11 @@ public final class ClipboardSyncWebPortal {
 
     private String buildAckJson(boolean ok, String messageId, String clientId, String status,
             long appliedAtMs, String error) {
+        return buildImageAckJson(ok, messageId, clientId, status, appliedAtMs, error, null);
+    }
+
+    private String buildImageAckJson(boolean ok, String messageId, String clientId, String status,
+            long appliedAtMs, String error, WebClipboardMediaStore.MediaEntry imageEntry) {
         JSONObject payload = new JSONObject();
         try {
             payload.put("ok", ok);
@@ -872,6 +1197,10 @@ public final class ClipboardSyncWebPortal {
             }
             if (error != null && !error.isBlank()) {
                 payload.put("error", error);
+            }
+            if (imageEntry != null) {
+                payload.put("kind", "image");
+                putImageMetadata(payload, imageEntry);
             }
         } catch (Throwable ignored) {
             return ok ? "{\"ok\":true,\"status\":\"applied\"}"
@@ -910,6 +1239,10 @@ public final class ClipboardSyncWebPortal {
         String queryClientId = sanitizeClientId(request.query("clientId"));
         if (!queryClientId.isBlank()) {
             return queryClientId;
+        }
+        String headerClientId = sanitizeClientId(request.header("x-client-id"));
+        if (!headerClientId.isBlank()) {
+            return headerClientId;
         }
         return sanitizeClientId(extractClientId(request.body));
     }
@@ -1215,6 +1548,7 @@ public final class ClipboardSyncWebPortal {
         writer.write("HTTP/1.1 " + status + " " + reason + "\r\n");
         writer.write("Content-Type: " + contentType + "\r\n");
         writer.write("Content-Length: " + bytes.length + "\r\n");
+        writer.write("X-Content-Type-Options: nosniff\r\n");
         writer.write("Cache-Control: no-store\r\n");
         writer.write("Pragma: no-cache\r\n");
         writer.write("Expires: 0\r\n");
@@ -1262,6 +1596,27 @@ public final class ClipboardSyncWebPortal {
         return "application/octet-stream";
     }
 
+    private static long parseContentLengthLong(String value) {
+        if (value == null) {
+            return 0L;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return 0L;
+        }
+        for (int index = 0; index < trimmed.length(); index++) {
+            char current = trimmed.charAt(index);
+            if (current < '0' || current > '9') {
+                return 0L;
+            }
+        }
+        try {
+            return Long.parseLong(trimmed);
+        } catch (NumberFormatException overflow) {
+            return Long.MAX_VALUE;
+        }
+    }
+
     private static int parsePositiveInt(String value) {
         try {
             return Math.max(0, Integer.parseInt(value.trim()));
@@ -1305,9 +1660,11 @@ public final class ClipboardSyncWebPortal {
         String method;
         String path;
         String body;
+        byte[] rawBody;
         Map<String, String> headers;
         Map<String, String> query;
         boolean bodyTooLarge;
+        boolean bodyIncomplete;
 
         String header(String name) {
             if (headers == null || name == null) {

@@ -83,8 +83,10 @@ Import custom ZIP themes and beautiful themes from the official Rboard repositor
 <details>
   <summary><code>Toolbar Editing Buttons</code></summary>
 
-  Add Select All, Copy, Cut and Paste to the menu. Drag them to the top toolbar and
-  use them with different keyboard languages in supported editors.
+  Add editing and cursor buttons such as Select All, Copy, Cut, Paste, Forward Delete,
+  Home/End, Tab, and arrows to the menu. Drag them to the top toolbar and use them with
+  different keyboard languages in supported editors. Button labels follow the Patches
+  settings language.
 </details>
 
 <details>
@@ -150,7 +152,11 @@ Customize the bottom tab order in Gboard's Emojis, stickers & GIFs panel with dr
 <details>
   <summary><code>Backup &amp; Restore</code></summary>
 
-  Exports all Gboard Patches settings to a portable JSON backup and restores only the modules you select, with per-module and per-key results. It also exports, compares, and restores Gboard's raw PB/XML flag-store files.
+  Exports all Gboard Patches settings to a portable JSON backup and restores only the modules you select. Before restoring, an overview lists every module that changes, and each module page shows its added, changed, and removed keys with a key filter; the result page reports each module and key.
+
+  Also backs up Gboard's own personal data to a ZIP file through Gboard's built-in backup providers: learned words (including Chinese and Japanese), personal dictionary, blocked suggestions, emoji, sticker and GIF history, saved expression images, custom themes, pinned clipboard items, and Gboard settings. Import shows what the file contains, asks for confirmation, and reports each item. The clipboard includes pinned items only, and restored settings may make Gboard ask for contacts access again.
+
+  It also exports, compares, and restores Gboard's raw PB/XML flag-store files.
 </details>
 
 

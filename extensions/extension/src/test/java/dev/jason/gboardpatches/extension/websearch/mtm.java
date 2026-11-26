@@ -3,6 +3,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class mtm {
+    public android.graphics.drawable.Icon c;
     public String d;
     public wnz e;
     private String q;

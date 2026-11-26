@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.editingaccesspoints;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -11,8 +12,11 @@ public class GboardEditingAccessPointsPolicyTest {
     @Test public void appendPreservesOrderAndDeduplicates() {
         List<String> stock = Arrays.asList("emoji", "web_search", "text_edit_copy", "emoji");
         List<String> actual = GboardEditingAccessPointsContribution.extend(stock, action -> true);
-        assertEquals(Arrays.asList("emoji", "web_search", "text_edit_copy",
-                "text_edit_select_all", "text_edit_cut", "text_edit_paste"), actual);
+        List<String> expected = new ArrayList<>(Arrays.asList("emoji", "web_search", "text_edit_copy"));
+        for (EditorAction action : EditorAction.values()) {
+            if (!expected.contains(action.token)) expected.add(action.token);
+        }
+        assertEquals(expected, actual);
         assertEquals(actual, GboardEditingAccessPointsContribution.extend(actual, action -> true));
     }
 
@@ -37,7 +41,37 @@ public class GboardEditingAccessPointsPolicyTest {
                 GboardEditingAccessPointsSettings.key(EditorAction.CUT));
     }
 
-    @Test public void menuLabelsAreFixedEnglish() {
+    @Test public void coreButtonsDefaultOnAndExtendedButtonsDefaultOff() {
+        for (EditorAction action : EditorAction.values()) {
+            String key = GboardEditingAccessPointsSettings.key(action);
+            assertEquals(action.name(), action.defaultEnabled,
+                    GboardEditingAccessPointsSettings.read(Collections.emptyMap(), key));
+            assertTrue(GboardEditingAccessPointsSettings.read(Collections.singletonMap(key, "true"), key));
+            assertFalse(GboardEditingAccessPointsSettings.read(Collections.singletonMap(key, false), key));
+        }
+        List<EditorAction> core = Arrays.asList(EditorAction.SELECT_ALL, EditorAction.COPY,
+                EditorAction.CUT, EditorAction.PASTE);
+        for (EditorAction action : EditorAction.values()) {
+            assertEquals(action.name(), core.contains(action), action.defaultEnabled);
+        }
+        assertFalse(GboardEditingAccessPointsSettings.read(Collections.emptyMap(),
+                GboardEditingAccessPointsSettings.SELECT_ALL_WHEN_UNSELECTED));
+        assertFalse(GboardEditingAccessPointsSettings.read(Collections.emptyMap(), (String) null));
+    }
+
+    @Test public void keyActionsCarryKeyCodesAndMenuActionsCarryMenuIds() {
+        for (EditorAction action : EditorAction.values()) {
+            if (action.dispatchType == EditorAction.DispatchType.KEY_EVENT) {
+                assertTrue(action.name(), action.keyCode > 0);
+                assertEquals(action.name(), 0, action.contextMenuId);
+            } else {
+                assertNotEquals(action.name(), 0, action.contextMenuId);
+                assertEquals(action.name(), 0, action.keyCode);
+            }
+        }
+    }
+
+    @Test public void englishFallbackLabels() {
         assertEquals("Select All", GboardEditingAccessPointsContribution.label(EditorAction.SELECT_ALL));
         assertEquals("Copy", GboardEditingAccessPointsContribution.label(EditorAction.COPY));
         assertEquals("Cut", GboardEditingAccessPointsContribution.label(EditorAction.CUT));

@@ -1,7 +1,7 @@
 package dev.jason.gboardpatches.extension.editingaccesspoints;
 
-import android.view.inputmethod.InputConnection;
 import android.inputmethodservice.InputMethodService;
+import android.view.inputmethod.InputConnection;
 import java.lang.ref.WeakReference;
 import java.util.function.BooleanSupplier;
 import dev.jason.gboardpatches.extension.core.input.GboardEditorActions;
@@ -41,6 +41,11 @@ public final class EditorActionSession {
             BooleanSupplier current = () -> editor.connection() == connection
                     && generation == expectedGeneration && active.get() == editor;
             InputMethodService service = editor.inputMethodService();
+            if (action.dispatchType == EditorAction.DispatchType.KEY_EVENT) {
+                return service == null
+                        ? GboardEditorActions.sendKey(connection, action.keyCode, current)
+                        : GboardEditorActions.sendKey(service, action.keyCode, current);
+            }
             return service == null
                     ? GboardEditorActions.perform(connection, action.contextMenuId,
                             selectAllWhenUnselected, current)

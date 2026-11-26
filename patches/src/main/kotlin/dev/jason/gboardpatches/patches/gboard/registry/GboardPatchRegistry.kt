@@ -24,6 +24,7 @@ import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculat
 import dev.jason.gboardpatches.patches.gboard.features.calculator.gboardCalculatorLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.about.gboardAboutPageResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardCustomSymbolsFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardSelectAllPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardAdapterTrimPatch
 import dev.jason.gboardpatches.patches.gboard.features.clipboard.gboardClipboardColumnCountPatch
@@ -234,8 +235,9 @@ val gboardManualIncognitoModePatch = gboardPublicResourcePatch(
 val gboardEditingAccessPointsPatch = gboardPublicResourcePatch(
     featureId = "editing_access_points",
     name = "Toolbar Editing Buttons",
-    description = "將全選、複製、剪下與貼上加入選單。\n" +
-        "Add Select All, Copy, Cut and Paste to the menu.",
+    description = "將全選、複製、剪下、貼上、向前刪除、行首／行尾、Tab 與方向鍵等按鈕加入選單。\n" +
+        "Add editing and cursor buttons such as Select All, Copy, Cut, Paste, Forward Delete, " +
+        "Home/End, Tab, and arrows to the menu.",
     default = true,
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
@@ -597,8 +599,8 @@ val gboardDeveloperOptionsPatch = gboardPublicResourcePatch(
 val gboardBackupRestorePatch = gboardPublicResourcePatch(
     featureId = "backup_restore",
     name = "Backup & Restore",
-    description = "匯出或還原全部 Patches 設定，並備份、比較及還原 Gboard PB/XML flag store\n" +
-        "Export or restore all Patches settings, and back up, compare, or restore the Gboard PB/XML flag store.",
+    description = "匯出或還原 Patches 設定與 Gboard 個人化資料，並備份、比較及還原 Gboard PB/XML flag store\n" +
+        "Export or restore Patches settings and Gboard personal data, and back up, compare, or restore the Gboard PB/XML flag store.",
     default = true,
 ) {
     compatibleWith(COMPATIBILITY_GBOARD)
@@ -643,7 +645,8 @@ val gboardClipboardEnhancementsPatch = gboardPublicResourcePatch(
         gboardClipboardPrunePatch,
         gboardClipboardColumnCountPatch,
         gboardClipboardAdapterTrimPatch,
-        gboardClipboardItemBindPatch
+        gboardClipboardItemBindPatch,
+        gboardClipboardSelectAllPatch
     )
 }
 

@@ -87,12 +87,12 @@ public final class GboardPatchesRestartSourceTest {
 
     @Test
     public void restartCopyIsLocalized() throws Exception {
-        String settingsText = read("src/main/settings-text/gboard_settings_text.xml");
+        String settingsText = GboardSettingsTextFiles.englishAndTraditionalChinese();
 
         Assert.assertTrue(settingsText.contains(
-                "<translation locale=\"en\">Restart Gboard</translation>"));
+                ">Restart Gboard</string>"));
         Assert.assertTrue(settingsText.contains(
-                "<translation locale=\"zh-Hant\">重新啟動 Gboard</translation>"));
+                ">重新啟動 Gboard</string>"));
         Assert.assertTrue(settingsText.contains("gboard_patches_restart_failed"));
     }
 

@@ -20,4 +20,15 @@ public final class ClipboardSyncServiceSourceTest {
         Assert.assertTrue(source.contains("new android.os.Handler(android.os.Looper.getMainLooper())"));
         Assert.assertTrue(source.contains("Toast.makeText("));
     }
+
+    @Test
+    public void monotonicClipTimestampPreventsSameMillisecondHistoryIdCollision() {
+        long base = 1_700_000_000_000L;
+        long first = ClipboardSyncService.nextMonotonicClipTimestampMs(base);
+        long second = ClipboardSyncService.nextMonotonicClipTimestampMs(base);
+        long third = ClipboardSyncService.nextMonotonicClipTimestampMs(base);
+
+        Assert.assertTrue(second > first);
+        Assert.assertTrue(third > second);
+    }
 }

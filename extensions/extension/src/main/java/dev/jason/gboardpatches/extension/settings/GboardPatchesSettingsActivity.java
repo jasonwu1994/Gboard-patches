@@ -696,35 +696,126 @@ public final class GboardPatchesSettingsActivity extends Activity
         }
         boolean[] selected = initiallySelected.clone();
         final Runnable[] pendingAction = new Runnable[1];
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMultiChoiceItems(labels, selected,
-                        (ignored, which, checked) -> {
-                            if (which >= 0 && which < selected.length) {
-                                selected[which] = checked;
-                            }
-                        })
-                .setPositiveButton(positiveLabel, null)
-                .setNegativeButton(text(R.string.gboard_patches_dialog_cancel), null);
-        AlertDialog dialog = builder.create();
-        dialog.setOnShowListener(ignored -> {
-            tintDialogButtons(dialog);
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-                List<String> chosen = new ArrayList<String>();
-                for (int index = 0; index < values.length; index++) {
-                    if (selected[index]) {
-                        chosen.add(values[index]);
-                    }
+        Dialog dialog = buildBottomSheetDialog();
+        LinearLayout sheet = buildBottomSheetContainer();
+        sheet.setPadding(0, 0, 0, dp(24));
+        sheet.addView(buildBottomSheetHandle(dp(14)));
+
+        TextView titleView = new TextView(this);
+        titleView.setText(title);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+        titleView.setTypeface(mediumTypeface());
+        titleView.setTextColor(palette.textPrimary);
+        titleView.setPadding(dp(24), 0, dp(24), dp(10));
+        sheet.addView(titleView);
+
+        TextView positive = buildPrimaryActionButton(positiveLabel, true);
+        Runnable refreshPositive = () -> {
+            boolean any = false;
+            for (boolean value : selected) {
+                any |= value;
+            }
+            positive.setEnabled(any);
+            positive.setAlpha(any ? 1f : DISABLED_CONTENT_ALPHA);
+        };
+
+        ColorStateList checkTint = new ColorStateList(
+                new int[][] {{android.R.attr.state_checked}, {}},
+                new int[] {palette.accent, palette.textSecondary});
+        LinearLayout list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
+        for (int index = 0; index < labels.length; index++) {
+            final int which = index;
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(20), dp(12), dp(24), dp(12));
+            row.setMinimumHeight(dp(56));
+            row.setBackground(buildRippleDrawable(0));
+
+            android.widget.CheckBox checkBox = new android.widget.CheckBox(this);
+            checkBox.setButtonTintList(checkTint);
+            checkBox.setChecked(selected[which]);
+            checkBox.setClickable(false);
+            checkBox.setFocusable(false);
+            checkBox.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            LinearLayout.LayoutParams checkParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            checkParams.rightMargin = dp(8);
+            row.addView(checkBox, checkParams);
+
+            TextView labelView = new TextView(this);
+            labelView.setText(labels[which]);
+            labelView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            labelView.setTextColor(palette.textPrimary);
+            row.addView(labelView, new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setContentDescription(labels[which]);
+            row.setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                @Override
+                public void onInitializeAccessibilityNodeInfo(View host,
+                        android.view.accessibility.AccessibilityNodeInfo info) {
+                    super.onInitializeAccessibilityNodeInfo(host, info);
+                    info.setCheckable(true);
+                    info.setChecked(selected[which]);
+                    info.setClassName(android.widget.CheckBox.class.getName());
                 }
-                if (chosen.isEmpty()) {
-                    return;
-                }
-                pendingAction[0] = () -> runSafely(
-                        "handle multi-choice dialog selection",
-                        () -> valueConsumer.accept(chosen));
-                dialog.dismiss();
             });
+            row.setOnClickListener(view -> {
+                selected[which] = !selected[which];
+                checkBox.setChecked(selected[which]);
+                refreshPositive.run();
+            });
+            list.addView(row, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+        sheet.addView(buildCappedScrollView(list, 0.6f));
+
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.CENTER_VERTICAL);
+        buttons.setPadding(dp(24), dp(16), dp(24), 0);
+        TextView cancel = new TextView(this);
+        cancel.setText(text(R.string.gboard_patches_dialog_cancel));
+        cancel.setGravity(Gravity.CENTER);
+        cancel.setTypeface(mediumTypeface());
+        cancel.setTextSize(TypedValue.COMPLEX_UNIT_SP, ROW_TITLE_SP);
+        cancel.setTextColor(palette.accent);
+        cancel.setMinHeight(dp(56));
+        cancel.setBackground(buildRippleDrawable(999));
+        cancel.setClickable(true);
+        cancel.setFocusable(true);
+        cancel.setOnClickListener(view -> dialog.dismiss());
+        LinearLayout.LayoutParams cancelParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        cancelParams.rightMargin = dp(12);
+        buttons.addView(cancel, cancelParams);
+        buttons.addView(positive, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        sheet.addView(buttons);
+
+        positive.setOnClickListener(view -> {
+            List<String> chosen = new ArrayList<String>();
+            for (int index = 0; index < values.length; index++) {
+                if (selected[index]) {
+                    chosen.add(values[index]);
+                }
+            }
+            if (chosen.isEmpty()) {
+                return;
+            }
+            pendingAction[0] = () -> runSafely(
+                    "handle multi-choice dialog selection",
+                    () -> valueConsumer.accept(chosen));
+            dialog.dismiss();
         });
+        refreshPositive.run();
+
+        dialog.setContentView(sheet, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         dialog.setOnDismissListener(ignored -> {
             Runnable action = pendingAction[0];
             pendingAction[0] = null;
@@ -736,6 +827,8 @@ public final class GboardPatchesSettingsActivity extends Activity
         try {
             dialog.show();
             onManagedDialogShown();
+            // Size the window before its first frame; the show listener runs after it.
+            matchSheetWindow(dialog);
         } catch (Throwable throwable) {
             Log.w(TAG, "Failed to show multi-choice dialog", throwable);
         }
@@ -2054,6 +2147,9 @@ public final class GboardPatchesSettingsActivity extends Activity
         screenActionContainer.setOrientation(LinearLayout.VERTICAL);
         screenActionContainer.setPadding(dp(16), dp(8), dp(16), dp(16));
         screenActionContainer.setVisibility(View.GONE);
+        screenActionContainer.addOnLayoutChangeListener(
+                (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) ->
+                        updateScreenActionObstruction());
         shell.addView(screenActionContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -3613,13 +3709,26 @@ public final class GboardPatchesSettingsActivity extends Activity
         GboardPatchesSettingsContract.CommandRow primaryAction = screen.getPrimaryAction();
         if (primaryAction == null) {
             screenActionContainer.setVisibility(View.GONE);
+            updateScreenActionObstruction();
         } else {
-            View primaryActionView = createSectionView(
-                    new GboardPatchesSettingsContract.Section(
-                            null, Collections.singletonList(primaryAction)));
-            if (primaryActionView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams margins) {
-                margins.topMargin = 0;
+            TextView primaryActionView = buildPrimaryActionButton(
+                    primaryAction.getTitle(), primaryAction.isEnabled());
+            if (primaryAction.getSummary() != null && !primaryAction.getSummary().isEmpty()) {
+                primaryActionView.setContentDescription(
+                        primaryAction.getTitle() + ". " + primaryAction.getSummary());
             }
+            primaryActionView.setOnClickListener(view -> {
+                if (!primaryAction.isEnabled()) {
+                    return;
+                }
+                if (primaryAction instanceof GboardPatchesSettingsContract.DangerRow dangerRow) {
+                    showConfirmDialog(dangerRow.getConfirmTitle(),
+                            dangerRow.getConfirmMessage(), dangerRow.getAction());
+                } else {
+                    runSafely("handle primary action", primaryAction.getAction());
+                }
+            });
+            noteRenderedRow(primaryAction, primaryActionView);
             screenActionContainer.addView(primaryActionView);
             screenActionContainer.setVisibility(View.VISIBLE);
         }
@@ -4111,21 +4220,21 @@ public final class GboardPatchesSettingsActivity extends Activity
             return;
         }
         Context context = host.getContext();
+        String[] supported = GboardSettingsLocaleManager.supportedLanguageTags();
+        String[] labels = new String[supported.length + 1];
+        String[] values = new String[supported.length + 1];
+        labels[0] = GboardSettingsText.get(context,
+                R.string.gboard_patches_language_system_label);
+        values[0] = GboardSettingsLocaleManager.LANGUAGE_SYSTEM;
+        for (int index = 0; index < supported.length; index++) {
+            String tag = supported[index];
+            values[index + 1] = tag;
+            labels[index + 1] = languageLabelForTag(context, tag);
+        }
         GboardPatchesSettingsContract.showChoiceDialog(host,
                 GboardSettingsText.get(context, R.string.gboard_patches_language_title),
-                new String[] {
-                        GboardSettingsText.get(context,
-                                R.string.gboard_patches_language_system_label),
-                        GboardSettingsText.get(context,
-                                R.string.gboard_patches_language_english_label),
-                        GboardSettingsText.get(context,
-                                R.string.gboard_patches_language_traditional_chinese_label)
-                },
-                new String[] {
-                        GboardSettingsLocaleManager.LANGUAGE_SYSTEM,
-                        GboardSettingsLocaleManager.LANGUAGE_ENGLISH,
-                        GboardSettingsLocaleManager.LANGUAGE_TRADITIONAL_CHINESE
-                },
+                labels,
+                values,
                 context == null
                         ? GboardSettingsLocaleManager.LANGUAGE_SYSTEM
                         : GboardSettingsLocaleManager.readLanguagePreference(
@@ -4151,26 +4260,28 @@ public final class GboardPatchesSettingsActivity extends Activity
                 ? null
                 : GboardPatchesSettings.preferences(context);
         String preference = GboardSettingsLocaleManager.readLanguagePreference(preferences);
-        if (GboardSettingsLocaleManager.LANGUAGE_TRADITIONAL_CHINESE.equals(preference)) {
-            return GboardSettingsText.get(context,
-                    R.string.gboard_patches_language_traditional_chinese_label);
-        }
-        if (GboardSettingsLocaleManager.LANGUAGE_ENGLISH.equals(preference)) {
-            return GboardSettingsText.get(context,
-                    R.string.gboard_patches_language_english_label);
+        if (!GboardSettingsLocaleManager.LANGUAGE_SYSTEM.equals(preference)) {
+            return languageLabelForTag(context, preference);
         }
         String effectiveLanguage = GboardSettingsLocaleManager.resolveEffectiveLanguageTag(
                 preference,
                 Locale.getDefault());
-        String effectiveLabel =
-                GboardSettingsLocaleManager.LANGUAGE_TRADITIONAL_CHINESE.equals(effectiveLanguage)
-                        ? GboardSettingsText.get(context,
-                                R.string.gboard_patches_language_traditional_chinese_label)
-                        : GboardSettingsText.get(context,
-                                R.string.gboard_patches_language_english_label);
+        String effectiveLabel = languageLabelForTag(context, effectiveLanguage);
         return GboardSettingsText.format(context,
                 R.string.gboard_patches_language_system_value,
                 effectiveLabel);
+    }
+
+    private static String languageLabelForTag(Context context, String languageTag) {
+        if (GboardSettingsLocaleManager.LANGUAGE_ENGLISH.equals(languageTag)) {
+            return GboardSettingsText.get(context,
+                    R.string.gboard_patches_language_english_label);
+        }
+        if (GboardSettingsLocaleManager.LANGUAGE_TRADITIONAL_CHINESE.equals(languageTag)) {
+            return GboardSettingsText.get(context,
+                    R.string.gboard_patches_language_traditional_chinese_label);
+        }
+        return GboardSettingsLocaleManager.displayNameForLanguageTag(languageTag);
     }
 
     private GboardPatchesSettingsContract.Screen buildFeatureErrorScreen(
@@ -5117,6 +5228,52 @@ public final class GboardPatchesSettingsActivity extends Activity
         return -1;
     }
 
+    /** Keeps the keyboard preview launcher above the pinned primary action when one shows. */
+    private void updateScreenActionObstruction() {
+        if (keyboardPreviewController == null || screenActionContainer == null) {
+            return;
+        }
+        keyboardPreviewController.setBottomObstruction(
+                screenActionContainer.getVisibility() == View.VISIBLE
+                        ? screenActionContainer.getHeight() : 0);
+    }
+
+    /**
+     * Filled pill button for a screen's pinned primary action, so it reads as the page's one
+     * commit action and not as another list row.
+     */
+    private TextView buildPrimaryActionButton(CharSequence text, boolean enabled) {
+        TextView button = new TextView(this);
+        button.setText(text);
+        button.setGravity(Gravity.CENTER);
+        button.setTypeface(mediumTypeface());
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, ROW_TITLE_SP);
+        button.setMinHeight(dp(56));
+        button.setPadding(dp(24), dp(12), dp(24), dp(12));
+        button.setMaxLines(2);
+        button.setEllipsize(TextUtils.TruncateAt.END);
+        int fill = enabled ? palette.accent : blendAlpha(palette.textPrimary, 0.12f);
+        int textColor = enabled
+                ? palette.onAccent
+                : blendAlpha(palette.textPrimary, DISABLED_CONTENT_ALPHA);
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(fill);
+        shape.setCornerRadius(dp(999));
+        GradientDrawable mask = new GradientDrawable();
+        mask.setColor(Color.WHITE);
+        mask.setCornerRadius(dp(999));
+        button.setBackground(new RippleDrawable(
+                ColorStateList.valueOf(blendAlpha(palette.onAccent, 0.16f)), shape, mask));
+        button.setTextColor(textColor);
+        button.setEnabled(enabled);
+        button.setClickable(enabled);
+        button.setFocusable(enabled);
+        button.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        return button;
+    }
+
     private Drawable buildRippleDrawable(int radiusDp) {
         GradientDrawable mask = new GradientDrawable();
         mask.setColor(Color.WHITE);
@@ -5367,6 +5524,7 @@ public final class GboardPatchesSettingsActivity extends Activity
             panelContainer.addView(root);
             screenActionContainer.removeAllViews();
             screenActionContainer.setVisibility(View.GONE);
+            updateScreenActionObstruction();
         }
 
         private GboardFoldFrame foldFrame(View content) {

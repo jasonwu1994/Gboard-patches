@@ -14,7 +14,7 @@ class GboardOcrPatchContractTest {
         val contributionWiring = read(root, CONTRIBUTION_WIRING)
         val keyboardGroup = read(root, KEYBOARD_GROUP)
         val availability = read(root, AVAILABILITY)
-        val settingsText = read(root, SETTINGS_TEXT)
+        val settingsText = SETTINGS_TEXTS.joinToString("\n") { read(root, it) }
         val readme = read(root, README)
 
         assertTrue(registry.contains("val gboardOcrScanTextPatch = gboardPublicResourcePatch("))
@@ -34,21 +34,21 @@ class GboardOcrPatchContractTest {
         assertTrue(!keyboardGroup.contains("GboardLatinGlobeKeyIgnoreIntervalSettingsFeature"))
         assertTrue(availability.contains("FEATURE_OCR_SCAN_TEXT"))
         assertTrue(availability.contains("dev.jason.gboardpatches.feature.ocr_scan_text"))
-        assertTrue(settingsText.contains("<translation locale=\"zh-Hant\">OCR / 掃描文字</translation>"))
+        assertTrue(settingsText.contains(">OCR / 掃描文字</string>"))
         assertTrue(settingsText.contains(
-            "<translation locale=\"en\">Control the backend engine used for text " +
-                "recognition.</translation>",
+            ">Control the backend engine used for text " +
+                "recognition.</string>",
         ))
-        assertTrue(settingsText.contains("<translation locale=\"zh-Hant\">控制文字辨識的後端引擎。</translation>"))
-        assertTrue(settingsText.contains("<translation locale=\"zh-Hant\">文字辨識後端引擎</translation>"))
+        assertTrue(settingsText.contains(">控制文字辨識的後端引擎。</string>"))
+        assertTrue(settingsText.contains(">文字辨識後端引擎</string>"))
         assertTrue(settingsText.contains("gboard_patches_ocr_header_summary"))
         assertTrue(settingsText.contains(
-            "<translation locale=\"en\">Official models must be downloaded through Google " +
-                "Play services.</translation>",
+            ">Official models must be downloaded through Google " +
+                "Play services.</string>",
         ))
         assertTrue(settingsText.contains(
-            "<translation locale=\"zh-Hant\">需要透過 Google Play services " +
-                "下載官方模型</translation>",
+            ">需要透過 Google Play services " +
+                "下載官方模型</string>",
         ))
         assertTrue(!settingsText.contains("gboard_patches_ocr_engine_summary"))
         assertTrue(
@@ -83,8 +83,10 @@ class GboardOcrPatchContractTest {
         const val AVAILABILITY =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
                 "GboardPatchesFeatureAvailability.java"
-        const val SETTINGS_TEXT =
-            "extensions/extension/src/main/settings-text/gboard_settings_text.xml"
+        val SETTINGS_TEXTS = listOf(
+            "extensions/extension/src/main/settings-text/values/gboard_settings_strings.xml",
+            "extensions/extension/src/main/settings-text/values-b+zh+Hant/gboard_settings_strings.xml",
+        )
         const val README = "README.md"
     }
 }

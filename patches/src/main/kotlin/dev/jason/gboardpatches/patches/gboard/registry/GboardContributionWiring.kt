@@ -9,6 +9,9 @@ import dev.jason.gboardpatches.patches.gboard.features.cursortrackpad.gboardCurs
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingToolsFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.writingtools.gboardAiWritingTools1853PreferenceObserverPatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCustomSymbolsCorpusPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreManifestPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardDataBackupFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCustomSymbolsEmoticonStatePatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCustomSymbolsEntryPatch
 import dev.jason.gboardpatches.patches.gboard.features.addsymbols.gboardZhuyinCustomSymbolsHistoryPatch
@@ -82,6 +85,12 @@ internal object GboardContributionWiring {
                     gboardS3AirplaneModePatch,
                 )
             },
+        ),
+        "backup_restore" to listOf(
+            unit("backup_restore.resources") {
+                arrayOf(gboardBackupRestoreFeatureMarkerPatch, gboardBackupRestoreManifestPatch)
+            },
+            unit("backup_restore.flag") { arrayOf(gboardDataBackupFlagValuePatch) },
         ),
         "custom_symbols" to listOf(
             unit("custom_symbols.soft_key") {

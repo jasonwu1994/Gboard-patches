@@ -1,6 +1,7 @@
 package dev.jason.gboardpatches.patches.gboard.shared.runtimeabi
 
 internal enum class RuntimeCallId(internal val encodedAbi: String) {
+    GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/backuprestore/gboarddata/GboardDataBackupFlagRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/keypresshaptics/GboardKeypressHapticsRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->applyOverriddenFlagValue(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     LANGUAGE_MODELS_RUNTIME_RESTRICT_NWP_CACHED_PACK("Ldev/jason/gboardpatches/extension/languagemodels/GboardLanguageModelRuntime;->restrictNwpCachedPack(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
@@ -75,6 +76,11 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     CLIPBOARD_CONTENT_LIMIT_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE("Ldev/jason/gboardpatches/extension/clipboardcontentlimit/GboardClipboardContentLimitRuntime;->applyOverriddenFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     CLOSE_PROACTIVE_SUGGESTIONS_RUNTIME_APPLY_FLAG_VALUE("Ldev/jason/gboardpatches/extension/closeproactivesuggestions/GboardCloseProactiveSuggestionsRuntime;->applyFlagValue(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;"),
     CLIPBOARD_RUNTIME_AFTER_ADAPTER_TRIM("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->afterAdapterTrim(Ljava/lang/Object;)V"),
+    CLIPBOARD_SELECT_ALL_AFTER_DATA("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardSelectAllRuntime;->afterData(Ljava/lang/Object;)V"),
+    CLIPBOARD_SELECT_ALL_AFTER_OPEN("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardSelectAllRuntime;->afterOpen(Ljava/lang/Object;)V"),
+    CLIPBOARD_SELECT_ALL_AFTER_STATE("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardSelectAllRuntime;->afterState(Ljava/lang/Object;I)V"),
+    CLIPBOARD_SELECT_ALL_BEFORE_OPEN_OR_CLOSE("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardSelectAllRuntime;->beforeOpenOrClose(Ljava/lang/Object;)V"),
+    CLIPBOARD_SELECT_ALL_INTERCEPT_TOUCH("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardSelectAllRuntime;->interceptTouch(Landroid/view/View;Landroid/view/MotionEvent;)Z"),
     CLIPBOARD_RUNTIME_AFTER_ITEM_BIND("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->afterItemBind(Ljava/lang/Object;Ljava/lang/Object;I)V"),
     CLIPBOARD_RUNTIME_BEFORE_ITEM_BIND("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->beforeItemBind(Ljava/lang/Object;Ljava/lang/Object;I)V"),
     CLIPBOARD_RUNTIME_HANDLE_CUSTOM_PRUNE("Ldev/jason/gboardpatches/extension/clipboard/GboardClipboardRuntime;->handleCustomPrune(Ljava/lang/Object;)Z"),
@@ -148,6 +154,7 @@ internal enum class RuntimeCallId(internal val encodedAbi: String) {
     TOP_ROW_SWIPE_RUNTIME_MAYBE_CONSUME_TOP_ROW_SWIPE("Ldev/jason/gboardpatches/extension/toprowswipe/GboardTopRowSwipeRuntime;->maybeConsumeTopRowSwipe(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z"),
     TOP_ROW_SWIPE_RUNTIME_PATCH_INCOMING_SOFT_KEY_METADATA("Ldev/jason/gboardpatches/extension/toprowswipe/GboardTopRowSwipeRuntime;->patchIncomingSoftKeyMetadata(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_LATIN_IME_ON_CREATE("Ldev/jason/gboardpatches/extension/webclipboard/GboardWebClipboardCaptureBootstrap;->afterLatinImeOnCreate(Ljava/lang/Object;)V"),
+    WEB_CLIPBOARD_CAPTURE_BOOTSTRAP_AFTER_CLIPBOARD_PROVIDER_INSERT("Ldev/jason/gboardpatches/extension/webclipboard/GboardWebClipboardCaptureBootstrap;->afterClipboardProviderInsert(Ljava/lang/Object;Ljava/lang/Object;)V"),
     AI_WRITING_TOOLS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE("Ldev/jason/gboardpatches/extension/writingtools/GboardAiWritingToolsRuntime;->applyOverriddenFlagValue(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
     AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_APPLY_GEN_AI_INIT_CLIENT_TYPE("Ldev/jason/gboardpatches/extension/writingtools/GboardAiWritingToolsVoiceCommandRuntime;->applyGenAiInitClientType(Ljava/lang/Object;Z)Z"),
     AI_WRITING_TOOLS_VOICE_COMMAND_RUNTIME_APPLY_SMART_EDIT_INIT_CLIENT_TYPE("Ldev/jason/gboardpatches/extension/writingtools/GboardAiWritingToolsVoiceCommandRuntime;->applySmartEditInitClientType(Ljava/lang/Object;Z)Z"),

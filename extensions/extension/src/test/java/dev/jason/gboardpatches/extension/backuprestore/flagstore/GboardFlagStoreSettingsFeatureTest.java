@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.backuprestore.flagstore;
 
+import dev.jason.gboardpatches.extension.settings.GboardSettingsTextFiles;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -25,7 +26,7 @@ public final class GboardFlagStoreSettingsFeatureTest {
     @Test
     public void mixedFormatCopyExplainsAmbiguityAndAllFileTimesAreShown()
             throws Exception {
-        String strings = source("src/main/settings-text/gboard_settings_text.xml");
+        String strings = GboardSettingsTextFiles.englishAndTraditionalChinese();
         String feature = source("src/main/java/dev/jason/gboardpatches/extension/"
                 + "backuprestore/flagstore/GboardFlagStoreSettingsFeature.java");
 

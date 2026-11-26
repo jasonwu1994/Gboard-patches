@@ -32,6 +32,7 @@ public final class GboardPatchesIcons {
     public static final int SEARCH = 17;
     public static final int MORE = 18;
     public static final int KEYBOARD = 19;
+    public static final int CLIPBOARD_SELECT_UNPINNED = 20;
 
     private static final float VIEWPORT = 24f;
 
@@ -51,6 +52,10 @@ public final class GboardPatchesIcons {
                 return "M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z";
             case CHEVRON_RIGHT:
                 return "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z";
+            case CLIPBOARD_SELECT_UNPINNED:
+                return "M3,3H7V5H5V7H3ZM9,3H11V5H9ZM13,3H15V5H13ZM17,3H21V7H19V5H17ZM3,9H5V11H3Z"
+                    + "M19,9H21V11H19ZM3,13H5V15H3ZM19,13H21V15H19ZM3,17H5V19H7V21H3Z"
+                    + "M9,19H11V21H9ZM13,19H15V21H13ZM17,19H19V17H21V21H17ZM7,7H17V17H7Z";
             case CLIPBOARD:
                 return "M19 2h-4.18C14.4.84 13.3 0 12 0S9.6.84 9.18 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2"
                         + " 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1"
@@ -108,6 +113,13 @@ public final class GboardPatchesIcons {
             default:
                 return null;
         }
+    }
+
+    public static Path parsePathData(String data) {
+        if (data == null || data.isEmpty()) {
+            throw new IllegalArgumentException("Path data required");
+        }
+        return PathDataParser.parse(data);
     }
 
     public static Drawable create(int icon, int color, float density) {

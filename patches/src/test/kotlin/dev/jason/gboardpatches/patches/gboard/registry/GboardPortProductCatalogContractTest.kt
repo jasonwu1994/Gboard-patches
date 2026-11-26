@@ -51,7 +51,7 @@ class GboardPortProductCatalogContractTest {
     @Test
     fun catalogIsDeterministicAndDeclaresSelectedOnlyZeroSelectionComposition() {
         assertEquals("gboard-port-product-catalog.v1", catalog["format"].asString)
-        assertEquals("1.21.0", catalog["catalog_version"].asString)
+        assertEquals("1.22.0", catalog["catalog_version"].asString)
         val composition = catalog.getAsJsonObject("composition")
         assertEquals(
             setOf("selected_only_call_chain", "runtime_feature_mask"),
@@ -187,7 +187,7 @@ class GboardPortProductCatalogContractTest {
                 }
         }.toSet()
 
-        assertEquals(238, authoritativeKeys.size)
+        assertEquals(243, authoritativeKeys.size)
         assertEquals(authoritativeKeys, requiredKeys)
         assertEquals(
             authoritativeKinds,
@@ -210,7 +210,7 @@ class GboardPortProductCatalogContractTest {
     }
 
     @Test
-    fun flagFamilyDeclaresEighteenSelectedOnlyComposerCallsInCanonicalOrder() {
+    fun flagFamilyDeclaresNineteenSelectedOnlyComposerCallsInCanonicalOrder() {
         val flagContributions = features().flatMap { feature ->
             feature.getAsJsonArray("contributions")
                 .map { contribution -> contribution.asJsonObject }
@@ -220,18 +220,18 @@ class GboardPortProductCatalogContractTest {
                 .map { contribution -> feature["feature_id"].asString to contribution }
         }.sortedBy { (_, contribution) -> contribution["order"].asInt }
 
-        assertEquals(18, flagContributions.size)
+        assertEquals(19, flagContributions.size)
         assertEquals(
             listOf(
                 5, 10, 20, 30, 40, 100, 200, 300, 400,
-                500, 600, 700, 800, 900, 1000, 1200, 1300, 1400,
+                500, 600, 700, 800, 900, 1000, 1200, 1300, 1400, 1500,
             ),
             flagContributions.map { (_, contribution) -> contribution["order"].asInt },
         )
         val runtimeCalls = flagContributions.map { (_, contribution) ->
             contribution.getAsJsonArray("runtime_calls").first().asString
         }
-        assertEquals(18, runtimeCalls.distinct().size)
+        assertEquals(19, runtimeCalls.distinct().size)
         assertFalse("FEATURE_FLAGS_RUNTIME_APPLY_OVERRIDDEN_FLAG_VALUE" in runtimeCalls)
         flagContributions.forEach { (featureId, contribution) ->
             assertEquals(
@@ -674,7 +674,7 @@ class GboardPortProductCatalogContractTest {
             "add_gboard_signature_bypass" to "version-sensitive",
             "advanced_voice_typing" to "version-sensitive",
             "ai_writing_tools" to "version-sensitive",
-            "backup_restore" to "version-neutral-extension",
+            "backup_restore" to "version-sensitive",
             "change_emoji_size" to "version-sensitive",
             "clipboard_custom_character_limit" to "version-sensitive",
             "clipboard_enhancements" to "version-sensitive",

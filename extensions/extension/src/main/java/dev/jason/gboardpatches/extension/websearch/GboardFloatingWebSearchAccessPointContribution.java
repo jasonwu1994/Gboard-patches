@@ -11,11 +11,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import dev.jason.gboardpatches.extension.R;
+import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
+
 public final class GboardFloatingWebSearchAccessPointContribution {
     public static final GboardFloatingWebSearchAccessPointContribution INSTANCE =
             new GboardFloatingWebSearchAccessPointContribution();
     public static final String TOKEN = "web_search";
     static final int GOOGLE_G_DRAWABLE_ID = 0x7f080467;
+    static final String ENGLISH_LABEL = "Web Search";
 
     private static volatile Handles handles;
 
@@ -58,13 +62,19 @@ public final class GboardFloatingWebSearchAccessPointContribution {
             Object builder = active.descriptorBuilderFactory.invoke(null);
             active.builderTokenMethod.invoke(builder, TOKEN);
             active.builderIconResourceMethod.invoke(builder, GOOGLE_G_DRAWABLE_ID);
-            active.builderLabelTextField.set(builder, "Web Search");
+            active.builderLabelTextField.set(builder, label(safeContext));
             active.builderRunnableMethod.invoke(builder, new OpenAction(safeContext));
             Object descriptor = active.builderBuildMethod.invoke(builder);
             active.controllerRegisterMethod.invoke(controller, descriptor, false);
         } catch (Throwable ignored) {
             // A synthetic Access Point must fail closed.
         }
+    }
+
+    /** Access Menu label in the patches settings language; English when none is packaged. */
+    static String label(Context context) {
+        return GboardSettingsText.packagedOrDefault(context,
+                R.string.gboard_patches_floating_web_search_ap_label, ENGLISH_LABEL);
     }
 
     private static boolean isGoogleIcon(Context context) {

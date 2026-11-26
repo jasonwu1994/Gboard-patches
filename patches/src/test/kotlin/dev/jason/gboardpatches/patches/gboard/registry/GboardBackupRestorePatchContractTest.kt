@@ -7,6 +7,7 @@ import dev.jason.gboardpatches.patches.gboard.features.backuprestore.BACKUP_REST
 import dev.jason.gboardpatches.patches.gboard.features.backuprestore.applyGboardBackupRestoreManifest
 import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreFeatureMarkerPatch
 import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardBackupRestoreManifestPatch
+import dev.jason.gboardpatches.patches.gboard.features.backuprestore.gboardDataBackupFlagValuePatch
 import dev.jason.gboardpatches.patches.gboard.shared.ANDROID_NS
 import dev.jason.gboardpatches.patches.gboard.shared.gboardPatchesSettingsPatch
 import java.io.ByteArrayInputStream
@@ -23,7 +24,7 @@ class GboardBackupRestorePatchContractTest {
     private val repositoryRoot = repositoryRoot()
 
     @Test
-    fun `public patch is independent version neutral and enabled by default`() {
+    fun `public patch is independent and enabled by default with one flag contribution`() {
         val patch = gboardBackupRestorePatch
 
         assertEquals("Backup & Restore", patch.name)
@@ -33,6 +34,7 @@ class GboardBackupRestorePatchContractTest {
                 gboardPatchesSettingsPatch,
                 gboardBackupRestoreFeatureMarkerPatch,
                 gboardBackupRestoreManifestPatch,
+                gboardDataBackupFlagValuePatch,
             ),
             patch.dependencies,
         )
@@ -43,13 +45,23 @@ class GboardBackupRestorePatchContractTest {
         val feature = catalog.getAsJsonArray("features").map { it.asJsonObject }.single {
             it["feature_id"].asString == "backup_restore"
         }
-        assertEquals("version-neutral-extension", feature["migration_scope"].asString)
-        assertTrue(feature.getAsJsonArray("target_family_ids").isEmpty)
+        // The only version-sensitive part is the flag getter that registers every Gboard
+        // backup provider for the personal data backup.
+        assertEquals("version-sensitive", feature["migration_scope"].asString)
+        assertEquals(listOf("flag.reader"),
+            feature.getAsJsonArray("target_family_ids").map { it.asString })
         assertEquals(BACKUP_RESTORE_FEATURE_MARKER, feature["feature_marker"].asString)
-        val contribution = feature.getAsJsonArray("contributions").single().asJsonObject
-        assertEquals("resource_only", contribution["anchor_family_id"].asString)
-        assertTrue(contribution.getAsJsonArray("required_bindings").isEmpty)
-        assertTrue(contribution.getAsJsonArray("runtime_calls").isEmpty)
+        val contributions = feature.getAsJsonArray("contributions").map { it.asJsonObject }
+        assertEquals(listOf("backup_restore.resources", "backup_restore.flag"),
+            contributions.map { it["contribution_id"].asString })
+        val resources = contributions[0]
+        assertEquals("resource_only", resources["anchor_family_id"].asString)
+        assertTrue(resources.getAsJsonArray("required_bindings").isEmpty)
+        assertTrue(resources.getAsJsonArray("runtime_calls").isEmpty)
+        val flag = contributions[1]
+        assertEquals("flag_bool_getter", flag["anchor_family_id"].asString)
+        assertEquals(listOf("GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE"),
+            flag.getAsJsonArray("runtime_calls").map { it.asString })
     }
 
     @Test
@@ -86,17 +98,16 @@ class GboardBackupRestorePatchContractTest {
         val developer = registry.indexOf("new GboardDeveloperOptionsSettingsFeature(context)")
         assertTrue(homepage >= 0 && homepage < backup && backup < developer)
 
-        val text = Files.readString(
-            repositoryRoot.resolve(SETTINGS_TEXT_PATH),
-            StandardCharsets.UTF_8,
-        )
-        assertTrue(text.contains("<translation locale=\"en\">Backup &amp; Restore</translation>"))
+        val text = SETTINGS_TEXT_PATHS.joinToString("\n") { path ->
+            Files.readString(repositoryRoot.resolve(path), StandardCharsets.UTF_8)
+        }
+        assertTrue(text.contains(">Backup &amp; Restore</string>"))
         assertTrue(text.contains(
-            "<translation locale=\"en\">Export or restore all Patches settings</translation>",
+            ">Export or restore Patches settings and Gboard data</string>",
         ))
-        assertTrue(text.contains("<translation locale=\"zh-Hant\">備份與還原</translation>"))
+        assertTrue(text.contains(">備份與還原</string>"))
         assertTrue(text.contains(
-            "<translation locale=\"zh-Hant\">匯出或還原全部 Patches 設定</translation>",
+            ">匯出或還原 Patches 設定與 Gboard 資料</string>",
         ))
     }
 
@@ -121,7 +132,9 @@ class GboardBackupRestorePatchContractTest {
         const val SETTINGS_REGISTRY_PATH =
             "extensions/extension/src/main/java/dev/jason/gboardpatches/extension/settings/" +
                 "GboardMoreSettingsGroupFeature.java"
-        const val SETTINGS_TEXT_PATH =
-            "extensions/extension/src/main/settings-text/gboard_settings_text.xml"
+        val SETTINGS_TEXT_PATHS = listOf(
+            "extensions/extension/src/main/settings-text/values/gboard_settings_strings.xml",
+            "extensions/extension/src/main/settings-text/values-b+zh+Hant/gboard_settings_strings.xml",
+        )
     }
 }

@@ -118,6 +118,11 @@ internal enum class GboardFlagFamilyFeature(
         RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
         GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
     ),
+    GBOARD_DATA_BACKUP(
+        1500,
+        RuntimeCallId.GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE,
+        GboardFlagFamilyArgumentShape.FLAG_NAME_AND_RESULT,
+    ),
     ;
 
     val spec: GboardFlagFamilyFeatureSpec
@@ -577,6 +582,9 @@ private fun MethodReference.matches(abi: RuntimeAbi): Boolean =
 private fun String.normalized(): String = uppercase().replace('-', '_').replace('/', '_')
 
 private fun emitFlagFamilyRuntimeCall(call: RuntimeCallId, registers: String): String = when (call) {
+    RuntimeCallId.GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
+        RuntimeCallId.GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE, registers,
+    )
     RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE -> RuntimeCallEmitter.invoke(
         RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE, registers,
     )
@@ -676,9 +684,11 @@ private const val MAX_MOVE_RESULT_OBJECT_REGISTER = 255
 private val GUARDED_FLAG_FAMILY_CALLS = setOf(
     RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
+    RuntimeCallId.GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE,
 )
 
 private val ALL_FLAG_FAMILY_RUNTIME_CALLS: Set<RuntimeCallId> = setOf(
+    RuntimeCallId.GBOARD_DATA_BACKUP_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.KEYPRESS_HAPTICS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.LANGUAGE_MODELS_RUNTIME_APPLY_FLAG_VALUE,
     RuntimeCallId.ACCESS_POINT_COUNT_RUNTIME_APPLY_FLAG_VALUE,

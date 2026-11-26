@@ -1,5 +1,6 @@
 package dev.jason.gboardpatches.extension.backuprestore;
 
+import dev.jason.gboardpatches.extension.settings.GboardSettingsTextFiles;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -93,20 +94,14 @@ public final class GboardBackupRestoreLocalizationTest {
                 }
             }
         }
-        String authority = new String(Files.readAllBytes(
-                Path.of("src/main/settings-text/gboard_settings_text.xml")),
-                StandardCharsets.UTF_8);
+        String authority = GboardSettingsTextFiles.english();
         for (String resourceName : resourceNames) {
             Pattern blockPattern = Pattern.compile(
                     "<string name=\"" + Pattern.quote(resourceName)
-                            + "\">(.*?)</string>", Pattern.DOTALL);
+                            + "\"[^>]*>(.*?)</string>", Pattern.DOTALL);
             Matcher block = blockPattern.matcher(authority);
             assertTrue("Missing settings-text entry: " + resourceName, block.find());
-            Matcher english = Pattern.compile(
-                    "<translation locale=\"en\">(.*?)</translation>", Pattern.DOTALL)
-                    .matcher(block.group(1));
-            assertTrue("Missing English translation: " + resourceName, english.find());
-            String englishText = english.group(1).trim();
+            String englishText = block.group(1).trim();
             assertFalse("Blank English translation: " + resourceName, englishText.isEmpty());
             assertFalse("Chinese text in English translation: " + resourceName,
                     Pattern.compile("[\\p{IsHan}]").matcher(englishText).find());

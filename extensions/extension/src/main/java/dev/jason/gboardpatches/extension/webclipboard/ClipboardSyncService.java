@@ -6,19 +6,29 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -41,10 +51,17 @@ public final class ClipboardSyncService extends Service {
     private static final String EXTRA_TEXT = "text";
     private static final String NOTIFICATION_CHANNEL_ID = "web_clipboard";
     private static final int NOTIFICATION_ID = 1002;
+    private static final int MAX_INCOMING_IMAGE_FILES = 20;
+    private static final String INCOMING_IMAGE_DIR_NAME = "clipboard_image";
+    static final String INCOMING_IMAGE_PREFIX = "web-clip-";
     private static final long DUPLICATE_SUPPRESSION_WINDOW_MS = 750L;
     private static final AtomicLong START_COMMAND_SEQUENCE = new AtomicLong(1L);
+    private static final AtomicLong INCOMING_IMAGE_SEQUENCE = new AtomicLong(1L);
+    private static final AtomicLong LAST_HISTORY_CLIP_ID = new AtomicLong(0L);
     private static volatile ClipboardSyncService activeService;
     private static volatile ClipboardSyncWebPortal activePortal;
+
+    private final Object incomingImageFileLock = new Object();
 
     private ClipboardManager serviceClipboardManager;
     private ClipboardManager.OnPrimaryClipChangedListener serviceClipboardListener;
@@ -57,7 +74,11 @@ public final class ClipboardSyncService extends Service {
             WebClipboardPreferences.DEFAULT_LOOPBACK_INGRESS_TOKEN;
     private String lastPublishedText = "";
     private long lastPublishedAtElapsedMs;
+    private String lastPublishedImageHash = "";
+    private long lastPublishedImageAtElapsedMs;
     private final WebClipboardEchoSuppressor webClipboardEchoSuppressor =
+            new WebClipboardEchoSuppressor(DUPLICATE_SUPPRESSION_WINDOW_MS);
+    private final WebClipboardEchoSuppressor webImageEchoSuppressor =
             new WebClipboardEchoSuppressor(DUPLICATE_SUPPRESSION_WINDOW_MS);
     private final ExecutorService clipboardPublishExecutor = Executors.newSingleThreadExecutor();
 
@@ -304,10 +325,24 @@ public final class ClipboardSyncService extends Service {
 
     private boolean startWebPortal(int port, boolean pairingRequired, String pairingCode,
             String loopbackIngressToken) {
+        ClipboardSyncWebPortal.ClipboardBridge bridge = new ClipboardSyncWebPortal.ClipboardBridge() {
+            @Override
+            public void applyDesktopClipboard(String text) {
+                applyWebClipboardToPhone(text);
+            }
+
+            @Override
+            public void applyDesktopClipboardImage(byte[] imageBytes, String mimeType,
+                    String fileName) {
+                applyWebClipboardImageToPhone(imageBytes, mimeType, fileName);
+            }
+        };
+        File mediaCacheRoot = new File(getCacheDir(), "web-clipboard-media");
         ClipboardSyncWebPortal portal = new ClipboardSyncWebPortal(
                 port,
-                this::applyWebClipboardToPhone,
+                bridge,
                 ClipboardSyncWebPortal.WebAssets.from(this),
+                mediaCacheRoot,
                 new ClipboardSyncWebPortal.SecurityConfig(
                         pairingRequired,
                         pairingCode,
@@ -373,12 +408,28 @@ public final class ClipboardSyncService extends Service {
             return;
         }
         ClipboardManager.OnPrimaryClipChangedListener listener = () -> {
-            CharSequence currentText = currentClipboardText(clipboardManager);
-            if (currentText != null) {
-                Log.i(TAG, LOG_PREFIX + " service clipboard listener fired"
-                        + " len=" + currentText.length()
-                        + ", portal=" + describePortal(webPortal));
-                publishClipboardToPortalIfNotWebEcho(currentText.toString());
+            try {
+                ClipData clipData = currentPrimaryClip(clipboardManager);
+                if (clipData == null || isWebClipboardEcho(clipData)) {
+                    return;
+                }
+                Uri imageUri = extractImageClipUri(clipData);
+                if (imageUri != null) {
+                    String mimeType = resolveImageClipMimeType(clipData, imageUri);
+                    Log.i(TAG, LOG_PREFIX + " service clipboard listener fired image"
+                            + ", portal=" + describePortal(webPortal));
+                    publishClipboardImageUriToPortal(imageUri, mimeType);
+                    return;
+                }
+                CharSequence currentText = currentClipboardText(clipboardManager);
+                if (currentText != null) {
+                    Log.i(TAG, LOG_PREFIX + " service clipboard listener fired"
+                            + " len=" + currentText.length()
+                            + ", portal=" + describePortal(webPortal));
+                    publishClipboardToPortalIfNotWebEcho(currentText.toString());
+                }
+            } catch (Throwable throwable) {
+                Log.w(TAG, LOG_PREFIX + " clipboard listener callback failed", throwable);
             }
         };
         try {
@@ -427,6 +478,127 @@ public final class ClipboardSyncService extends Service {
         updateNotification("Clipboard applied from Web");
     }
 
+    private void applyWebClipboardImageToPhone(byte[] imageBytes, String mimeType,
+            String fileName) {
+        if (imageBytes == null || imageBytes.length == 0
+                || imageBytes.length > WebClipboardMediaStore.MAX_IMAGE_BYTES) {
+            throw new IllegalArgumentException("Invalid clipboard image payload");
+        }
+        String resolvedMime = WebClipboardMediaStore.detectMimeType(imageBytes, mimeType);
+        if (resolvedMime == null) {
+            throw new IllegalArgumentException("Unsupported clipboard image type");
+        }
+        ClipboardManager clipboardManager = serviceClipboardManager;
+        if (clipboardManager == null) {
+            clipboardManager = getSystemService(ClipboardManager.class);
+        }
+        if (clipboardManager == null) {
+            throw new IllegalStateException("ClipboardManager unavailable");
+        }
+        String sha256 = WebClipboardMediaStore.sha256Hex(imageBytes);
+        long clipTimestampMs = nextMonotonicClipTimestampMs(System.currentTimeMillis());
+        File targetFile = writeIncomingImageFile(imageBytes, resolvedMime, clipTimestampMs);
+        Uri contentUri = buildIncomingImageFileProviderUri(targetFile);
+        ClipDescription description = new ClipDescription(
+                ClipboardSyncIngressContract.WEB_CLIPBOARD_LABEL,
+                new String[] { resolvedMime });
+        ClipData clipData = new ClipData(description, new ClipData.Item(contentUri));
+        try {
+            webImageEchoSuppressor.markWebApplied(sha256, SystemClock.elapsedRealtime());
+            clipboardManager.setPrimaryClip(clipData);
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Failed to apply web clipboard image to phone", throwable);
+            throw new IllegalStateException("Failed to apply web clipboard image", throwable);
+        }
+        insertImageIntoClipboardHistoryBestEffort(contentUri, clipTimestampMs);
+        updateNotification("Image applied from Web");
+    }
+
+    static long nextMonotonicClipTimestampMs(long nowMs) {
+        long safeNow = Math.max(1L, nowMs);
+        return LAST_HISTORY_CLIP_ID.updateAndGet(previous -> Math.max(safeNow, previous + 1L));
+    }
+
+    private File writeIncomingImageFile(byte[] imageBytes, String mimeType, long timestampMs) {
+        synchronized (incomingImageFileLock) {
+            File dir = new File(getFilesDir(), INCOMING_IMAGE_DIR_NAME);
+            if (!dir.exists() && !dir.mkdirs() && !dir.isDirectory()) {
+                throw new IllegalStateException("Unable to create incoming image directory");
+            }
+            String ext = WebClipboardMediaStore.extensionForMimeType(mimeType);
+            String stem = INCOMING_IMAGE_PREFIX + timestampMs + "-"
+                    + INCOMING_IMAGE_SEQUENCE.getAndIncrement();
+            File targetFile = new File(dir, stem + ext);
+            try (FileOutputStream output = new FileOutputStream(targetFile)) {
+                output.write(imageBytes);
+                output.flush();
+            } catch (Throwable throwable) {
+                throw new IllegalStateException("Failed to write incoming image file", throwable);
+            }
+            pruneIncomingImageFilesLocked(dir, targetFile);
+            return targetFile;
+        }
+    }
+
+    private Uri buildIncomingImageFileProviderUri(File targetFile) {
+        return new Uri.Builder()
+                .scheme("content")
+                .authority(getPackageName() + ".fileprovider")
+                .appendPath(INCOMING_IMAGE_DIR_NAME)
+                .appendPath(targetFile.getName())
+                .build();
+    }
+
+    private void insertImageIntoClipboardHistoryBestEffort(Uri contentUri, long timestampMs) {
+        if (contentUri == null) {
+            return;
+        }
+        try {
+            Uri clipsUri = new Uri.Builder()
+                    .scheme("content")
+                    .authority(getPackageName() + ".clipboard_content")
+                    .appendPath("clips")
+                    .build();
+            ContentValues values = new ContentValues();
+            values.put("_id", timestampMs);
+            values.put("text", "");
+            values.put("html_text", "");
+            values.put("timestamp", timestampMs);
+            values.put("item_type", 0);
+            values.put("entity_type", 0);
+            values.put("uri", contentUri.toString());
+            values.put("sensitive", false);
+            getContentResolver().insert(clipsUri, values);
+        } catch (Throwable throwable) {
+            Log.w(TAG, LOG_PREFIX + " clipboard history image insert skipped", throwable);
+        }
+    }
+
+    private void pruneIncomingImageFilesLocked(File dir, File keepFile) {
+        File[] files = dir.listFiles((currentDir, name) ->
+                name != null && name.startsWith(INCOMING_IMAGE_PREFIX));
+        if (files == null || files.length <= MAX_INCOMING_IMAGE_FILES) {
+            return;
+        }
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified)
+                .thenComparing(File::getName)
+                .reversed());
+        String keepName = keepFile == null ? "" : keepFile.getName();
+        int kept = 0;
+        for (File file : files) {
+            if (keepName.equals(file.getName()) || kept < MAX_INCOMING_IMAGE_FILES) {
+                kept++;
+                continue;
+            }
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                file.delete();
+            } catch (Throwable ignored) {
+                // Best effort cleanup.
+            }
+        }
+    }
+
     private void publishClipboardToPortalIfNotWebEcho(String text) {
         if (webClipboardEchoSuppressor.shouldSuppressClipboardEvent(
                 text,
@@ -449,6 +621,13 @@ public final class ClipboardSyncService extends Service {
         if (clipboardManager == null) {
             return;
         }
+        ClipData primaryClip = currentPrimaryClip(clipboardManager);
+        Uri imageUri = extractImageClipUri(primaryClip);
+        if (imageUri != null) {
+            String mimeType = resolveImageClipMimeType(primaryClip, imageUri);
+            publishClipboardImageUriToPortal(imageUri, mimeType);
+            return;
+        }
         CharSequence currentText = currentClipboardText(clipboardManager);
         if (currentText == null || currentText.length() == 0) {
             return;
@@ -457,6 +636,141 @@ public final class ClipboardSyncService extends Service {
         lastPublishedText = text;
         lastPublishedAtElapsedMs = SystemClock.elapsedRealtime();
         portal.publishPhoneClipboard(text);
+    }
+
+    private void publishClipboardImageUriToPortal(Uri imageUri, String declaredMimeType) {
+        if (imageUri == null) {
+            return;
+        }
+        try {
+            clipboardPublishExecutor.execute(
+                    () -> publishClipboardImageUriInternal(imageUri, declaredMimeType));
+        } catch (RejectedExecutionException ignored) {
+            Log.i(TAG, LOG_PREFIX + " portal image publish ignored during teardown");
+        }
+    }
+
+    private void publishClipboardImageUriInternal(Uri imageUri, String declaredMimeType) {
+        try {
+            ClipboardSyncWebPortal portal = webPortal;
+            if (portal == null || imageUri == null) {
+                return;
+            }
+            byte[] bytes = readUriBytesBounded(imageUri, WebClipboardMediaStore.MAX_IMAGE_BYTES);
+            if (bytes == null || bytes.length == 0) {
+                return;
+            }
+            String resolvedMime = WebClipboardMediaStore.detectMimeType(bytes, declaredMimeType);
+            if (resolvedMime == null) {
+                return;
+            }
+            String sha256 = WebClipboardMediaStore.sha256Hex(bytes);
+            long now = SystemClock.elapsedRealtime();
+            if (webImageEchoSuppressor.shouldSuppressClipboardEvent(sha256, now)) {
+                Log.i(TAG, LOG_PREFIX + " service clipboard listener suppressed web image echo"
+                        + " bytes=" + bytes.length);
+                return;
+            }
+            if (sha256.equals(lastPublishedImageHash)
+                    && now - lastPublishedImageAtElapsedMs <= DUPLICATE_SUPPRESSION_WINDOW_MS) {
+                return;
+            }
+            lastPublishedImageHash = sha256;
+            lastPublishedImageAtElapsedMs = now;
+            String fileName = imageUri.getLastPathSegment();
+            if (portal.publishPhoneClipboardImage(bytes, resolvedMime, fileName)) {
+                updateNotification("Image available");
+            }
+        } catch (Throwable throwable) {
+            Log.w(TAG, LOG_PREFIX + " failed to publish phone clipboard image", throwable);
+        }
+    }
+
+    private ClipData currentPrimaryClip(ClipboardManager clipboardManager) {
+        try {
+            if (clipboardManager == null || !clipboardManager.hasPrimaryClip()) {
+                return null;
+            }
+            return clipboardManager.getPrimaryClip();
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isWebClipboardEcho(ClipData clipData) {
+        try {
+            ClipDescription description = clipData == null ? null : clipData.getDescription();
+            CharSequence label = description == null ? null : description.getLabel();
+            return ClipboardSyncIngressContract.WEB_CLIPBOARD_LABEL.contentEquals(
+                    label == null ? "" : label);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private Uri extractImageClipUri(ClipData clipData) {
+        try {
+            if (clipData == null || clipData.getItemCount() <= 0) {
+                return null;
+            }
+            ClipData.Item item = clipData.getItemAt(0);
+            Uri uri = item == null ? null : item.getUri();
+            if (uri == null || !"content".equalsIgnoreCase(uri.getScheme())) {
+                return null;
+            }
+            String mimeType = resolveImageClipMimeType(clipData, uri);
+            return mimeType != null && mimeType.toLowerCase(Locale.US).startsWith("image/")
+                    ? uri
+                    : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private String resolveImageClipMimeType(ClipData clipData, Uri uri) {
+        try {
+            ClipDescription description = clipData == null ? null : clipData.getDescription();
+            if (description != null) {
+                int count = description.getMimeTypeCount();
+                for (int index = 0; index < count; index++) {
+                    String mime = description.getMimeType(index);
+                    if (mime != null && mime.toLowerCase(Locale.US).startsWith("image/")) {
+                        return mime;
+                    }
+                }
+            }
+            if (uri != null) {
+                String resolved = getContentResolver().getType(uri);
+                if (resolved != null && resolved.toLowerCase(Locale.US).startsWith("image/")) {
+                    return resolved;
+                }
+            }
+        } catch (Throwable ignored) {
+            // Best effort.
+        }
+        return null;
+    }
+
+    private byte[] readUriBytesBounded(Uri uri, int maxBytes) {
+        try (InputStream input = getContentResolver().openInputStream(uri)) {
+            if (input == null) {
+                return null;
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16_384];
+            int total = 0;
+            int read;
+            while ((read = input.read(buffer)) >= 0) {
+                total += read;
+                if (total > maxBytes) {
+                    return null;
+                }
+                output.write(buffer, 0, read);
+            }
+            return output.toByteArray();
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private void publishClipboardToPortal(String text) {

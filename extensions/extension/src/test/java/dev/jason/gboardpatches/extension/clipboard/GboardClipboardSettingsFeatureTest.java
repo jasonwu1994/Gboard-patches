@@ -35,7 +35,27 @@ public final class GboardClipboardSettingsFeatureTest {
                 Arrays.asList("General", "Metadata", "Layout", "Retention", "Extensions"),
                 sectionTitles(sections));
         Assert.assertEquals("ToggleRow", sections.get(0).getItems().get(0).getClass().getSimpleName());
-        Assert.assertEquals(3, sections.get(0).getItems().size());
+        Assert.assertEquals(4, sections.get(0).getItems().size());
+        GboardPatchesSettingsContract.ToggleRow selectAll =
+                (GboardPatchesSettingsContract.ToggleRow) sections.get(0).getItems().get(3);
+        Assert.assertEquals("Add a Select All button in edit mode", selectAll.getTitle());
+        Assert.assertFalse(selectAll.isChecked());
+        Assert.assertEquals("settings-previews/clipboard/select_all_in_edit_mode.png",
+                ((GboardPatchesSettingsContract.PreviewImage)
+                        selectAll.getPreviewSpec().getMediaItems().get(0)).getAssetPath());
+        selectAll.getToggleAction().accept(true);
+        GboardPatchesSettingsContract.Screen enabled =
+                new GboardClipboardSettingsFeature().buildScreen(host);
+        GboardPatchesSettingsContract.ToggleRow excludePinned =
+                (GboardPatchesSettingsContract.ToggleRow) enabled.getSections().get(0).getItems().get(4);
+        Assert.assertEquals("Exclude pinned clips", excludePinned.getTitle());
+        Assert.assertFalse(excludePinned.isChecked());
+        excludePinned.getToggleAction().accept(true);
+        Assert.assertTrue(GboardClipboardSettings.readExcludePinned(preferences));
+        selectAll.getToggleAction().accept(false);
+        Assert.assertEquals(4,
+                new GboardClipboardSettingsFeature().buildScreen(host).getSections().get(0)
+                        .getItems().size());
         GboardPatchesSettingsContract.ToggleRow sensitiveRow =
                 (GboardPatchesSettingsContract.ToggleRow) findRow(
                         screen,

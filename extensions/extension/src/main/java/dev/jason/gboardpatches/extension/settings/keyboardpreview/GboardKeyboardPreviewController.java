@@ -55,6 +55,9 @@ public final class GboardKeyboardPreviewController {
     private final int accentColor;
     private final int iconColor;
     private ImageButton launcher;
+    private int rightInset;
+    private int bottomInset;
+    private int bottomObstruction;
 
     public GboardKeyboardPreviewController(Activity activity,
             Supplier<List<String>> targetPackageNames,
@@ -78,7 +81,26 @@ public final class GboardKeyboardPreviewController {
     }
 
     public void updateSafeAreaInsets(int rightInset, int bottomInset) {
+        this.rightInset = rightInset;
+        this.bottomInset = bottomInset;
         runSafely("update keyboard preview insets", () -> {
+            if (launcher != null) {
+                launcher.setLayoutParams(launcherLayoutParams(rightInset, bottomInset));
+            }
+        });
+    }
+
+    /**
+     * Height of a bar pinned to the bottom of the window (inset included), such as a screen's
+     * primary action, so the launcher sits above it instead of covering it. 0 when none shows.
+     */
+    public void setBottomObstruction(int height) {
+        int normalized = Math.max(0, height);
+        if (normalized == bottomObstruction) {
+            return;
+        }
+        bottomObstruction = normalized;
+        runSafely("update keyboard preview obstruction", () -> {
             if (launcher != null) {
                 launcher.setLayoutParams(launcherLayoutParams(rightInset, bottomInset));
             }
@@ -122,7 +144,9 @@ public final class GboardKeyboardPreviewController {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 dp(BUTTON_SIZE_DP), dp(BUTTON_SIZE_DP), Gravity.END | Gravity.BOTTOM);
         params.rightMargin = dp(BUTTON_MARGIN_DP) + Math.max(0, rightInset);
-        params.bottomMargin = dp(BUTTON_MARGIN_DP) + Math.max(0, bottomInset);
+        params.bottomMargin = bottomObstruction > 0
+                ? bottomObstruction
+                : dp(BUTTON_MARGIN_DP) + Math.max(0, bottomInset);
         return params;
     }
 

@@ -93,6 +93,15 @@ public final class GboardEditingAccessPointsSettingsFeature
             case COPY -> R.string.gboard_edit_ap_copy;
             case CUT -> R.string.gboard_edit_ap_cut;
             case PASTE -> R.string.gboard_edit_ap_paste;
+            case FORWARD_DELETE -> R.string.gboard_edit_ap_forward_delete;
+            case PASTE_PLAIN_TEXT -> R.string.gboard_edit_ap_paste_plain_text;
+            case HOME -> R.string.gboard_edit_ap_home;
+            case END -> R.string.gboard_edit_ap_end;
+            case TAB -> R.string.gboard_edit_ap_tab;
+            case ARROW_LEFT -> R.string.gboard_edit_ap_arrow_left;
+            case ARROW_RIGHT -> R.string.gboard_edit_ap_arrow_right;
+            case ARROW_UP -> R.string.gboard_edit_ap_arrow_up;
+            case ARROW_DOWN -> R.string.gboard_edit_ap_arrow_down;
         };
     }
 

@@ -16,9 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import dev.jason.gboardpatches.extension.R;
+import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
+
 final class GboardManualIncognitoAccessPointSupport {
     static final String TOKEN = "manual_incognito";
-    private static final String LABEL = "Incognito";
+    static final String ENGLISH_LABEL = "Incognito";
     private static final int OFFICIAL_INCOGNITO_ICON_RESOURCE_ID = 0x7f0806c3;
     private static final float OFFICIAL_INCOGNITO_ICON_SCALE = 1.2f;
 
@@ -71,7 +74,7 @@ final class GboardManualIncognitoAccessPointSupport {
             activeHandles.builderIconResourceMethod.invoke(
                     builder, OFFICIAL_INCOGNITO_ICON_RESOURCE_ID);
         }
-        activeHandles.builderLabelTextField.set(builder, LABEL);
+        activeHandles.builderLabelTextField.set(builder, label(safeContext));
         activeHandles.builderRunnableMethod.invoke(
                 builder, new ToggleAction(controller, safeContext));
         Object descriptor = activeHandles.builderBuildMethod.invoke(builder);
@@ -96,6 +99,12 @@ final class GboardManualIncognitoAccessPointSupport {
                 // A later controller construction or input session will retry.
             }
         }
+    }
+
+    /** Access Menu label in the patches settings language; English when none is packaged. */
+    static String label(Context context) {
+        return GboardSettingsText.packagedOrDefault(context,
+                R.string.gboard_patches_manual_incognito_ap_label, ENGLISH_LABEL);
     }
 
     static List<String> appendToken(Collection<?> original) {

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import dev.jason.gboardpatches.extension.R;
+import dev.jason.gboardpatches.extension.backuprestore.GboardRestoreKeyFilter;
 import dev.jason.gboardpatches.extension.settings.GboardPatchesSettingsContract;
 import dev.jason.gboardpatches.extension.settings.GboardSettingsText;
 
@@ -17,6 +18,7 @@ final class GboardFlagStoreDiffSettingsFeature
     private final String fileName;
     private final byte[] replacement;
     private final GboardFlagStoreDiff.Result diff;
+    private final GboardRestoreKeyFilter filter = new GboardRestoreKeyFilter();
 
     GboardFlagStoreDiffSettingsFeature(Context context, String fileName, byte[] replacement,
             GboardFlagStoreDiff.Result diff) {
@@ -45,17 +47,27 @@ final class GboardFlagStoreDiffSettingsFeature
                 diff.count(GboardFlagStoreDiff.Change.ADDED),
                 diff.count(GboardFlagStoreDiff.Change.REMOVED));
         List<GboardPatchesSettingsContract.Section> sections = new ArrayList<>();
-        addDifferenceSection(sections, GboardFlagStoreDiff.Change.CHANGED,
+        int matched = addDifferenceSection(sections, GboardFlagStoreDiff.Change.CHANGED,
                 R.string.gboard_flag_store_diff_changed);
-        addDifferenceSection(sections, GboardFlagStoreDiff.Change.ADDED,
+        matched += addDifferenceSection(sections, GboardFlagStoreDiff.Change.ADDED,
                 R.string.gboard_flag_store_diff_added);
-        addDifferenceSection(sections, GboardFlagStoreDiff.Change.REMOVED,
+        matched += addDifferenceSection(sections, GboardFlagStoreDiff.Change.REMOVED,
                 R.string.gboard_flag_store_diff_removed);
+        List<GboardPatchesSettingsContract.Row> filterRows =
+                filter.rows(context, host, diff.getDifferences().size(), matched);
+        if (!filterRows.isEmpty()) {
+            sections.add(0, new GboardPatchesSettingsContract.Section(null, filterRows));
+        }
         if (diff.getDifferences().isEmpty()) {
             sections.add(new GboardPatchesSettingsContract.Section(
                     text(R.string.gboard_flag_store_diff_no_changes),
                     Collections.singletonList(new GboardPatchesSettingsContract.InfoRow(
                             fileName, text(R.string.gboard_flag_store_diff_identical), true))));
+        } else if (matched == 0) {
+            sections.add(new GboardPatchesSettingsContract.Section(null,
+                    Collections.singletonList(new GboardPatchesSettingsContract.InfoRow(
+                            text(R.string.gboard_patches_backup_filter_no_match), null,
+                            false))));
         }
         GboardPatchesSettingsContract.CommandRow action =
                 new GboardPatchesSettingsContract.DangerRow(
@@ -75,11 +87,11 @@ final class GboardFlagStoreDiffSettingsFeature
                 action);
     }
 
-    private void addDifferenceSection(List<GboardPatchesSettingsContract.Section> sections,
+    private int addDifferenceSection(List<GboardPatchesSettingsContract.Section> sections,
             GboardFlagStoreDiff.Change change, int titleResource) {
         List<GboardPatchesSettingsContract.Row> rows = new ArrayList<>();
         for (GboardFlagStoreDiff.Difference difference : diff.getDifferences()) {
-            if (difference.getChange() != change) {
+            if (difference.getChange() != change || !filter.matches(difference.getKey())) {
                 continue;
             }
             rows.add(new GboardPatchesSettingsContract.InfoRow(
@@ -87,12 +99,12 @@ final class GboardFlagStoreDiffSettingsFeature
         }
         if (!rows.isEmpty()) {
             sections.add(new GboardPatchesSettingsContract.Section(
-                    text(titleResource) + " (" + rows.size() + ")", null,
-                    change == GboardFlagStoreDiff.Change.CHANGED
-                            ? GboardPatchesSettingsContract.SectionStyle.ADVANCED
-                            : GboardPatchesSettingsContract.SectionStyle.DEFAULT,
+                    GboardRestoreKeyFilter.groupTitle(context, text(titleResource), rows.size()),
+                    null,
+                    GboardPatchesSettingsContract.SectionStyle.DEFAULT,
                     rows));
         }
+        return rows.size();
     }
 
     private String describe(GboardFlagStoreDiff.Difference difference) {
